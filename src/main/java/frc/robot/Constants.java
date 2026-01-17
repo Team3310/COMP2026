@@ -18,6 +18,9 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  // Set this to select which robot's tuner constants to use
+  public static final Bot currentBot = Bot.SOFTWARE;
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
@@ -27,5 +30,13 @@ public final class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static enum Bot {
+    /** Software robot (default configuration) */
+    SOFTWARE
+    // Add more robot variants here as needed, e.g.:
+    // COMPETITION,
+    // PRACTICE
   }
 }
