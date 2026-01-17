@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD
 // license that can be found in the LICENSE file
 // at the root directory of this project.
-
+// I am the coolest person on earth, next to john doe
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
