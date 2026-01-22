@@ -78,7 +78,7 @@
                     "options": {}
                   }
                 ],
-                "maxSpeed": 5,
+                "maxSpeed": 8,
                 "sizeX": 0.65,
                 "sizeY": 0.65,
                 "orientation": 1

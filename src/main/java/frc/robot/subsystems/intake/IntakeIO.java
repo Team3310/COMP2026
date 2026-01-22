@@ -15,6 +15,27 @@ public interface IntakeIO {
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;
     public double tempCelsius = 0.0;
+
+    // Calculated values
+    public double currentRPM = 0.0;
+
+    // Setpoints
+    public double targetRPM = 0.0;
+    public double targetRadsPerSec = 0.0;
+
+    // Control parameters
+    public double outtakeRPM = 0.0;
+    public double intakeRPM = 0.0;
+    public double kP = 0.0;
+    public double kI = 0.0;
+    public double kD = 0.0;
+    public double kS = 0.0;
+    public double kV = 0.0;
+    public double feedforwardVolts = 0.0;
+
+    // State
+    public String commandState = "STOPPED";
+    public boolean pidUpdated = false;
   }
 
   /** Updates the set of loggable inputs. */

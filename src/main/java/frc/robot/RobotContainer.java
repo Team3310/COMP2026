@@ -40,6 +40,9 @@ public class RobotContainer {
   private final Drive drive;
   private final Intake intake;
 
+  // Autonomous commands
+  private final frc.robot.Auton.AutonCommandBase autonCommands;
+
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -108,8 +111,18 @@ public class RobotContainer {
         break;
     }
 
+    // Initialize autonomous commands
+    autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    // Automatically register all autonomous commands from AutonCommandBase
+    autonCommands.registerAllCommands(autoChooser);
+    
+    // Also manually add them as backup (for testing)
+    autoChooser.addOption("Forward 2m (Manual)", autonCommands.forward2m());
+    autoChooser.addOption("Example Auto (Manual)", autonCommands.exampleAuto());
 
     // Set up SysId routines
     autoChooser.addOption(
