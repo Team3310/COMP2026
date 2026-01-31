@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -25,8 +26,8 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.velocity.VelocityControlIO;
+import frc.robot.subsystems.velocity.VelocityControlIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -37,8 +38,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
-  private final Intake intake;
+  private Drive drive;
+  private shooter intake;
+  private Agitator agitator;
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -82,8 +84,8 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
 
-        // Intake subsystem - Motor ID 58
-        intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus));
+        intake = new shooter(new VelocityControlIOTalonFX(59, TunerConstants.kRioCANBus));
+        agitator = new Agitator(new VelocityControlIOTalonFX(58, TunerConstants.kRioCANBus));
         break;
 
       case SIM:
@@ -95,7 +97,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        intake = new Intake(new IntakeIO() {});
+        intake = new shooter(new VelocityControlIO() {});
         break;
 
       default:
@@ -107,7 +109,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        intake = new Intake(new IntakeIO() {});
+        intake = new shooter(new VelocityControlIO() {});
         break;
     }
 
@@ -119,7 +121,7 @@ public class RobotContainer {
 
     // Automatically register all autonomous commands from AutonCommandBase
     autonCommands.registerAllCommands(autoChooser);
-    
+
     // Also manually add them as backup (for testing)
     autoChooser.addOption("Forward 2m (Manual)", autonCommands.forward2m());
     autoChooser.addOption("Example Auto (Manual)", autonCommands.exampleAuto());
@@ -185,10 +187,16 @@ public class RobotContainer {
 
     // Intake controls
     // Left Trigger - Run intake forward (hold to run forward)
-    controller.leftTrigger().whileTrue(intake.forwardCommand());
+    controller.leftTrigger().whileTrue(intake.backwardCommand());
 
     // Right Trigger - Run intake backward (hold to run backward)
-    controller.rightTrigger().whileTrue(intake.backwardCommand());
+    controller.rightTrigger().whileTrue(intake.forwardCommand());
+
+    // Left bumper
+    controller.leftBumper().whileTrue(agitator.backwardCommand());
+
+    // Right bumper
+    controller.rightBumper().whileTrue(agitator.forwardCommand());
   }
 
   /**

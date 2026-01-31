@@ -2,13 +2,13 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.velocity;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface IntakeIO {
+public interface VelocityControlIO {
   @AutoLog
-  public static class IntakeIOInputs {
+  public static class VelocityControlIOInputs {
     public boolean connected = true;
     public double positionRads = 0.0;
     public double velocityRadsPerSec = 0.0;
@@ -24,8 +24,8 @@ public interface IntakeIO {
     public double targetRadsPerSec = 0.0;
 
     // Control parameters
-    public double outtakeRPM = 0.0;
-    public double intakeRPM = 0.0;
+    public double backwardRPM = 0.0;
+    public double forwardRPM = 0.0;
     public double kP = 0.0;
     public double kI = 0.0;
     public double kD = 0.0;
@@ -39,17 +39,17 @@ public interface IntakeIO {
   }
 
   /** Updates the set of loggable inputs. */
-  public default void updateInputs(IntakeIOInputs inputs) {}
+  public default void updateInputs(VelocityControlIOInputs inputs) {}
 
-  /** Run intake at specified voltage. */
+  /** Run motor at specified voltage. */
   public default void setVoltage(double volts) {}
 
-  /** Run intake at specified velocity in radians per second. */
+  /** Run motor at specified velocity in radians per second. */
   public default void setVelocity(double velocityRadsPerSec, double ffVolts) {}
 
-  /** Stop the intake motor. */
+  /** Stop the motor. */
   public default void stop() {}
 
   /** Configure PID constants. */
-  public default void configurePID(double kP, double kI, double kD) {}
+  public default void configurePID(double kP, double kI, double kD, double kV, double kS) {}
 }

@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.agitator;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -11,16 +11,16 @@ import frc.robot.subsystems.velocity.VelocityControlIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Intake subsystem for controlling game piece intake. Uses AdvantageKit IO layer pattern for
+ * Hopper subsystem for controlling game piece hopper. Uses AdvantageKit IO layer pattern for
  * hardware abstraction.
  */
-public class Intake extends SubsystemBase {
+public class Agitator extends SubsystemBase {
   private final VelocityControlIO io;
   private final VelocityControlIOInputsAutoLogged inputs = new VelocityControlIOInputsAutoLogged();
 
   // Default RPM setpoints - change these constants to tune
-  private static final double DEFAULT_OUTTAKE_RPM = 2000.0;
-  private static final double DEFAULT_INTAKE_RPM = 3000.0;
+  private static final double DEFAULT_OUTTAKE_RPM = 1000.0;
+  private static final double DEFAULT_INTAKE_RPM = 1000.0;
 
   // Feedforward constants - tune based on motor characterization
   private static final double DEFAULT_KS = 0.0; // Volts to overcome static friction
@@ -47,8 +47,8 @@ public class Intake extends SubsystemBase {
   private double lastKV = DEFAULT_KV;
   private double lastKS = DEFAULT_KS;
 
-  /** Creates a new Intake subsystem. */
-  public Intake(VelocityControlIO io) {
+  /** Creates a new Hopper subsystem. */
+  public Agitator(VelocityControlIO io) {
     this.io = io;
 
     // Configure initial PID
@@ -85,10 +85,10 @@ public class Intake extends SubsystemBase {
     }
 
     // Process all inputs - @AutoLog will handle logging everything
-    Logger.processInputs("Intake", inputs);
+    Logger.processInputs("Hopper", inputs);
   }
 
-  /** Run intake forward at target RPM (for outtaking game pieces). */
+  /** Run hopper forward at target RPM (for outtaking game pieces). */
   public void runForward() {
     double targetRadsPerSec = backwardRPM * 2.0 * Math.PI / 60.0;
     double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
@@ -102,7 +102,7 @@ public class Intake extends SubsystemBase {
     io.setVelocity(targetRadsPerSec, ffVolts);
   }
 
-  /** Run intake backward at target RPM (for intaking game pieces). */
+  /** Run hopper backward at target RPM (for intaking game pieces). */
   public void runBackward() {
     double targetRadsPerSec = -forwardRPM * 2.0 * Math.PI / 60.0; // Negative for backward
     double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
@@ -111,23 +111,23 @@ public class Intake extends SubsystemBase {
     inputs.targetRPM = -forwardRPM;
     inputs.targetRadsPerSec = targetRadsPerSec;
     inputs.feedforwardVolts = ffVolts;
-    inputs.commandState = "INTAKE";
+    inputs.commandState = "HOPPER";
 
     io.setVelocity(targetRadsPerSec, ffVolts);
   }
 
-  /** Stop the intake motor. */
+  /** Stop the hopper motor. */
   public void stop() {
     inputs.commandState = "STOPPED";
     io.stop();
   }
 
-  /** Returns true if the intake motor is connected. */
+  /** Returns true if the hopper motor is connected. */
   public boolean isConnected() {
     return inputs.connected;
   }
 
-  /** Returns the current draw of the intake motor in amps. */
+  /** Returns the current draw of the hopper motor in amps. */
   public double getCurrentAmps() {
     return inputs.currentAmps;
   }
@@ -139,7 +139,7 @@ public class Intake extends SubsystemBase {
     this.backwardRPM = rpm;
   }
 
-  /** Set intake RPM (use in test mode or via commands). */
+  /** Set hopper RPM (use in test mode or via commands). */
   public void setForwardRPM(double rpm) {
     this.forwardRPM = rpm;
   }
@@ -155,18 +155,18 @@ public class Intake extends SubsystemBase {
 
   // -------------------- Commands --------------------
 
-  /** Command to run intake forward continuously. */
+  /** Command to run hopper forward continuously. */
   public Command forwardCommand() {
-    return startEnd(this::runForward, this::stop).withName("IntakeForward");
+    return startEnd(this::runForward, this::stop).withName("HopperForward");
   }
 
-  /** Command to run intake backward continuously. */
+  /** Command to run hopper backward continuously. */
   public Command backwardCommand() {
-    return startEnd(this::runBackward, this::stop).withName("IntakeBackward");
+    return startEnd(this::runBackward, this::stop).withName("HopperBackward");
   }
 
-  /** Command to stop intake. */
+  /** Command to stop hopper. */
   public Command stopCommand() {
-    return runOnce(this::stop).withName("StopIntake");
+    return runOnce(this::stop).withName("StopHopper");
   }
 }

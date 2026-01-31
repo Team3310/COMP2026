@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.velocity;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -14,8 +14,11 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.*;
 
-/** IntakeIO implementation for TalonFX motor controller. Uses Phoenix 6 API for motor control. */
-public class IntakeIOTalonFX implements IntakeIO {
+/**
+ * VelocityControlIO implementation for TalonFX motor controller. Uses Phoenix 6 API for motor
+ * control.
+ */
+public class VelocityControlIOTalonFX implements VelocityControlIO {
   private final TalonFX motor;
 
   // Control requests
@@ -29,7 +32,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Current> current;
   private final StatusSignal<Temperature> temp;
 
-  public IntakeIOTalonFX(int canId, CANBus canBus) {
+  public VelocityControlIOTalonFX(int canId, CANBus canBus) {
     motor = new TalonFX(canId, canBus);
 
     // Configure motor
@@ -57,7 +60,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   }
 
   @Override
-  public void updateInputs(IntakeIOInputs inputs) {
+  public void updateInputs(VelocityControlIOInputs inputs) {
     // Refresh all signals
     BaseStatusSignal.refreshAll(position, velocity, appliedVolts, current, temp);
 
@@ -88,11 +91,13 @@ public class IntakeIOTalonFX implements IntakeIO {
   }
 
   @Override
-  public void configurePID(double kP, double kI, double kD) {
+  public void configurePID(double kP, double kI, double kD, double kV, double kS) {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.Slot0.kP = kP;
     config.Slot0.kI = kI;
     config.Slot0.kD = kD;
+    config.Slot0.kV = kV;
+    config.Slot0.kS = kS;
     motor.getConfigurator().apply(config.Slot0);
   }
 }

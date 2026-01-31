@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,45 +14,32 @@ import org.littletonrobotics.junction.Logger;
  * Intake subsystem for controlling game piece intake. Uses AdvantageKit IO layer pattern for
  * hardware abstraction.
  */
-public class Intake extends SubsystemBase {
+public class shooter extends SubsystemBase {
   private final VelocityControlIO io;
   private final VelocityControlIOInputsAutoLogged inputs = new VelocityControlIOInputsAutoLogged();
-
+  private final Module[] modules = new Module[3]; //shooter, feeder, and hood motors
   // Default RPM setpoints - change these constants to tune
   private static final double DEFAULT_OUTTAKE_RPM = 2000.0;
   private static final double DEFAULT_INTAKE_RPM = 3000.0;
 
-  // Feedforward constants - tune based on motor characterization
-  private static final double DEFAULT_KS = 0.0; // Volts to overcome static friction
-  private static final double DEFAULT_KV = 0.11; // Volts per rad/s
-
-  // PID constants - tune for velocity control
-  private static final double DEFAULT_KP = 0.6;
-  private static final double DEFAULT_KI = 0.0;
-  private static final double DEFAULT_KD = 0.0;
-
   // Tunable setpoints and gains
   private double backwardRPM = DEFAULT_OUTTAKE_RPM;
   private double forwardRPM = DEFAULT_INTAKE_RPM;
-  private double kS = DEFAULT_KS;
-  private double kV = DEFAULT_KV;
-  private double kP = DEFAULT_KP;
-  private double kI = DEFAULT_KI;
-  private double kD = DEFAULT_KD;
-
-  // Track last PID values to avoid spamming CAN bus
-  private double lastKP = DEFAULT_KP;
-  private double lastKI = DEFAULT_KI;
-  private double lastKD = DEFAULT_KD;
-  private double lastKV = DEFAULT_KV;
-  private double lastKS = DEFAULT_KS;
+  private double mainKv = 0.12;
+  private double mainKp = 0.6;
 
   /** Creates a new Intake subsystem. */
-  public Intake(VelocityControlIO io) {
+  public shooter(
+    VelocityControlIO io,
+    ModuleIO shooterIO,
+    ModuleIO feeder) {
     this.io = io;
+      modules[0] = new Module(shooterIO);
+      modules[1] = new Module(feederIO);
+      modules[2] = new Module(hoodIO);
 
     // Configure initial PID
-    io.configurePID(kP, kI, kD, kV, kS);
+    io.configurePID(mainKp, 0.0, 0.0, mainKv, 0.0);
   }
 
   @Override
@@ -65,21 +52,21 @@ public class Intake extends SubsystemBase {
     // Update tunable parameters in inputs for logging
     inputs.backwardRPM = backwardRPM;
     inputs.forwardRPM = forwardRPM;
-    inputs.kP = kP;
+    inputs.kP = mainKp;
     inputs.kI = kI;
     inputs.kD = kD;
-    inputs.kS = kS;
-    inputs.kV = kV;
+    inputs.kS = mainKs;
+    inputs.kV = mainKv;
 
     // Update PID gains ONLY if changed (avoid spamming CAN bus)
-    if (kP != lastKP || kI != lastKI || kD != lastKD || kV != lastKV || kS != lastKS) {
-      io.configurePID(kP, kI, kD, kV, kS);
+    if (mainKp != lastKP || kI != lastKI || kD != lastKD || mainKv != lastKV || mainKs != lastKS) {
+      io.configurePID(mainKp, kI, kD, mainKv, mainKs);
       inputs.pidUpdated = true;
-      lastKP = kP;
+      lastKP = mainKp;
       lastKI = kI;
       lastKD = kD;
-      lastKV = kV;
-      lastKS = kS;
+      lastKV = mainKv;
+      lastKS = mainKs;
     } else {
       inputs.pidUpdated = false;
     }
@@ -91,7 +78,7 @@ public class Intake extends SubsystemBase {
   /** Run intake forward at target RPM (for outtaking game pieces). */
   public void runForward() {
     double targetRadsPerSec = backwardRPM * 2.0 * Math.PI / 60.0;
-    double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
+    double ffVolts = Math.signum(targetRadsPerSec) * mainKs + mainKv * targetRadsPerSec;
 
     // Update inputs for @AutoLog
     inputs.targetRPM = backwardRPM;
@@ -105,7 +92,7 @@ public class Intake extends SubsystemBase {
   /** Run intake backward at target RPM (for intaking game pieces). */
   public void runBackward() {
     double targetRadsPerSec = -forwardRPM * 2.0 * Math.PI / 60.0; // Negative for backward
-    double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
+    double ffVolts = Math.signum(targetRadsPerSec) * mainKs + mainKv * targetRadsPerSec;
 
     // Update inputs for @AutoLog
     inputs.targetRPM = -forwardRPM;
@@ -146,11 +133,11 @@ public class Intake extends SubsystemBase {
 
   /** Set PID gains (use in test mode or via commands). */
   public void setPID(double kP, double kI, double kD, double kV, double kS) {
-    this.kP = kP;
+    this.mainKp = kP;
     this.kI = kI;
     this.kD = kD;
-    this.kV = kV;
-    this.kS = kS;
+    this.mainKv = kV;
+    this.mainKs = kS;
   }
 
   // -------------------- Commands --------------------

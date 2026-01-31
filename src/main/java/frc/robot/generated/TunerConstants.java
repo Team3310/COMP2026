@@ -14,6 +14,7 @@ import frc.robot.Constants;
 public class TunerConstants {
   // Delegated constants - these forward to the selected variant based on Constants.currentBot
   public static final CANBus kCANBus;
+  public static final CANBus kRioCANBus;
   public static final LinearVelocity kSpeedAt12Volts;
   public static final SwerveDrivetrainConstants DrivetrainConstants;
   public static final SwerveModuleConstants<
@@ -34,6 +35,7 @@ public class TunerConstants {
     switch (Constants.currentBot) {
       case SOFTWARE:
         kCANBus = TunerConstantsSoftware.kCANBus;
+        kRioCANBus = TunerConstantsSoftware.kRioCANBus;
         kSpeedAt12Volts = TunerConstantsSoftware.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsSoftware.DrivetrainConstants;
         FrontLeft = TunerConstantsSoftware.FrontLeft;
