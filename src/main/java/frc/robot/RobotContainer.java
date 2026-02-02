@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.lib.subsystems.SimTalonFXIO;
+import frc.lib.subsystems.TalonFXIO;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -27,6 +29,8 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.intake.IntakePivot;
+import frc.robot.subsystems.intake.IntakeRollers;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -39,6 +43,8 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Intake intake;
+  private final IntakeRollers intakeRollers;
+  private final IntakePivot intakePivot;
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -84,6 +90,12 @@ public class RobotContainer {
 
         // Intake subsystem - Motor ID 58
         intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus));
+        intakeRollers =
+            new IntakeRollers(
+                Constants.kIntakeRollerConfig, new TalonFXIO(Constants.kIntakeRollerConfig));
+        intakePivot =
+            new IntakePivot(
+                Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
         break;
 
       case SIM:
@@ -96,6 +108,12 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         intake = new Intake(new IntakeIO() {});
+        intakeRollers =
+            new IntakeRollers(
+                Constants.kIntakeRollerConfig, new SimTalonFXIO(Constants.kIntakeRollerConfig));
+        intakePivot =
+            new IntakePivot(
+                Constants.kIntakePivotConfig, new SimTalonFXIO(Constants.kIntakePivotConfig));
         break;
 
       default:
@@ -108,6 +126,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         intake = new Intake(new IntakeIO() {});
+        intakeRollers = null;
+        intakePivot = null;
         break;
     }
 
@@ -119,7 +139,7 @@ public class RobotContainer {
 
     // Automatically register all autonomous commands from AutonCommandBase
     autonCommands.registerAllCommands(autoChooser);
-    
+
     // Also manually add them as backup (for testing)
     autoChooser.addOption("Forward 2m (Manual)", autonCommands.forward2m());
     autoChooser.addOption("Example Auto (Manual)", autonCommands.exampleAuto());

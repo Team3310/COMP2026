@@ -36,7 +36,7 @@ public class AutonCommandBase {
   public void registerAllCommands(LoggedDashboardChooser<Command> chooser) {
     System.out.println("=== Registering Autonomous Commands ===");
     int registeredCount = 0;
-    
+
     // Get all methods from this class
     for (Method method : this.getClass().getDeclaredMethods()) {
       // Check if method returns Command and takes no parameters
