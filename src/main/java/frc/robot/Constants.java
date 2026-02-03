@@ -99,9 +99,13 @@ public final class Constants {
 
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
-    kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBus.getName());
+    kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = 1.0;
+    kIntakeRollerConfig.unitToRotorRatio = 60.0;
+
+    kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
+    kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
+    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
