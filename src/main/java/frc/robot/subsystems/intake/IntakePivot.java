@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
 import frc.robot.Constants;
 
@@ -25,6 +27,18 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
         motionMagicSetpointCommand(this::getPositionSetpointUnits)
             .withName("Intake Pivot Maintain Setpoint (default)")
             .ignoringDisable(true));
+  }
+
+  // -------------------- Position Control Commands --------------------
+
+  /**
+   * Command to run pivot at target position.
+   *
+   * @return Command that sets position as angle
+   */
+  public Command setDegreesCommand(double position) {
+    return motionMagicSetpointCommand(() -> Units.degreesToRotations(position))
+        .withName("Intake Pivot Maintain Setpoint");
   }
 
   @Override

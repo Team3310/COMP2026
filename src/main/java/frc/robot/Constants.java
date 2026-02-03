@@ -101,13 +101,12 @@ public final class Constants {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = 60.0;
-
+    kIntakeRollerConfig.unitToRotorRatio = 1.0; //gear ratio
     kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
     kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
     kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
 
-    kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
@@ -117,27 +116,21 @@ public final class Constants {
 
   static {
     kIntakePivotConfig.name = "Intake_Pivot";
-    kIntakePivotConfig.talonCANID = new CANDeviceId(23, TunerConstants.kCANBus.getName());
+    kIntakePivotConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakePivotConfig.momentOfInertia = 0.01;
     kIntakePivotConfig.fxConfig.Slot0.kP = 2.0;
-    kIntakePivotConfig.fxConfig.Slot0.kD = 0.3;
-    kIntakePivotConfig.fxConfig.Slot0.kV = 0.15;
+    kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
+    kIntakePivotConfig.fxConfig.Slot0.kV = 0.2;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
-    kIntakePivotConfig.unitToRotorRatio =
-        Units.rotationsToRadians((10.0 / 36.0) * (14.0 / 42.0) * (14.0 / 56.0));
+    kIntakePivotConfig.unitToRotorRatio = 1.0;
 
-    kIntakePivotConfig.canCoderConfig.CANID = new CANDeviceId(30, TunerConstants.kCANBus.getName());
-    kIntakePivotConfig.canCoderConfig.config.MagnetSensor.MagnetOffset =
-        IntakeConstants.kIntakePivotCancoderOffset;
-    kIntakePivotConfig.cancoderToUnitsRatio = Units.rotationsToRadians(1);
-
-    kIntakePivotConfig.kMaxPositionUnits = 0.0;
-    kIntakePivotConfig.kMinPositionUnits = Units.degreesToRadians(-115.6);
-    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kIntakePivotConfig.kMaxPositionUnits = 100.0;
+    kIntakePivotConfig.kMinPositionUnits = -100.0;
+    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         kIntakePivotConfig.kMaxPositionUnits / kIntakePivotConfig.unitToRotorRatio;
-    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         kIntakePivotConfig.kMinPositionUnits / kIntakePivotConfig.unitToRotorRatio;
 

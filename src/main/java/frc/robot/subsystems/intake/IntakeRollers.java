@@ -38,7 +38,7 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
    * @return Command that runs intake forward
    */
   public Command intakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityInRPM)
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityInRPM/60) //RPM to RPS
         .withName("Intake Forward");
   }
 
@@ -48,7 +48,7 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
    * @return Command that runs intake backward
    */
   public Command outakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityOutRPM)
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityOutRPM/60) //RPM to RPS
         .withName("Intake Forward");
   }
 }
