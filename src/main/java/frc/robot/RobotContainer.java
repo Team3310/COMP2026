@@ -26,10 +26,6 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
-import frc.robot.subsystems.intake.IntakePivot;
 import frc.robot.subsystems.intake.IntakeRollers;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -42,9 +38,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Intake intake;
+  // private final Intake intake;
   private final IntakeRollers intakeRollers;
-  private final IntakePivot intakePivot;
+  // private final IntakePivot intakePivot;
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -89,13 +85,13 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
 
         // Intake subsystem - Motor ID 58
-        intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus));
+        // intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus));
         intakeRollers =
             new IntakeRollers(
                 Constants.kIntakeRollerConfig, new TalonFXIO(Constants.kIntakeRollerConfig));
-        intakePivot =
-            new IntakePivot(
-                Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
+        // intakePivot =
+        //     new IntakePivot(
+        //         Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
         break;
 
       case SIM:
@@ -107,13 +103,13 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        intake = new Intake(new IntakeIO() {});
+        // intake = new Intake(new IntakeIO() {});
         intakeRollers =
             new IntakeRollers(
                 Constants.kIntakeRollerConfig, new SimTalonFXIO(Constants.kIntakeRollerConfig));
-        intakePivot =
-            new IntakePivot(
-                Constants.kIntakePivotConfig, new SimTalonFXIO(Constants.kIntakePivotConfig));
+        // intakePivot =
+        //     new IntakePivot(
+        //         Constants.kIntakePivotConfig, new SimTalonFXIO(Constants.kIntakePivotConfig));
         break;
 
       default:
@@ -125,9 +121,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        intake = new Intake(new IntakeIO() {});
+        // intake = new Intake(new IntakeIO() {});
         intakeRollers = null;
-        intakePivot = null;
+        // intakePivot = null;
         break;
     }
 
@@ -205,10 +201,10 @@ public class RobotContainer {
 
     // Intake controls
     // Left Trigger - Run intake forward (hold to run forward)
-    controller.leftTrigger().whileTrue(intake.forwardCommand());
+    controller.leftTrigger().whileTrue(intakeRollers.intakeCommand());
 
     // Right Trigger - Run intake backward (hold to run backward)
-    controller.rightTrigger().whileTrue(intake.backwardCommand());
+    controller.rightTrigger().whileTrue(intakeRollers.outakeCommand());
   }
 
   /**

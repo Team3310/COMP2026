@@ -77,6 +77,9 @@ public final class Constants {
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
 
+    public static final double kIntakeVelocityInRPM = 1000.0;
+    public static final double kIntakeVelocityOutRPM = 500.0;
+
     public static final double kIntakePivotStowPositionRadians = Units.degreesToRadians(-80);
     public static final double kIntakePivotStowForClimbPositionRadians =
         Units.degreesToRadians(-90);
@@ -96,9 +99,9 @@ public final class Constants {
 
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
-    kIntakeRollerConfig.talonCANID = new CANDeviceId(24, TunerConstants.kCANBus.getName());
+    kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBus.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = (12.0 / 24.0);
+    kIntakeRollerConfig.unitToRotorRatio = 1.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
