@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -20,6 +21,9 @@ import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.CoralShooter.Shooter;
+import frc.robot.subsystems.Scorer.flywheel.Flywheel;
+import frc.robot.subsystems.Scorer.hood.Hood;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -41,6 +45,9 @@ public class RobotContainer {
   // private final Intake intake;
   // private final IntakeRollers intakeRollers;
   private final IntakePivot intakePivot;
+  private final Shooter shooter;
+  private final Hood hood;
+  private final Flywheel flywheel;
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -92,6 +99,13 @@ public class RobotContainer {
         intakePivot =
             new IntakePivot(
                 Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
+
+        shooter = new Shooter(Constants.kShooterConfig, new TalonFXIO(Constants.kShooterConfig));
+
+        hood = new Hood(Constants.kHoodConfig, new TalonFXIO(Constants.kHoodConfig));
+
+        flywheel =
+            new Flywheel(Constants.kFlywheelConfig, new TalonFXIO(Constants.kFlywheelConfig));
         break;
 
       case SIM:
@@ -110,6 +124,10 @@ public class RobotContainer {
         intakePivot =
             new IntakePivot(
                 Constants.kIntakePivotConfig, new SimTalonFXIO(Constants.kIntakePivotConfig));
+        shooter = new Shooter(Constants.kShooterConfig, new SimTalonFXIO(Constants.kShooterConfig));
+        hood = new Hood(Constants.kHoodConfig, new SimTalonFXIO(Constants.kHoodConfig));
+        flywheel =
+            new Flywheel(Constants.kFlywheelConfig, new SimTalonFXIO(Constants.kFlywheelConfig));
         break;
 
       default:
@@ -124,6 +142,9 @@ public class RobotContainer {
         // intake = new Intake(new IntakeIO() {});
         // intakeRollers = null;
         intakePivot = null;
+        shooter = null;
+        hood = null;
+        flywheel = null;
         break;
     }
 
@@ -155,6 +176,14 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    // Add SmartDashboard buttons for shooter (only if shooter exists)
+    if (shooter != null) {
+      SmartDashboard.putData("Shooter: 3000 RPM", shooter.RPMCommand(3000.0));
+      SmartDashboard.putData("Shooter: 4000 RPM", shooter.RPMCommand(4000.0));
+      SmartDashboard.putData("Shooter: 5000 RPM", shooter.RPMCommand(5000.0));
+      SmartDashboard.putData("Shooter: Stop", shooter.dutyCycleCommand(() -> 0.0));
+    }
 
     // Configure the button bindings
     configureButtonBindings();
@@ -205,6 +234,12 @@ public class RobotContainer {
 
     // Right Trigger - Run intake backward (hold to run backward)
     controller.rightTrigger().whileTrue(intakePivot.setDegreesCommand(-180.0));
+
+    controller.leftBumper().whileTrue(hood.setDegreesCommand(0.0));
+
+    // controller.rightBumper().whileTrue(hood.setDegreesCommand(15.0));
+
+    controller.rightBumper().whileTrue(flywheel.forwardCommand());
   }
 
   /**

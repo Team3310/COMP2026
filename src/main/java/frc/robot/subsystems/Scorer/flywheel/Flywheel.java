@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.Scorer.flywheel;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.MotorIO;
@@ -11,12 +11,12 @@ import frc.robot.Constants;
  * The {@code IntakeRollerSubsystem} controls the roller mechanism of the robot's intake. It manages
  * the speed and direction of the intake rollers to collect and feed game pieces.
  */
-public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
 
   // Default velocity setpoints (units per second - tune these values)
 
-  public IntakeRollers(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
+  public Flywheel(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
   }
@@ -37,9 +37,9 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
    *
    * @return Command that runs intake forward
    */
-  public Command intakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityInRPM)
-        .withName("Intake Forward");
+  public Command forwardCommand() {
+    return velocitySetpointCommand(() -> Constants.ScorerConstants.kShootRPM)
+        .withName("Flywheel Forward");
   }
 
   /**
@@ -47,8 +47,8 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
    *
    * @return Command that runs intake backward
    */
-  public Command outakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityOutRPM)
-        .withName("Intake Forward");
+  public Command backwardCommand() {
+    return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseRPM)
+        .withName("Flywheel Reverse");
   }
 }

@@ -72,6 +72,79 @@ public final class Constants {
         .withTorqueOpenLoopRampPeriod(0.02)
         .withVoltageOpenLoopRampPeriod(0.02);
   }
+  // #region Scorer Subsystems
+  public static final class ScorerConstants {
+
+    public static final double kShootRPM = 3000.0;
+    public static final double kReverseRPM = -3000.0;
+  }
+
+  public static final ServoMotorSubsystemConfig kHoodConfig = new ServoMotorSubsystemConfig();
+
+  static {
+    kHoodConfig.name = "Hood";
+    kHoodConfig.talonCANID = new CANDeviceId(45, TunerConstants.kCANBusRio.getName());
+    kHoodConfig.momentOfInertia = 0.01;
+    kHoodConfig.fxConfig.Slot0.kP = 2.0;
+    kHoodConfig.fxConfig.Slot0.kD = 0.0;
+    kHoodConfig.fxConfig.Slot0.kV = 0.2;
+    kHoodConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 1.0;
+    kHoodConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
+    kHoodConfig.unitToRotorRatio =
+        (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
+
+    kHoodConfig.kMaxPositionUnits = 25.0; // degrees
+    kHoodConfig.kMinPositionUnits = 0.0;
+    kHoodConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kHoodConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        kHoodConfig.kMaxPositionUnits / kHoodConfig.unitToRotorRatio;
+    kHoodConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kHoodConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        kHoodConfig.kMinPositionUnits / kHoodConfig.unitToRotorRatio;
+
+    kHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    kHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+  }
+
+  public static final ServoMotorSubsystemConfig kFlywheelConfig =
+      new ServoMotorSubsystemConfig(); // 2025 Coral Shooter
+
+  static {
+    kFlywheelConfig.name = "Flywheel";
+    kFlywheelConfig.talonCANID = new CANDeviceId(44, TunerConstants.kCANBusRio.getName());
+    kFlywheelConfig.momentOfInertia = 0.00132536;
+    kFlywheelConfig.unitToRotorRatio = 1.0 * 60; // gear ratio * 60 for RPM to RPS
+
+    kFlywheelConfig.fxConfig.Slot0.kP = 0.5;
+    kFlywheelConfig.fxConfig.Slot0.kS = 0.02;
+    kFlywheelConfig.fxConfig.Slot0.kV = 0.1;
+
+    kFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    kFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+  }
+
+  // #endregion
+
+  public static final ServoMotorSubsystemConfig kShooterConfig =
+      new ServoMotorSubsystemConfig(); // 2025 Coral Shooter
+
+  static {
+    kShooterConfig.name = "Shooter";
+    kShooterConfig.talonCANID = new CANDeviceId(10, TunerConstants.kCANBus.getName());
+    kShooterConfig.momentOfInertia = 0.00132536;
+    kShooterConfig.unitToRotorRatio = 1.0; // gear ratio
+
+    kShooterConfig.fxConfig.Slot0.kP = 0.5;
+    kShooterConfig.fxConfig.Slot0.kS = 0.02;
+    kShooterConfig.fxConfig.Slot0.kV = 0.1;
+
+    kShooterConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kShooterConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    kShooterConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+  }
 
   public static final class IntakeConstants {
     public static final double kIntakeDutyCycleIntake = 1.0;
@@ -101,7 +174,7 @@ public final class Constants {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = 1.0; //gear ratio
+    kIntakeRollerConfig.unitToRotorRatio = 1.0; // gear ratio
     kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
     kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
     kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
@@ -123,7 +196,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.Slot0.kV = 0.2;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
-    kIntakePivotConfig.unitToRotorRatio = 1.0;
+    kIntakePivotConfig.unitToRotorRatio = 1.0 * 60; // RPM to RPS
 
     kIntakePivotConfig.kMaxPositionUnits = 100.0;
     kIntakePivotConfig.kMinPositionUnits = -100.0;
