@@ -217,28 +217,111 @@ public final class Constants {
   }
 
   public static final class AgitatorConstants {
+    // Floor Roller speeds (Velocity Voltage Control)
+    // Output Top Speed = 75 RPS (4500 RPM) from design sheet
+    // TESTING: Increased speed to make velocity control more noticeable
+    public static final double kFloorRollerIntakeRPM =
+        1800.0; // RPM at output (increased for testing)
+    public static final double kFloorRollerOuttakeRPM =
+        -1800.0; // RPM at output (increased for testing)
+    public static final double kFloorRollerIntakeRPS =
+        kFloorRollerIntakeRPM / 60.0; // RPS at output = 30 RPS
+    public static final double kFloorRollerOuttakeRPS =
+        kFloorRollerOuttakeRPM / 60.0; // RPS at output = -30 RPS
 
-    public static final double kAgitatorVelocityInRPM = 1000.0;
-    public static final double kAgitatorVelocityOutRPM = 500.0;
-
-    public static final double kAgitatorRadius = 0.0269875; // in m
+    // Vertical Feed Roller speeds (Velocity Voltage Control)
+    // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
+    public static final double kVerticalFeedIntakeRPM = 3600.0; // RPM at output
+    public static final double kVerticalFeedOuttakeRPM = -3600.0; // RPM at output
+    public static final double kVerticalFeedIntakeRPS =
+        kVerticalFeedIntakeRPM / 60.0; // RPS at output
+    public static final double kVerticalFeedOuttakeRPS =
+        kVerticalFeedOuttakeRPM / 60.0; // RPS at output
   }
 
-  public static final ServoMotorSubsystemConfig kAgitatorRightConfig =
+  // ---- Right Floor Roller (CAN 25, CANivore #2) ----
+  // Design Sheet: X44, gear ratio 1.66667:1 (20/12), 75 RPS output, Outtake direction, 80A
+  public static final ServoMotorSubsystemConfig kRightFloorRollerConfig =
       new ServoMotorSubsystemConfig();
 
   static {
-    kAgitatorRightConfig.name = "AgitatorRight";
-    kAgitatorRightConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus2.getName());
-    kAgitatorRightConfig.momentOfInertia = 0.00132536;
-    kAgitatorRightConfig.unitToRotorRatio = 12.0 / 120.0 * 60.0; // gear ratio
-    kAgitatorRightConfig.fxConfig.Slot0.kP = 0.5;
-    kAgitatorRightConfig.fxConfig.Slot0.kS = 0.02;
-    kAgitatorRightConfig.fxConfig.Slot0.kV = 0.1;
+    kRightFloorRollerConfig.name = "RightFloorRoller";
+    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus2.getName());
+    kRightFloorRollerConfig.momentOfInertia = 0.00132536;
+    kRightFloorRollerConfig.unitToRotorRatio = 20.0 / 12.0; // gear ratio 1.66667:1
 
-    kAgitatorRightConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+    // Velocity PID gains - SIGNIFICANTLY INCREASED for better response
+    // Phoenix Tuner confirmed velocity control works at these higher gains
+    kRightFloorRollerConfig.fxConfig.Slot0.kP = 5.0; // Increased from 0.5
+    kRightFloorRollerConfig.fxConfig.Slot0.kI = 0.0;
+    kRightFloorRollerConfig.fxConfig.Slot0.kD = 0.0;
+    kRightFloorRollerConfig.fxConfig.Slot0.kS = 0.25; // Increased from 0.02 - overcome friction
+    kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.12; // Increased from 0.1 - velocity feedforward
+    kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
+
+    kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+  }
+
+  // ---- Left Floor Roller (CAN 20, CANivore #2) ----
+  // Design Sheet: X44, gear ratio 1.66667:1 (20/12), 75 RPS output, Intake direction, 80A
+  public static final ServoMotorSubsystemConfig kLeftFloorRollerConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kLeftFloorRollerConfig.name = "LeftFloorRoller";
+    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, TunerConstants.kCANBus2.getName());
+    kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
+    kLeftFloorRollerConfig.unitToRotorRatio = 20.0 / 12.0; // gear ratio 1.66667:1
+
+    kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kV = 0.1;
+
+    kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+  }
+
+  // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
+  // Design Sheet: X44, gear ratio 1.5:1 (18/12), 83.33 RPS output, Outtake direction, 80A
+  public static final ServoMotorSubsystemConfig kRightVerticalFeedConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kRightVerticalFeedConfig.name = "RightVerticalFeed";
+    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, TunerConstants.kCANBus2.getName());
+    kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
+    kRightVerticalFeedConfig.unitToRotorRatio = 18.0 / 12.0; // gear ratio 1.5:1
+
+    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
+
+    kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+  }
+
+  // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
+  // Design Sheet: X44, gear ratio 1.5:1 (18/12), 83.33 RPS output, Intake direction, 80A
+  public static final ServoMotorSubsystemConfig kLeftVerticalFeedConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kLeftVerticalFeedConfig.name = "LeftVerticalFeed";
+    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus2.getName());
+    kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
+    kLeftVerticalFeedConfig.unitToRotorRatio = 18.0 / 12.0; // gear ratio 1.5:1
+
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
+
+    kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   /**

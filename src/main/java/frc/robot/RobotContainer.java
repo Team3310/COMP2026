@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.lib.subsystems.TalonFXIO;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 // TODO: Fix Shooter class - package frc.robot.subsystems.CoralShooter does not exist
@@ -23,7 +24,7 @@ import frc.robot.generated.TunerConstants;
 // TODO: Re-enable these subsystems once MotorInputsAutoLogged is generated
 // import frc.robot.subsystems.Scorer.flywheel.Flywheel;
 // import frc.robot.subsystems.Scorer.hood.Hood;
-// import frc.robot.subsystems.agitator.Agitator;
+import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -50,7 +51,7 @@ public class RobotContainer {
   // private final IntakePivot intakePivot;
   // private final Hood hood;
   // private final Flywheel flywheel;
-  // private final Agitator agitatorRight;
+  private final Agitator agitatorRight;
   // private final Shooter shooter;
 
   // Autonomous commands
@@ -111,10 +112,10 @@ public class RobotContainer {
         // TODO: Re-enable after AdvantageKit generates MotorInputsAutoLogged
         // flywheel =
         //     new Flywheel(Constants.kFlywheelConfig, new TalonFXIO(Constants.kFlywheelConfig));
-        // TODO: Re-enable after AdvantageKit generates MotorInputsAutoLogged
-        // agitatorRight =
-        //     new Agitator(
-        //         Constants.kAgitatorRightConfig, new TalonFXIO(Constants.kAgitatorRightConfig));
+        agitatorRight =
+            new Agitator(
+                Constants.kRightFloorRollerConfig,
+                new TalonFXIO(Constants.kRightFloorRollerConfig));
         break;
 
       case SIM:
@@ -142,6 +143,7 @@ public class RobotContainer {
         // TODO: Re-enable after AdvantageKit generates MotorInputsAutoLogged
         // flywheel =
         //     new Flywheel(Constants.kFlywheelConfig, new SimTalonFXIO(Constants.kFlywheelConfig));
+        agitatorRight = null;
         break;
 
       default:
@@ -160,6 +162,7 @@ public class RobotContainer {
         // shooter = null;
         // hood = null;
         // flywheel = null;
+        agitatorRight = null;
         break;
     }
 
@@ -258,7 +261,16 @@ public class RobotContainer {
 
     // controller.rightBumper().whileTrue(flywheel.forwardCommand());
 
-    // controller.y().whileTrue(agitatorRight.intakeCommand());
+    if (agitatorRight != null) {
+      // Y button = velocity control (closed loop PID)
+      controller.y().whileTrue(agitatorRight.intakeCommand());
+
+      // Right bumper = direct voltage test (2V) - bypasses PID entirely
+      controller.rightBumper().whileTrue(agitatorRight.voltageCommand(() -> 2.0));
+
+      // Left bumper = duty cycle test (20%) - bypasses PID entirely
+      controller.leftBumper().whileTrue(agitatorRight.dutyCycleCommand(() -> 0.2));
+    }
   }
 
   /**
