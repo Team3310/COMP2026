@@ -41,7 +41,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return velocitySetpointCommand(() -> Constants.AgitatorConstants.kAgitatorVelocityInRPM)
         .withName("Agitator Forward");
   }
-  
+
   /**
    * Command to run intake at target velocity for collecting game pieces.
    *

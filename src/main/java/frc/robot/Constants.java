@@ -34,7 +34,7 @@ public final class Constants {
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
 
   // Set this to select which robot's tuner constants to use
-  public static final Bot currentBot = Bot.SOFTWARE;
+  public static final Bot currentBot = Bot.BRAVO;
 
   // Field dimensions for 2026 Reefscape
   public static final double kFieldLengthMeters = 16.54;
@@ -53,7 +53,9 @@ public final class Constants {
 
   public static enum Bot {
     /** Software robot (default configuration) */
-    SOFTWARE
+    SOFTWARE,
+    /** Bravo robot */
+    BRAVO
     // Add more robot variants here as needed, e.g.:
     // COMPETITION,
     // PRACTICE
@@ -174,7 +176,8 @@ public final class Constants {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = 18.0/20. * 10.0/32.0 * 60.0; // gear ratio in RPM to RPS
+    kIntakeRollerConfig.unitToRotorRatio =
+        18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
     kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
     kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
     kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
@@ -213,7 +216,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
 
-    public static final class AgitatorConstants {
+  public static final class AgitatorConstants {
 
     public static final double kAgitatorVelocityInRPM = 1000.0;
     public static final double kAgitatorVelocityOutRPM = 500.0;
@@ -225,7 +228,7 @@ public final class Constants {
       new ServoMotorSubsystemConfig();
 
   static {
-    kAgitatorRightConfigname = "AgitatorRight";
+    kAgitatorRightConfig.name = "AgitatorRight";
     kAgitatorRightConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus2.getName());
     kAgitatorRightConfig.momentOfInertia = 0.00132536;
     kAgitatorRightConfig.unitToRotorRatio = 12.0 / 120.0 * 60.0; // gear ratio
@@ -237,7 +240,6 @@ public final class Constants {
     kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
   }
-
 
   /**
    * Check if this system has a certain mac address in any network device.

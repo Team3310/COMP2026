@@ -1,4 +1,4 @@
-orRightpackage frc.robot.generated;
+package frc.robot.generated;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
@@ -44,6 +44,17 @@ public class TunerConstants {
         FrontRight = TunerConstantsSoftware.FrontRight;
         BackLeft = TunerConstantsSoftware.BackLeft;
         BackRight = TunerConstantsSoftware.BackRight;
+        break;
+      case BRAVO:
+        kCANBus1 = TunerConstantsBravo.kCANBus1;
+        kCANBus2 = TunerConstantsBravo.kCANBus2;
+        kCANBusRio = TunerConstantsBravo.kCANBusRio;
+        kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
+        DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;
+        FrontLeft = TunerConstantsBravo.FrontLeft;
+        FrontRight = TunerConstantsBravo.FrontRight;
+        BackLeft = TunerConstantsBravo.BackLeft;
+        BackRight = TunerConstantsBravo.BackRight;
         break;
         // Add more cases here for additional robots:
         // case COMPETITION:
