@@ -133,7 +133,7 @@ public final class Constants {
 
   static {
     kShooterConfig.name = "Shooter";
-    kShooterConfig.talonCANID = new CANDeviceId(10, TunerConstants.kCANBus.getName());
+    kShooterConfig.talonCANID = new CANDeviceId(10, TunerConstants.kCANBus1.getName());
     kShooterConfig.momentOfInertia = 0.00132536;
     kShooterConfig.unitToRotorRatio = 1.0; // gear ratio
 
@@ -174,7 +174,7 @@ public final class Constants {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
-    kIntakeRollerConfig.unitToRotorRatio = 1.0; // gear ratio
+    kIntakeRollerConfig.unitToRotorRatio = 18.0/20. * 10.0/32.0 * 60.0; // gear ratio in RPM to RPS
     kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
     kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
     kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
@@ -212,6 +212,32 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
+
+    public static final class AgitatorConstants {
+
+    public static final double kAgitatorVelocityInRPM = 1000.0;
+    public static final double kAgitatorVelocityOutRPM = 500.0;
+
+    public static final double kAgitatorRadius = 0.0269875; // in m
+  }
+
+  public static final ServoMotorSubsystemConfig kAgitatorRightConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kAgitatorRightConfigname = "AgitatorRight";
+    kAgitatorRightConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus2.getName());
+    kAgitatorRightConfig.momentOfInertia = 0.00132536;
+    kAgitatorRightConfig.unitToRotorRatio = 12.0 / 120.0 * 60.0; // gear ratio
+    kAgitatorRightConfig.fxConfig.Slot0.kP = 0.5;
+    kAgitatorRightConfig.fxConfig.Slot0.kS = 0.02;
+    kAgitatorRightConfig.fxConfig.Slot0.kV = 0.1;
+
+    kAgitatorRightConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    kAgitatorRightConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+  }
+
 
   /**
    * Check if this system has a certain mac address in any network device.

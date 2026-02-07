@@ -24,6 +24,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CoralShooter.Shooter;
 import frc.robot.subsystems.Scorer.flywheel.Flywheel;
 import frc.robot.subsystems.Scorer.hood.Hood;
+import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -45,9 +46,9 @@ public class RobotContainer {
   // private final Intake intake;
   // private final IntakeRollers intakeRollers;
   private final IntakePivot intakePivot;
-  private final Shooter shooter;
   private final Hood hood;
   private final Flywheel flywheel;
+  private final Agitator agitatorRight;
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -92,7 +93,7 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
 
         // Intake subsystem - Motor ID 58
-        // intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus));
+        // intake = new Intake(new IntakeIOTalonFX(58, TunerConstants.kCANBus1));
         // intakeRollers =
         //     new IntakeRollers(
         //         Constants.kIntakeRollerConfig, new TalonFXIO(Constants.kIntakeRollerConfig));
@@ -100,13 +101,13 @@ public class RobotContainer {
             new IntakePivot(
                 Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
 
-        shooter = new Shooter(Constants.kShooterConfig, new TalonFXIO(Constants.kShooterConfig));
-
         hood = new Hood(Constants.kHoodConfig, new TalonFXIO(Constants.kHoodConfig));
 
         flywheel =
             new Flywheel(Constants.kFlywheelConfig, new TalonFXIO(Constants.kFlywheelConfig));
-        break;
+        agitatorRight =
+            new Agitator(Constants.kAgitatorRightConfig, new TalonFXIO(Constants.kAgitatorRightConfig));
+
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
@@ -240,6 +241,9 @@ public class RobotContainer {
     // controller.rightBumper().whileTrue(hood.setDegreesCommand(15.0));
 
     controller.rightBumper().whileTrue(flywheel.forwardCommand());
+
+    controller.y().whileTrue(agitatorRight.intakeCommand());
+    
   }
 
   /**

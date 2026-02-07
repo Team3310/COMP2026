@@ -1,4 +1,4 @@
-package frc.robot.generated;
+orRightpackage frc.robot.generated;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
@@ -13,7 +13,8 @@ import frc.robot.Constants;
  */
 public class TunerConstants {
   // Delegated constants - these forward to the selected variant based on Constants.currentBot
-  public static final CANBus kCANBus;
+  public static final CANBus kCANBus1;
+  public static final CANBus kCANBus2;
   public static final CANBus kCANBusRio;
   public static final LinearVelocity kSpeedAt12Volts;
   public static final SwerveDrivetrainConstants DrivetrainConstants;
@@ -34,7 +35,8 @@ public class TunerConstants {
   static {
     switch (Constants.currentBot) {
       case SOFTWARE:
-        kCANBus = TunerConstantsSoftware.kCANBus;
+        kCANBus1 = TunerConstantsSoftware.kCANBus1;
+        kCANBus2 = TunerConstantsSoftware.kCANBus2;
         kCANBusRio = TunerConstantsSoftware.kCANBusRio;
         kSpeedAt12Volts = TunerConstantsSoftware.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsSoftware.DrivetrainConstants;
@@ -45,8 +47,8 @@ public class TunerConstants {
         break;
         // Add more cases here for additional robots:
         // case COMPETITION:
-        //   kCANBus = TunerConstantsCompetition.kCANBus;
-        //   kSpeedAt12Volts = TunerConstantsCompetition.kSpeedAt12Volts;
+        //   kCANBus1 = TunerConstantsCompetition.kCANBus1;
+        //   kCANBus2 = TunerConstantsCompetition.kCANBus2;
         //   DrivetrainConstants = TunerConstantsCompetition.DrivetrainConstants;
         //   FrontLeft = TunerConstantsCompetition.FrontLeft;
         //   FrontRight = TunerConstantsCompetition.FrontRight;
