@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
+import frc.lib.subsystems.ServoMotorSubsystemWithFollowersConfig;
 import frc.robot.generated.TunerConstants;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -151,13 +152,39 @@ public final class Constants {
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
   }
 
-  public static final ServoMotorSubsystemConfig kIntakeRollerConfig =
-      new ServoMotorSubsystemConfig();
+  public static final ServoMotorSubsystemWithFollowersConfig.FollowerConfig
+      kIntakeRollerFollowerConfig = new ServoMotorSubsystemWithFollowersConfig.FollowerConfig();
+
+  static {
+    kIntakeRollerFollowerConfig.config.name = "Intake_Roller_Follower";
+    kIntakeRollerFollowerConfig.config.talonCANID =
+        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
+    kIntakeRollerFollowerConfig.inverted = false;
+    kIntakeRollerFollowerConfig.config.momentOfInertia = 0.00132536;
+    kIntakeRollerFollowerConfig.config.unitToRotorRatio =
+        18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
+
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kI = 0.0;
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kD = 0.0;
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kS =
+        0.02; // Increased from 0.02 - overcome friction
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kV =
+        0.1; // Increased from 0.1 - velocity feedforward
+    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kA = 0.0;
+
+    kIntakeRollerFollowerConfig.config.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+  }
+
+  public static final ServoMotorSubsystemWithFollowersConfig kIntakeRollerConfig =
+      new ServoMotorSubsystemWithFollowersConfig();
 
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
-        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
+        new CANDeviceId(13, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
         18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
@@ -172,6 +199,9 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+
+    kIntakeRollerConfig.followers =
+        new ServoMotorSubsystemWithFollowersConfig.FollowerConfig[] {kIntakeRollerFollowerConfig};
   }
 
   public static final ServoMotorSubsystemWithCanCoderConfig kIntakePivotConfig =

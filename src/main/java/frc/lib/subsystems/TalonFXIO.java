@@ -29,6 +29,8 @@ public class TalonFXIO implements MotorIO {
       new DynamicMotionMagicVoltage(0.0, 0.0, 0.0);
   // TODO: Fix Follower API for Phoenix 6
   // private final Follower followerControl = null;
+  private final MotionMagicTorqueCurrentFOC motionMagicTorqueFOCPositionControl =
+      new MotionMagicTorqueCurrentFOC(0.0);
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
 
   private final StatusSignal<Angle> positionSignal;

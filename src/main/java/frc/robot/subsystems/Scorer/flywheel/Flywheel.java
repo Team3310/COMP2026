@@ -21,10 +21,6 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     this.motorIO = motorIO;
   }
 
-  public double getPositionRotations() {
-    return inputs.unitPosition;
-  }
-
   @Override
   public void periodic() {
     super.periodic();

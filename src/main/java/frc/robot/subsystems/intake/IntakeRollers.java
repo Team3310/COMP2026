@@ -3,26 +3,31 @@ package frc.robot.subsystems.intake;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.MotorIO;
 import frc.lib.subsystems.MotorInputsAutoLogged;
-import frc.lib.subsystems.ServoMotorSubsystem;
-import frc.lib.subsystems.ServoMotorSubsystemConfig;
+import frc.lib.subsystems.ServoMotorSubsystemWithFollowers;
+import frc.lib.subsystems.ServoMotorSubsystemWithFollowersConfig;
 import frc.robot.Constants;
 
 /**
  * The {@code IntakeRollerSubsystem} controls the roller mechanism of the robot's intake. It manages
  * the speed and direction of the intake rollers to collect and feed game pieces.
  */
-public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+public class IntakeRollers
+    extends ServoMotorSubsystemWithFollowers<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
-
   // Default velocity setpoints (units per second - tune these values)
 
-  public IntakeRollers(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
-    super(motorConfig, new MotorInputsAutoLogged(), motorIO);
-    this.motorIO = motorIO;
-  }
+  public IntakeRollers(
+      final ServoMotorSubsystemWithFollowersConfig leadConfig,
+      final MotorIO leadIO,
+      final MotorIO[] followerIO) {
 
-  public double getPositionRotations() {
-    return inputs.unitPosition;
+    super(
+        leadConfig,
+        new MotorInputsAutoLogged(),
+        leadIO,
+        new MotorInputsAutoLogged[] {new MotorInputsAutoLogged()},
+        followerIO);
+    motorIO = leadIO;
   }
 
   @Override
