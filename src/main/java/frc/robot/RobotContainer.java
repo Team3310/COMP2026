@@ -52,6 +52,7 @@ public class RobotContainer {
   // private final Hood hood;
   // private final Flywheel flywheel;
   private final Agitator agitatorRight;
+  private final Agitator agitatorLeft;
   // private final Shooter shooter;
 
   // Autonomous commands
@@ -116,6 +117,10 @@ public class RobotContainer {
             new Agitator(
                 Constants.kRightFloorRollerConfig,
                 new TalonFXIO(Constants.kRightFloorRollerConfig));
+        agitatorLeft =
+            new Agitator(
+                Constants.kLeftFloorRollerConfig,
+                new TalonFXIO(Constants.kLeftFloorRollerConfig));
         break;
 
       case SIM:
@@ -144,6 +149,7 @@ public class RobotContainer {
         // flywheel =
         //     new Flywheel(Constants.kFlywheelConfig, new SimTalonFXIO(Constants.kFlywheelConfig));
         agitatorRight = null;
+        agitatorLeft = null;
         break;
 
       default:
@@ -163,6 +169,7 @@ public class RobotContainer {
         // hood = null;
         // flywheel = null;
         agitatorRight = null;
+        agitatorLeft = null;
         break;
     }
 
@@ -261,9 +268,10 @@ public class RobotContainer {
 
     // controller.rightBumper().whileTrue(flywheel.forwardCommand());
 
-    if (agitatorRight != null) {
+    if (agitatorRight != null && agitatorLeft != null) {
       // Y button = velocity control (closed loop PID)
       controller.y().whileTrue(agitatorRight.intakeCommand());
+      controller.y().whileTrue(agitatorLeft.intakeCommand());
 
       // Right bumper = direct voltage test (2V) - bypasses PID entirely
       controller.rightBumper().whileTrue(agitatorRight.voltageCommand(() -> 2.0));
