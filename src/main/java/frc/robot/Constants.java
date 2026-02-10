@@ -130,24 +130,6 @@ public final class Constants {
 
   // #endregion
 
-  public static final ServoMotorSubsystemConfig kShooterConfig =
-      new ServoMotorSubsystemConfig(); // 2025 Coral Shooter
-
-  static {
-    kShooterConfig.name = "Shooter";
-    kShooterConfig.talonCANID = new CANDeviceId(10, TunerConstants.kCANBus1.getName());
-    kShooterConfig.momentOfInertia = 0.00132536;
-    kShooterConfig.unitToRotorRatio = 1.0; // gear ratio
-
-    kShooterConfig.fxConfig.Slot0.kP = 0.5;
-    kShooterConfig.fxConfig.Slot0.kS = 0.02;
-    kShooterConfig.fxConfig.Slot0.kV = 0.1;
-
-    kShooterConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kShooterConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kShooterConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
-  }
-
   public static final class IntakeConstants {
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
@@ -221,9 +203,9 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     public static final double kFloorRollerIntakeRPM =
-        1800.0; // RPM at output (increased for testing)
+        900.0; // RPM at output (increased for testing)
     public static final double kFloorRollerOuttakeRPM =
-        -1800.0; // RPM at output (increased for testing)
+        -900.0; // RPM at output (increased for testing)
     public static final double kFloorRollerIntakeRPS =
         kFloorRollerIntakeRPM / 60.0; // RPS at output = 30 RPS
     public static final double kFloorRollerOuttakeRPS =
@@ -246,17 +228,17 @@ public final class Constants {
 
   static {
     kRightFloorRollerConfig.name = "RightFloorRoller";
-    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus2.getName());
+    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus1.getName());
     kRightFloorRollerConfig.momentOfInertia = 0.00132536;
-    kRightFloorRollerConfig.unitToRotorRatio = 20.0 / 12.0; // gear ratio 1.66667:1
+    kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
     // Velocity PID gains - SIGNIFICANTLY INCREASED for better response
     // Phoenix Tuner confirmed velocity control works at these higher gains
-    kRightFloorRollerConfig.fxConfig.Slot0.kP = 5.0; // Increased from 0.5
+    kRightFloorRollerConfig.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
     kRightFloorRollerConfig.fxConfig.Slot0.kI = 0.0;
     kRightFloorRollerConfig.fxConfig.Slot0.kD = 0.0;
-    kRightFloorRollerConfig.fxConfig.Slot0.kS = 0.25; // Increased from 0.02 - overcome friction
-    kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.12; // Increased from 0.1 - velocity feedforward
+    kRightFloorRollerConfig.fxConfig.Slot0.kS = 0.02; // Increased from 0.02 - overcome friction
+    kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
     kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -271,9 +253,9 @@ public final class Constants {
 
   static {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
-    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, TunerConstants.kCANBus2.getName());
+    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus1.getName());
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
-    kLeftFloorRollerConfig.unitToRotorRatio = 20.0 / 12.0; // gear ratio 1.66667:1
+    kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
     kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
@@ -291,9 +273,9 @@ public final class Constants {
 
   static {
     kRightVerticalFeedConfig.name = "RightVerticalFeed";
-    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, TunerConstants.kCANBus2.getName());
+    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, TunerConstants.kCANBus1.getName());
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
-    kRightVerticalFeedConfig.unitToRotorRatio = 18.0 / 12.0; // gear ratio 1.5:1
+    kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
     kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
     kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
@@ -311,9 +293,9 @@ public final class Constants {
 
   static {
     kLeftVerticalFeedConfig.name = "LeftVerticalFeed";
-    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus2.getName());
+    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus1.getName());
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
-    kLeftVerticalFeedConfig.unitToRotorRatio = 18.0 / 12.0; // gear ratio 1.5:1
+    kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
     kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
     kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;

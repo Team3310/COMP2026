@@ -7,6 +7,7 @@ import frc.lib.subsystems.MotorInputsAutoLogged;
 import frc.lib.subsystems.ServoMotorSubsystem;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Generic roller subsystem used for floor rollers and vertical feed rollers. Each instance controls
@@ -35,6 +36,46 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
         INTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
     SmartDashboard.putNumber(
         OUTTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerOuttakeRPS));
+
+    // Log configuration to AdvantageKit (persists in logs, doesn't get overwritten)
+    Logger.recordOutput(getName() + "/Config/Name", motorConfig.name);
+    Logger.recordOutput(getName() + "/Config/CANID", motorConfig.talonCANID.getDeviceNumber());
+    Logger.recordOutput(getName() + "/Config/CANBus", motorConfig.talonCANID.getBus());
+    Logger.recordOutput(getName() + "/Config/GearRatio", motorConfig.unitToRotorRatio);
+    Logger.recordOutput(
+        getName() + "/Config/TargetIntakeRPS", Constants.AgitatorConstants.kFloorRollerIntakeRPS);
+    Logger.recordOutput(
+        getName() + "/Config/TargetIntakeRPM",
+        rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
+    Logger.recordOutput(getName() + "/Config/PID/kP", motorConfig.fxConfig.Slot0.kP);
+    Logger.recordOutput(getName() + "/Config/PID/kI", motorConfig.fxConfig.Slot0.kI);
+    Logger.recordOutput(getName() + "/Config/PID/kD", motorConfig.fxConfig.Slot0.kD);
+    Logger.recordOutput(getName() + "/Config/PID/kS", motorConfig.fxConfig.Slot0.kS);
+    Logger.recordOutput(getName() + "/Config/PID/kV", motorConfig.fxConfig.Slot0.kV);
+    Logger.recordOutput(getName() + "/Config/PID/kA", motorConfig.fxConfig.Slot0.kA);
+
+    // Also log to console for immediate visibility
+    System.out.println("==================================================");
+    System.out.println("AGITATOR INIT: " + motorConfig.name);
+    System.out.println(
+        "  CAN: "
+            + motorConfig.talonCANID.getDeviceNumber()
+            + " on "
+            + motorConfig.talonCANID.getBus());
+    System.out.println(
+        "  Target: "
+            + Constants.AgitatorConstants.kFloorRollerIntakeRPS
+            + " RPS ("
+            + rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS)
+            + " RPM)");
+    System.out.println(
+        "  PID: kP="
+            + motorConfig.fxConfig.Slot0.kP
+            + " kV="
+            + motorConfig.fxConfig.Slot0.kV
+            + " kS="
+            + motorConfig.fxConfig.Slot0.kS);
+    System.out.println("==================================================");
   }
 
   public double getPositionRotations() {
@@ -47,6 +88,18 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
 
     // Log current velocity in RPM to SmartDashboard
     SmartDashboard.putNumber("Agitator/CurrentRPM", rpsToRpm(inputs.velocityUnitsPerSecond));
+    SmartDashboard.putNumber("Agitator/CurrentRPS", inputs.velocityUnitsPerSecond);
+    SmartDashboard.putNumber("Agitator/AppliedVolts", inputs.appliedVolts);
+    SmartDashboard.putNumber("Agitator/StatorCurrent", inputs.currentStatorAmps);
+    SmartDashboard.putNumber("Agitator/SupplyCurrent", inputs.currentSupplyAmps);
+    SmartDashboard.putBoolean("Agitator/SubsystemActive", true);
+
+    // Debug: Log if motor is being driven
+    if (Math.abs(inputs.appliedVolts) > 0.1) {
+      SmartDashboard.putString("Agitator/Status", "MOTOR ACTIVE");
+    } else {
+      SmartDashboard.putString("Agitator/Status", "IDLE");
+    }
   }
 
   // -------------------- Unit Conversion Helpers --------------------
@@ -79,12 +132,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs roller in intake direction
    */
   public Command intakeCommand() {
-    return velocitySetpointCommand(
-            () ->
-                rpmToRps(
-                    SmartDashboard.getNumber(
-                        INTAKE_RPM_KEY,
-                        rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS))))
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerIntakeRPM)
         .withName(getName() + " Intake");
   }
 
@@ -94,12 +142,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs roller in outtake direction
    */
   public Command outtakeCommand() {
-    return velocitySetpointCommand(
-            () ->
-                rpmToRps(
-                    SmartDashboard.getNumber(
-                        OUTTAKE_RPM_KEY,
-                        rpsToRpm(Constants.AgitatorConstants.kFloorRollerOuttakeRPS))))
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerOuttakeRPM)
         .withName(getName() + " Outtake");
   }
 
@@ -109,18 +152,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @param velocityRPS velocity in rotations per second at the output
    * @return Command that runs roller at the specified velocity
    */
-  public Command customVelocityCommand(double velocityRPS) {
-    return velocitySetpointCommand(() -> velocityRPS).withName(getName() + " Custom Velocity");
-  }
-
-  /**
-   * Command to run roller at a custom velocity setpoint in RPM.
-   *
-   * @param velocityRPM velocity in rotations per minute at the output
-   * @return Command that runs roller at the specified velocity
-   */
-  public Command customVelocityCommandRPM(double velocityRPM) {
-    return velocitySetpointCommand(() -> rpmToRps(velocityRPM))
-        .withName(getName() + " Custom Velocity RPM");
+  public Command customVelocityCommand(double velocityRPM) {
+    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
   }
 }
