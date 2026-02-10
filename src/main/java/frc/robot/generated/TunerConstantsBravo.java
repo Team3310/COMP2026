@@ -54,20 +54,11 @@ public class TunerConstantsBravo {
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final Current kSlipCurrent = Amps.of(80);
+  private static final Current kSlipCurrent = Amps.of(120);
 
   // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
   // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
-  private static final TalonFXConfiguration driveInitialConfigs =
-      new TalonFXConfiguration()
-          .withCurrentLimits(
-              new CurrentLimitsConfigs()
-                  // Swerve azimuth does not require much torque output, so we can set a relatively
-                  // low
-                  // stator current limit to help avoid brownouts without impacting performance.
-                  .withStatorCurrentLimit(Amps.of(30))
-                  .withStatorCurrentLimitEnable(true));
-  ;
+  private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
   private static final TalonFXConfiguration steerInitialConfigs =
       new TalonFXConfiguration()
           .withCurrentLimits(
@@ -75,7 +66,7 @@ public class TunerConstantsBravo {
                   // Swerve azimuth does not require much torque output, so we can set a relatively
                   // low
                   // stator current limit to help avoid brownouts without impacting performance.
-                  .withStatorCurrentLimit(Amps.of(30))
+                  .withStatorCurrentLimit(Amps.of(60))
                   .withStatorCurrentLimitEnable(true));
   private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
@@ -89,7 +80,7 @@ public class TunerConstantsBravo {
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(12.0);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(8.0);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
@@ -147,7 +138,7 @@ public class TunerConstantsBravo {
   private static final int kFrontLeftDriveMotorId = 1;
   private static final int kFrontLeftSteerMotorId = 0;
   private static final int kFrontLeftEncoderId = 2;
-  private static final Angle kFrontLeftEncoderOffset = Rotations.of(-0.305419921875);
+  private static final Angle kFrontLeftEncoderOffset = Rotations.of(-0.299072265625);
   private static final boolean kFrontLeftSteerMotorInverted = true;
   private static final boolean kFrontLeftEncoderInverted = false;
 
@@ -158,7 +149,7 @@ public class TunerConstantsBravo {
   private static final int kFrontRightDriveMotorId = 4;
   private static final int kFrontRightSteerMotorId = 3;
   private static final int kFrontRightEncoderId = 5;
-  private static final Angle kFrontRightEncoderOffset = Rotations.of(0.004638671875);
+  private static final Angle kFrontRightEncoderOffset = Rotations.of(0.00830078125);
   private static final boolean kFrontRightSteerMotorInverted = true;
   private static final boolean kFrontRightEncoderInverted = false;
 
@@ -169,7 +160,7 @@ public class TunerConstantsBravo {
   private static final int kBackLeftDriveMotorId = 10;
   private static final int kBackLeftSteerMotorId = 9;
   private static final int kBackLeftEncoderId = 11;
-  private static final Angle kBackLeftEncoderOffset = Rotations.of(0.183837890625);
+  private static final Angle kBackLeftEncoderOffset = Rotations.of(0.18896484375);
   private static final boolean kBackLeftSteerMotorInverted = true;
   private static final boolean kBackLeftEncoderInverted = false;
 
@@ -180,7 +171,7 @@ public class TunerConstantsBravo {
   private static final int kBackRightDriveMotorId = 7;
   private static final int kBackRightSteerMotorId = 6;
   private static final int kBackRightEncoderId = 8;
-  private static final Angle kBackRightEncoderOffset = Rotations.of(0.4072265625);
+  private static final Angle kBackRightEncoderOffset = Rotations.of(0.40673828125);
   private static final boolean kBackRightSteerMotorInverted = true;
   private static final boolean kBackRightEncoderInverted = false;
 
@@ -244,12 +235,6 @@ public class TunerConstantsBravo {
    * Creates a CommandSwerveDrivetrain instance. This should only be called once in your robot
    * program,.
    */
-  // TODO: Uncomment if CommandSwerveDrivetrain class is created
-  // public static CommandSwerveDrivetrain createDrivetrain() {
-  //     return new CommandSwerveDrivetrain(
-  //         DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight
-  //     );
-  // }
 
   /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
   public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {

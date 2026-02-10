@@ -134,8 +134,8 @@ public final class Constants {
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
 
-    public static final double kIntakeVelocityInRPM = 1000.0;
-    public static final double kIntakeVelocityOutRPM = 500.0;
+    public static final double kIntakeVelocityRPM = 1000.0;
+    public static final double kOutakeVelocityRPM = -500.0;
 
     public static final double kIntakePivotStowPositionRadians = Units.degreesToRadians(-80);
     public static final double kIntakePivotStowForClimbPositionRadians =
@@ -156,13 +156,18 @@ public final class Constants {
 
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
-    kIntakeRollerConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
+    kIntakeRollerConfig.talonCANID =
+        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
         18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
-    kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5;
-    kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02;
-    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1;
+
+    kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
+    kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
+    kIntakeRollerConfig.fxConfig.Slot0.kD = 0.0;
+    kIntakeRollerConfig.fxConfig.Slot0.kS = 0.02; // Increased from 0.02 - overcome friction
+    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
+    kIntakeRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -181,7 +186,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.Slot0.kV = 0.2;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
-    kIntakePivotConfig.unitToRotorRatio = 1.0 * 60; // RPM to RPS
+    kIntakePivotConfig.unitToRotorRatio = 1.0 * 360.0; // Rotations to Degrees
 
     kIntakePivotConfig.kMaxPositionUnits = 100.0;
     kIntakePivotConfig.kMinPositionUnits = -100.0;
@@ -241,6 +246,8 @@ public final class Constants {
     kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
     kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
 
+    kRightFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
@@ -253,7 +260,7 @@ public final class Constants {
 
   static {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
-    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus1.getName());
+    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, TunerConstants.kCANBus1.getName());
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
     kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
