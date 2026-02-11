@@ -300,6 +300,10 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     io.setCurrentPosition(positionUnits);
   }
 
+  public void setVelocitySetpoint(double unitsPerSecond) {
+    io.setVelocitySetpoint(unitsPerSecond);
+  }
+
   protected Command withoutLimitsTemporarily() {
     var prev =
         new Object() {

@@ -158,11 +158,11 @@ public final class Constants {
   static {
     kIntakeRollerFollowerConfig.config.name = "Intake_Roller_Follower";
     kIntakeRollerFollowerConfig.config.talonCANID =
-        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
-    kIntakeRollerFollowerConfig.inverted = false;
+        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (slave)
+    kIntakeRollerFollowerConfig.inverted = true;
     kIntakeRollerFollowerConfig.config.momentOfInertia = 0.00132536;
     kIntakeRollerFollowerConfig.config.unitToRotorRatio =
-        18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
+        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
 
     kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
     kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kI = 0.0;
@@ -184,7 +184,7 @@ public final class Constants {
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
-        new CANDeviceId(13, TunerConstants.kCANBus1.getName()); // Motor 2 (master)
+        new CANDeviceId(13, TunerConstants.kCANBus1.getName()); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
         18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS

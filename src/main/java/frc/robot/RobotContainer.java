@@ -275,12 +275,11 @@ public class RobotContainer {
       // Y button = velocity control (closed loop PID)
       controller.y().whileTrue(agitatorRight.intakeCommand());
       controller.y().whileTrue(agitatorLeft.intakeCommand());
+    }
 
-      // Right bumper = direct voltage test (2V) - bypasses PID entirely
-      controller.rightBumper().whileTrue(agitatorRight.voltageCommand(() -> 2.0));
-
-      // Left bumper = duty cycle test (20%) - bypasses PID entirely
-      controller.leftBumper().whileTrue(agitatorRight.dutyCycleCommand(() -> 0.2));
+    if (intakeRollers != null) {
+      controller.rightBumper().whileTrue(intakeRollers.intakeCommand());
+      controller.leftBumper().whileTrue(intakeRollers.outakeCommand());
     }
   }
 
