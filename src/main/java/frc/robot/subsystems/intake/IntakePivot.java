@@ -1,14 +1,17 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
-import frc.robot.Constants;
 
 /**
  * The {@code IntakePivotSubsystem} controls the pivoting mechanism of the robot's intake. It
  * manages the deployment and stowing of the intake using a motor for precise position control and
  * feedback.
+ *
+ * <p>Units are in degrees (matching Hood pattern). The unitToRotorRatio in config handles the
+ * degree-to-rotor-rotation conversion via the gear ratio.
+ *
+ * <p>Design sheet: CAN 12, gear ratio 5.454545:1, range 0→145°, 40A stator.
  */
 public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
@@ -17,8 +20,9 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
 
-    this.setCurrentPosition(Constants.IntakeConstants.kIntakePivotStowPositionRadians);
-    this.positionSetpointUnits = Constants.IntakeConstants.kIntakePivotStowPositionRadians;
+    // Initialize at stow position (0 degrees)
+    this.setCurrentPosition(0.0);
+    this.positionSetpointUnits = 0.0;
   }
 
   public void setTeleopDefaultCommand() {
@@ -32,13 +36,16 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
   // -------------------- Position Control Commands --------------------
 
   /**
-   * Command to run pivot at target position.
+   * Command to move pivot to a target position in degrees.
    *
-   * @return Command that sets position as angle
+   * <p>Units are degrees — the unitToRotorRatio in config converts degrees to rotor rotations.
+   * Design sheet range: 0° (stowed) → 145° (fully deployed).
+   *
+   * @param degrees target position in degrees
+   * @return Command that moves and holds the pivot at the specified angle
    */
-  public Command setDegreesCommand(double position) {
-    return motionMagicSetpointCommand(() -> Units.degreesToRotations(position))
-        .withName("Intake Pivot Maintain Setpoint");
+  public Command setDegreesCommand(double degrees) {
+    return motionMagicSetpointCommand(() -> degrees).withName("Intake Pivot " + degrees + " deg");
   }
 
   @Override

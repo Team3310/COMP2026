@@ -107,8 +107,8 @@ public final class Constants {
 
     kHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    kHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   public static final ServoMotorSubsystemConfig kFlywheelConfig =
@@ -125,8 +125,8 @@ public final class Constants {
     kFlywheelConfig.fxConfig.Slot0.kV = 0.1;
 
     kFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   // #endregion
@@ -176,8 +176,8 @@ public final class Constants {
     kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerFollowerConfig.config.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   public static final ServoMotorSubsystemWithFollowersConfig kIntakeRollerConfig =
@@ -199,8 +199,8 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
 
     kIntakeRollerConfig.followers =
         new ServoMotorSubsystemWithFollowersConfig.FollowerConfig[] {kIntakeRollerFollowerConfig};
@@ -211,28 +211,42 @@ public final class Constants {
 
   static {
     kIntakePivotConfig.name = "Intake_Pivot";
-    kIntakePivotConfig.talonCANID = new CANDeviceId(58, TunerConstants.kCANBusRio.getName());
+    kIntakePivotConfig.talonCANID = new CANDeviceId(12, TunerConstants.kCANBusRio.getName());
     kIntakePivotConfig.momentOfInertia = 0.01;
-    kIntakePivotConfig.fxConfig.Slot0.kP = 2.0;
-    kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
-    kIntakePivotConfig.fxConfig.Slot0.kV = 0.2;
-    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
-    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
-    kIntakePivotConfig.unitToRotorRatio = 1.0 * 360.0; // Rotations to Degrees
 
-    kIntakePivotConfig.kMaxPositionUnits = 100.0;
-    kIntakePivotConfig.kMinPositionUnits = -100.0;
-    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+    // PID Slot 0 gains for MotionMagicVoltage
+    // Design sheet: X44, gear ratio 5.454545:1, 40A stator, Motion Magic Position Control
+    kIntakePivotConfig.fxConfig.Slot0.kP = 2.0; // Start conservative — tune up from here
+    kIntakePivotConfig.fxConfig.Slot0.kI = 0.0;
+    kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
+    kIntakePivotConfig.fxConfig.Slot0.kS = 0.25; // Static friction compensation (volts)
+    kIntakePivotConfig.fxConfig.Slot0.kV = 0.12; // Velocity feedforward (volts per rot/s)
+    kIntakePivotConfig.fxConfig.Slot0.kA = 0.0;
+
+    // Motion Magic profile — units are rotor rotations/s and rotations/s²
+    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 10.0; // rot/s
+    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 20.0; // rot/s²
+    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicJerk = 100.0; // rot/s³
+
+    // Units = degrees (matching Hood pattern)
+    // Gear ratio 5.454545:1 → unitToRotorRatio = (1 / 5.454545) * 360
+    // unitsToRotor(degrees) = degrees / 66.0 = rotor rotations
+    kIntakePivotConfig.unitToRotorRatio = (1.0 / 5.454545) * 360.0; // ≈ 66.0
+
+    // Position limits in degrees — design sheet: 0 → 145 degrees
+    kIntakePivotConfig.kMaxPositionUnits = 145.0; // degrees (fully deployed)
+    kIntakePivotConfig.kMinPositionUnits = 0.0; // degrees (fully stowed)
+    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         kIntakePivotConfig.kMaxPositionUnits / kIntakePivotConfig.unitToRotorRatio;
-    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         kIntakePivotConfig.kMinPositionUnits / kIntakePivotConfig.unitToRotorRatio;
 
     kIntakePivotConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kIntakePivotConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Per design sheet
   }
 
   public static final class AgitatorConstants {
@@ -320,6 +334,7 @@ public final class Constants {
     kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
     kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
+    kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
@@ -340,7 +355,7 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
     kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
-    kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
