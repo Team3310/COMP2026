@@ -135,8 +135,10 @@ public final class Constants {
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
 
-    public static final double kIntakeVelocityRPM = 1000.0;
-    public static final double kOutakeVelocityRPM = -500.0;
+    // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
+    // roughly 1900
+    public static final double kIntakeVelocityRPM = 1900.0;
+    public static final double kOutakeVelocityRPM = -1900.0;
 
     public static final double kIntakePivotStowPositionRadians = Units.degreesToRadians(-80);
     public static final double kIntakePivotStowForClimbPositionRadians =
@@ -338,6 +340,7 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.02;
     kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
+    kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;

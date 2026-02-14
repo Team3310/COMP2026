@@ -54,6 +54,8 @@ public class RobotContainer {
   // private final Flywheel flywheel;
   private final Agitator agitatorRight;
   private final Agitator agitatorLeft;
+  private final Agitator verticalFeedRight;
+  private final Agitator verticalFeedLeft;
   private IntakeRollers intakeRollers;
   // private final Shooter shooter;
 
@@ -124,6 +126,14 @@ public class RobotContainer {
         agitatorLeft =
             new Agitator(
                 Constants.kLeftFloorRollerConfig, new TalonFXIO(Constants.kLeftFloorRollerConfig));
+        verticalFeedRight =
+            new Agitator(
+                Constants.kRightVerticalFeedConfig,
+                new TalonFXIO(Constants.kRightVerticalFeedConfig));
+        verticalFeedLeft =
+            new Agitator(
+                Constants.kLeftVerticalFeedConfig,
+                new TalonFXIO(Constants.kLeftVerticalFeedConfig));
         break;
 
       case SIM:
@@ -153,6 +163,8 @@ public class RobotContainer {
         //     new Flywheel(Constants.kFlywheelConfig, new SimTalonFXIO(Constants.kFlywheelConfig));
         agitatorRight = null;
         agitatorLeft = null;
+        verticalFeedRight = null;
+        verticalFeedLeft = null;
         break;
 
       default:
@@ -173,6 +185,8 @@ public class RobotContainer {
         // flywheel = null;
         agitatorRight = null;
         agitatorLeft = null;
+        verticalFeedRight = null;
+        verticalFeedLeft = null;
         break;
     }
 
@@ -275,6 +289,12 @@ public class RobotContainer {
       // Y button = velocity control (closed loop PID)
       controller.y().whileTrue(agitatorRight.intakeCommand());
       controller.y().whileTrue(agitatorLeft.intakeCommand());
+    }
+
+    if (verticalFeedRight != null && verticalFeedLeft != null) {
+      // X button = vertical feed rollers (closed loop PID)
+      controller.x().whileTrue(verticalFeedRight.verticalFeedIntakeCommand());
+      controller.x().whileTrue(verticalFeedLeft.verticalFeedIntakeCommand());
     }
 
     if (intakeRollers != null) {

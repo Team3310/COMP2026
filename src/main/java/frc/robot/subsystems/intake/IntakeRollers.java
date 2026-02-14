@@ -30,6 +30,30 @@ public class IntakeRollers
     motorIO = leadIO;
   }
 
+  /**
+   * Override to command follower motors with the same velocity setpoint as the leader. This avoids
+   * relying on Phoenix 6 follower mode and drives both motors independently.
+   */
+  @Override
+  protected void setVelocitySetpointImpl(double unitsPerSecond, int slot) {
+    super.setVelocitySetpointImpl(unitsPerSecond, slot);
+    for (MotorIO follower : followerIos) {
+      follower.setVelocitySetpoint(unitsPerSecond, slot);
+    }
+  }
+
+  /**
+   * Override to also zero follower motors when the default command (duty cycle 0) runs. Without
+   * this, releasing a bumper stops the leader but leaves followers spinning at their last setpoint.
+   */
+  @Override
+  protected void setOpenLoopDutyCycleImpl(double dutyCycle) {
+    super.setOpenLoopDutyCycleImpl(dutyCycle);
+    for (MotorIO follower : followerIos) {
+      follower.setOpenLoopDutyCycle(dutyCycle);
+    }
+  }
+
   @Override
   public void periodic() {
     super.periodic();
@@ -43,7 +67,7 @@ public class IntakeRollers
    * @return Command that runs intake forward
    */
   public Command intakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityRPM)
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kOutakeVelocityRPM)
         .withName("Intake Forward");
   }
 
@@ -53,7 +77,7 @@ public class IntakeRollers
    * @return Command that runs intake backward
    */
   public Command outakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kOutakeVelocityRPM)
-        .withName("Intake Forward");
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityRPM)
+        .withName("Intake Reverse");
   }
 }

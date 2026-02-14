@@ -147,6 +147,26 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   }
 
   /**
+   * Command to run roller at the vertical feed intake speed.
+   *
+   * @return Command that runs vertical feed in intake direction
+   */
+  public Command verticalFeedIntakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedIntakeRPM)
+        .withName(getName() + " VertFeed Intake");
+  }
+
+  /**
+   * Command to run roller at the vertical feed outtake speed.
+   *
+   * @return Command that runs vertical feed in outtake direction
+   */
+  public Command verticalFeedOuttakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedOuttakeRPM)
+        .withName(getName() + " VertFeed Outtake");
+  }
+
+  /**
    * Command to run roller at a custom velocity setpoint in RPS.
    *
    * @param velocityRPS velocity in rotations per second at the output
