@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Scorer.flywheel;
+package frc.robot.subsystems.scorer.flywheel;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.MotorIO;

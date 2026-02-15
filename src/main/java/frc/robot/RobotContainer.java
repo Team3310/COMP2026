@@ -22,8 +22,8 @@ import frc.robot.generated.TunerConstants;
 // TODO: Fix Shooter class - package frc.robot.subsystems.CoralShooter does not exist
 // import frc.robot.subsystems.CoralShooter.Shooter;
 // TODO: Re-enable these subsystems once MotorInputsAutoLogged is generated
-// import frc.robot.subsystems.Scorer.flywheel.Flywheel;
-// import frc.robot.subsystems.Scorer.hood.Hood;
+// import frc.robot.subsystems.scorer.flywheel.Flywheel;
+// import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;

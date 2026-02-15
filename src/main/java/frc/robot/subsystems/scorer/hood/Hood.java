@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Scorer.hood;
+package frc.robot.subsystems.scorer.hood;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
