@@ -30,6 +30,7 @@ import java.util.Enumeration;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+  public static final BotState currentState = BotState.COLLECT;
 
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
@@ -61,6 +62,12 @@ public final class Constants {
     // COMPETITION,
     // PRACTICE
   }
+
+  public static enum BotState {
+    SNOWBLOW,
+    COLLECT
+  }
+
 
   public static final ClosedLoopRampsConfigs makeDefaultClosedLoopRampConfig() {
     return new ClosedLoopRampsConfigs()
