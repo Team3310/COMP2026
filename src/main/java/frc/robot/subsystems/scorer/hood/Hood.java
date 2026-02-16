@@ -3,18 +3,17 @@ package frc.robot.subsystems.scorer.hood;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
+import frc.robot.Constants;
 
-/**
- * The {@code IntakePivotSubsystem} controls the pivoting mechanism of the robot's intake. It
- * manages the deployment and stowing of the intake using a motor for precise position control and
- * feedback.
- */
+/** The {@code Hood} controls the pivoting mechanism of the robot's launcher hood. */
 public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
 
   public Hood(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
+    this.setCurrentPosition(Constants.ScorerConstants.kHoodStowedPosition);
+    this.positionSetpointUnits = Constants.ScorerConstants.kHoodStowedPosition;
   }
 
   public void setTeleopDefaultCommand() {
@@ -34,6 +33,17 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
    */
   public Command setDegreesCommand(double position) {
     return motionMagicSetpointCommand(() -> (position)).withName("Hood Maintain Setpoint");
+  }
+
+  public Command setDegreesCommandRunEnd(double positionRun, double positionEnd) {
+    return runEnd(
+            () -> {
+              setDegreesCommand(positionRun);
+            },
+            () -> {
+              setDegreesCommand(positionEnd);
+            })
+        .withName(getName() + " VelocityControl");
   }
 
   @Override

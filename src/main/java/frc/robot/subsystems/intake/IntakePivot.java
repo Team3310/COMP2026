@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
+import frc.robot.Constants;
 
 /**
  * The {@code IntakePivotSubsystem} controls the pivoting mechanism of the robot's intake. It
@@ -22,7 +23,7 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
     this.motorIO = motorIO;
 
     // Initialize at stow position (0 degrees)
-    this.setCurrentPosition(0.0);
+    this.setCurrentPosition(Constants.IntakeConstants.kIntakePivotStowedPosition);
     this.positionSetpointUnits = 0.0;
   }
 

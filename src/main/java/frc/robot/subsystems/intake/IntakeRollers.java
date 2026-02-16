@@ -80,4 +80,8 @@ public class IntakeRollers
     return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityRPM)
         .withName("Intake Reverse");
   }
+
+  public Command offCommand() {
+    return velocitySetpointCommand(() -> 0.0).withName("Intake Off");
+  }
 }

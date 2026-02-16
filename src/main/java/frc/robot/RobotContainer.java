@@ -24,6 +24,7 @@ import frc.robot.subsystems.intake.IntakePivot;
 import frc.robot.subsystems.intake.IntakeRollers;
 import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
+import frc.robot.subsystems.scorer.turret.Turret;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -100,6 +101,14 @@ public class RobotContainer {
     }
   }
 
+  private Turret buildTurretSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Turret(config, new TalonFXIO(config));
+    } else {
+      return new Turret(config, new SimTalonFXIO(config));
+    }
+  }
+
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
@@ -111,6 +120,48 @@ public class RobotContainer {
   private final IntakePivot intakePivot = buildIntakePivotSystem();
   private final Hood hoodLeft = buildHoodSystem(Constants.kLeftHoodConfig);
   private final Flywheel flywheelLeft = buildFlywheelSystem(Constants.kLeftFlywheelConfig);
+  private final Turret turretLeft = buildTurretSystem(Constants.kLeftTurretConfig);
+
+  // Acessors
+  public Drive getDrive() {
+    return drive;
+  }
+
+  public Agitator getAgitatorRight() {
+    return agitatorRight;
+  }
+
+  public Agitator getAgitatorLeft() {
+    return agitatorLeft;
+  }
+
+  public Agitator getVerticalFeedRight() {
+    return verticalFeedRight;
+  }
+
+  public Agitator getVerticalFeedLeft() {
+    return verticalFeedLeft;
+  }
+
+  public IntakeRollers getIntakeRollers() {
+    return intakeRollers;
+  }
+
+  public IntakePivot getIntakePivot() {
+    return intakePivot;
+  }
+
+  public Hood getHoodLeft() {
+    return hoodLeft;
+  }
+
+  public Flywheel getFlywheelLeft() {
+    return flywheelLeft;
+  }
+
+  public Turret getTurretLeft() {
+    return turretLeft;
+  }
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -211,28 +262,48 @@ public class RobotContainer {
       controller.rightTrigger().toggleOnTrue(verticalFeedRight.verticalFeedIntakeCommand());
     }
 
-    if (intakeRollers != null) {
+    if (intakeRollers != null && intakePivot != null) {
       // Right bumper = toggle intake rollers on/off
-      controller.rightBumper().toggleOnTrue(intakeRollers.intakeCommand());
+      controller
+          .rightBumper()
+          .toggleOnTrue(
+              Commands.parallel(
+                  intakeRollers.intakeCommand(), intakePivot.setDegreesCommand(145.0)));
       // Left bumper = toggle outtake rollers on/off
-      controller.leftBumper().toggleOnTrue(intakeRollers.outakeCommand());
+      controller
+          .leftBumper()
+          .toggleOnTrue(
+              Commands.parallel(intakeRollers.outakeCommand(), intakePivot.setDegreesCommand(0.0)));
     }
 
-    if (intakePivot != null) {
-      controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
-      controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
-    }
-
-    // if (hood != null) {
-    // controller.povUp().onTrue(hood.setDegreesCommand(15.0));
-    // controller.povDown().onTrue(hood.setDegreesCommand(0.0));
+    // if (intakePivot != null) {
+    //   controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
+    //   controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
     // }
+
+    // if (hoodLeft != null) {
+    //   controller.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
+    //   controller.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
+    // }
+
+    if (turretLeft != null) {
+      controller.povRight().onTrue(turretLeft.setDegreesCommand(-45.0));
+      controller.povLeft().onTrue(turretLeft.setDegreesCommand(0.0));
+    }
 
     if (flywheelLeft != null && hoodLeft != null) {
       controller
-          .povLeft()
-          .toggleOnTrue(
-              Commands.parallel(flywheelLeft.forwardCommand(), hoodLeft.setDegreesCommand(15.0)));
+          .povUp()
+          .onTrue(
+              Commands.parallel(
+                  flywheelLeft.forwardCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxPositionUnits)));
+      controller
+          .povDown()
+          .onTrue(
+              Commands.parallel(
+                  flywheelLeft.offCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)));
     }
   }
 

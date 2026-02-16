@@ -8,8 +8,8 @@ import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.robot.Constants;
 
 /**
- * The {@code IntakeRollerSubsystem} controls the roller mechanism of the robot's intake. It manages
- * the speed and direction of the intake rollers to collect and feed game pieces.
+ * The {@code Flywheel} controls the flywheel mechanism of the robot's launcher. It manages the
+ * speed and direction of the flywheel to shoot game pieces.
  */
 public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
@@ -29,9 +29,9 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   // -------------------- Velocity Control Commands --------------------
 
   /**
-   * Command to run intake at target velocity for collecting game pieces.
+   * Command to run flywheel at target velocity for collecting game pieces.
    *
-   * @return Command that runs intake forward
+   * @return Command that runs flywheel forward
    */
   public Command forwardCommand() {
     return velocitySetpointCommand(() -> Constants.ScorerConstants.kShootRPM)
@@ -39,9 +39,9 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   }
 
   /**
-   * Command to run intake at target velocity for collecting game pieces.
+   * Command to run flywheel at target velocity for collecting game pieces.
    *
-   * @return Command that runs intake backward
+   * @return Command that runs flywheel backward
    */
   public Command backwardCommand() {
     return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseRPM)
