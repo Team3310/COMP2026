@@ -1,172 +1,178 @@
-// Copyright (c) 2026 FRC Team 3310
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
-
 package frc.robot.subsystems.agitator;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.velocity.VelocityControlIO;
-import frc.robot.subsystems.velocity.VelocityControlIOInputsAutoLogged;
+import frc.lib.subsystems.MotorIO;
+import frc.lib.subsystems.MotorInputsAutoLogged;
+import frc.lib.subsystems.ServoMotorSubsystem;
+import frc.lib.subsystems.ServoMotorSubsystemConfig;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Hopper subsystem for controlling game piece hopper. Uses AdvantageKit IO layer pattern for
- * hardware abstraction.
+ * Generic roller subsystem used for floor rollers and vertical feed rollers. Each instance controls
+ * a single roller motor using Velocity Voltage Control.
+ *
+ * <p>Design Sheet Reference (CANivore #2):
+ *
+ * <ul>
+ *   <li>CAN 20: Left Floor Roller - X44, 1.66667:1 (20/12), 75 RPS output, Intake dir, 80A
+ *   <li>CAN 21: Left Vertical Feed - X44, 1.5:1 (18/12), 83.33 RPS output, Intake dir, 80A
+ *   <li>CAN 25: Right Floor Roller - X44, 1.66667:1 (20/12), 75 RPS output, Outtake dir, 80A
+ *   <li>CAN 26: Right Vertical Feed - X44, 1.5:1 (18/12), 83.33 RPS output, Outtake dir, 80A
+ * </ul>
  */
-public class Agitator extends SubsystemBase {
-  private final VelocityControlIO io;
-  private final VelocityControlIOInputsAutoLogged inputs = new VelocityControlIOInputsAutoLogged();
+public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+  public MotorIO motorIO;
+  private static final String INTAKE_RPM_KEY = "Agitator/IntakeRPM";
+  private static final String OUTTAKE_RPM_KEY = "Agitator/OuttakeRPM";
 
-  // Default RPM setpoints - change these constants to tune
-  private static final double DEFAULT_OUTTAKE_RPM = 1000.0;
-  private static final double DEFAULT_INTAKE_RPM = 1000.0;
+  public Agitator(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
+    super(motorConfig, new MotorInputsAutoLogged(), motorIO);
+    this.motorIO = motorIO;
 
-  // Feedforward constants - tune based on motor characterization
-  private static final double DEFAULT_KS = 0.0; // Volts to overcome static friction
-  private static final double DEFAULT_KV = 0.11; // Volts per rad/s
+    // Initialize SmartDashboard with default RPM values (converting from RPS)
+    SmartDashboard.putNumber(
+        INTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
+    SmartDashboard.putNumber(
+        OUTTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerOuttakeRPS));
 
-  // PID constants - tune for velocity control
-  private static final double DEFAULT_KP = 0.6;
-  private static final double DEFAULT_KI = 0.0;
-  private static final double DEFAULT_KD = 0.0;
+    // Log configuration to AdvantageKit (persists in logs, doesn't get overwritten)
+    Logger.recordOutput(getName() + "/Config/Name", motorConfig.name);
+    Logger.recordOutput(getName() + "/Config/CANID", motorConfig.talonCANID.getDeviceNumber());
+    Logger.recordOutput(getName() + "/Config/CANBus", motorConfig.talonCANID.getBus());
+    Logger.recordOutput(getName() + "/Config/GearRatio", motorConfig.unitToRotorRatio);
+    Logger.recordOutput(
+        getName() + "/Config/TargetIntakeRPS", Constants.AgitatorConstants.kFloorRollerIntakeRPS);
+    Logger.recordOutput(
+        getName() + "/Config/TargetIntakeRPM",
+        rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
+    Logger.recordOutput(getName() + "/Config/PID/kP", motorConfig.fxConfig.Slot0.kP);
+    Logger.recordOutput(getName() + "/Config/PID/kI", motorConfig.fxConfig.Slot0.kI);
+    Logger.recordOutput(getName() + "/Config/PID/kD", motorConfig.fxConfig.Slot0.kD);
+    Logger.recordOutput(getName() + "/Config/PID/kS", motorConfig.fxConfig.Slot0.kS);
+    Logger.recordOutput(getName() + "/Config/PID/kV", motorConfig.fxConfig.Slot0.kV);
+    Logger.recordOutput(getName() + "/Config/PID/kA", motorConfig.fxConfig.Slot0.kA);
 
-  // Tunable setpoints and gains
-  private double backwardRPM = DEFAULT_OUTTAKE_RPM;
-  private double forwardRPM = DEFAULT_INTAKE_RPM;
-  private double kS = DEFAULT_KS;
-  private double kV = DEFAULT_KV;
-  private double kP = DEFAULT_KP;
-  private double kI = DEFAULT_KI;
-  private double kD = DEFAULT_KD;
+    // Also log to console for immediate visibility
+    System.out.println("==================================================");
+    System.out.println("AGITATOR INIT: " + motorConfig.name);
+    System.out.println(
+        "  CAN: "
+            + motorConfig.talonCANID.getDeviceNumber()
+            + " on "
+            + motorConfig.talonCANID.getBus());
+    System.out.println(
+        "  Target: "
+            + Constants.AgitatorConstants.kFloorRollerIntakeRPS
+            + " RPS ("
+            + rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS)
+            + " RPM)");
+    System.out.println(
+        "  PID: kP="
+            + motorConfig.fxConfig.Slot0.kP
+            + " kV="
+            + motorConfig.fxConfig.Slot0.kV
+            + " kS="
+            + motorConfig.fxConfig.Slot0.kS);
+    System.out.println("==================================================");
+  }
 
-  // Track last PID values to avoid spamming CAN bus
-  private double lastKP = DEFAULT_KP;
-  private double lastKI = DEFAULT_KI;
-  private double lastKD = DEFAULT_KD;
-  private double lastKV = DEFAULT_KV;
-  private double lastKS = DEFAULT_KS;
-
-  /** Creates a new Hopper subsystem. */
-  public Agitator(VelocityControlIO io) {
-    this.io = io;
-
-    // Configure initial PID
-    io.configurePID(kP, kI, kD, kV, kS);
+  public double getPositionRotations() {
+    return inputs.unitPosition;
   }
 
   @Override
   public void periodic() {
-    io.updateInputs(inputs);
+    super.periodic();
 
-    // Update calculated values
-    inputs.currentRPM = inputs.velocityRadsPerSec * 60.0 / (2.0 * Math.PI);
+    // Log current velocity in RPM to SmartDashboard
+    SmartDashboard.putNumber("Agitator/CurrentRPM", rpsToRpm(inputs.velocityUnitsPerSecond));
+    SmartDashboard.putNumber("Agitator/CurrentRPS", inputs.velocityUnitsPerSecond);
+    SmartDashboard.putNumber("Agitator/AppliedVolts", inputs.appliedVolts);
+    SmartDashboard.putNumber("Agitator/StatorCurrent", inputs.currentStatorAmps);
+    SmartDashboard.putNumber("Agitator/SupplyCurrent", inputs.currentSupplyAmps);
+    SmartDashboard.putBoolean("Agitator/SubsystemActive", true);
 
-    // Update tunable parameters in inputs for logging
-    inputs.backwardRPM = backwardRPM;
-    inputs.forwardRPM = forwardRPM;
-    inputs.kP = kP;
-    inputs.kI = kI;
-    inputs.kD = kD;
-    inputs.kS = kS;
-    inputs.kV = kV;
-
-    // Update PID gains ONLY if changed (avoid spamming CAN bus)
-    if (kP != lastKP || kI != lastKI || kD != lastKD || kV != lastKV || kS != lastKS) {
-      io.configurePID(kP, kI, kD, kV, kS);
-      inputs.pidUpdated = true;
-      lastKP = kP;
-      lastKI = kI;
-      lastKD = kD;
-      lastKV = kV;
-      lastKS = kS;
+    // Debug: Log if motor is being driven
+    if (Math.abs(inputs.appliedVolts) > 0.1) {
+      SmartDashboard.putString("Agitator/Status", "MOTOR ACTIVE");
     } else {
-      inputs.pidUpdated = false;
+      SmartDashboard.putString("Agitator/Status", "IDLE");
     }
-
-    // Process all inputs - @AutoLog will handle logging everything
-    Logger.processInputs("Hopper", inputs);
   }
 
-  /** Run hopper forward at target RPM (for outtaking game pieces). */
-  public void runForward() {
-    double targetRadsPerSec = backwardRPM * 2.0 * Math.PI / 60.0;
-    double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
+  // -------------------- Unit Conversion Helpers --------------------
 
-    // Update inputs for @AutoLog
-    inputs.targetRPM = backwardRPM;
-    inputs.targetRadsPerSec = targetRadsPerSec;
-    inputs.feedforwardVolts = ffVolts;
-    inputs.commandState = "OUTTAKE";
-
-    io.setVelocity(targetRadsPerSec, ffVolts);
+  /**
+   * Convert rotations per second to rotations per minute.
+   *
+   * @param rps rotations per second
+   * @return rotations per minute
+   */
+  private double rpsToRpm(double rps) {
+    return rps * 60.0;
   }
 
-  /** Run hopper backward at target RPM (for intaking game pieces). */
-  public void runBackward() {
-    double targetRadsPerSec = -forwardRPM * 2.0 * Math.PI / 60.0; // Negative for backward
-    double ffVolts = Math.signum(targetRadsPerSec) * kS + kV * targetRadsPerSec;
-
-    // Update inputs for @AutoLog
-    inputs.targetRPM = -forwardRPM;
-    inputs.targetRadsPerSec = targetRadsPerSec;
-    inputs.feedforwardVolts = ffVolts;
-    inputs.commandState = "HOPPER";
-
-    io.setVelocity(targetRadsPerSec, ffVolts);
+  /**
+   * Convert rotations per minute to rotations per second.
+   *
+   * @param rpm rotations per minute
+   * @return rotations per second
+   */
+  private double rpmToRps(double rpm) {
+    return rpm / 60.0;
   }
 
-  /** Stop the hopper motor. */
-  public void stop() {
-    inputs.commandState = "STOPPED";
-    io.stop();
+  // -------------------- Velocity Control Commands --------------------
+
+  /**
+   * Command to run roller at the floor roller intake speed from SmartDashboard.
+   *
+   * @return Command that runs roller in intake direction
+   */
+  public Command intakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerIntakeRPM)
+        .withName(getName() + " Intake");
   }
 
-  /** Returns true if the hopper motor is connected. */
-  public boolean isConnected() {
-    return inputs.connected;
+  /**
+   * Command to run roller at the floor roller outtake speed from SmartDashboard.
+   *
+   * @return Command that runs roller in outtake direction
+   */
+  public Command outtakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerOuttakeRPM)
+        .withName(getName() + " Outtake");
   }
 
-  /** Returns the current draw of the hopper motor in amps. */
-  public double getCurrentAmps() {
-    return inputs.currentAmps;
+  /**
+   * Command to run roller at the vertical feed intake speed.
+   *
+   * @return Command that runs vertical feed in intake direction
+   */
+  public Command verticalFeedIntakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedIntakeRPM)
+        .withName(getName() + " VertFeed Intake");
   }
 
-  // -------------------- Tuning Setters --------------------
-
-  /** Set outtake RPM (use in test mode or via commands). */
-  public void setBackwardRPM(double rpm) {
-    this.backwardRPM = rpm;
+  /**
+   * Command to run roller at the vertical feed outtake speed.
+   *
+   * @return Command that runs vertical feed in outtake direction
+   */
+  public Command verticalFeedOuttakeCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedOuttakeRPM)
+        .withName(getName() + " VertFeed Outtake");
   }
 
-  /** Set hopper RPM (use in test mode or via commands). */
-  public void setForwardRPM(double rpm) {
-    this.forwardRPM = rpm;
-  }
-
-  /** Set PID gains (use in test mode or via commands). */
-  public void setPID(double kP, double kI, double kD, double kV, double kS) {
-    this.kP = kP;
-    this.kI = kI;
-    this.kD = kD;
-    this.kV = kV;
-    this.kS = kS;
-  }
-
-  // -------------------- Commands --------------------
-
-  /** Command to run hopper forward continuously. */
-  public Command forwardCommand() {
-    return startEnd(this::runForward, this::stop).withName("HopperForward");
-  }
-
-  /** Command to run hopper backward continuously. */
-  public Command backwardCommand() {
-    return startEnd(this::runBackward, this::stop).withName("HopperBackward");
-  }
-
-  /** Command to stop hopper. */
-  public Command stopCommand() {
-    return runOnce(this::stop).withName("StopHopper");
+  /**
+   * Command to run roller at a custom velocity setpoint in RPS.
+   *
+   * @param velocityRPS velocity in rotations per second at the output
+   * @return Command that runs roller at the specified velocity
+   */
+  public Command customVelocityCommand(double velocityRPM) {
+    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
   }
 }

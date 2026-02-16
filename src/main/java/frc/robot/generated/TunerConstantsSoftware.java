@@ -75,8 +75,9 @@ public class TunerConstantsSoftware {
 
   // CAN bus that the devices are located on;
   // All swerve devices must share the same CAN bus
-  public static final CANBus kCANBus = new CANBus("CanivoreCAN", "./logs/example.hoot");
-  public static final CANBus kRioCANBus = new CANBus("rio", "./logs/rio.hoot");
+  public static final CANBus kCANBus1 = new CANBus("CanivoreCAN1", "./logs/example1.hoot");
+  public static final CANBus kCANBus2 = new CANBus("CanivoreCAN2", "./logs/example2.hoot");
+  public static final CANBus kCANBusRio = new CANBus("rio", "./logs/example.hoot");
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
@@ -104,7 +105,7 @@ public class TunerConstantsSoftware {
 
   public static final SwerveDrivetrainConstants DrivetrainConstants =
       new SwerveDrivetrainConstants()
-          .withCANBusName(kCANBus.getName())
+          .withCANBusName(kCANBus1.getName())
           .withPigeon2Id(kPigeonId)
           .withPigeon2Configs(pigeonConfigs);
 

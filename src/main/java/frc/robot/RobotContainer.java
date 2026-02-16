@@ -1,10 +1,3 @@
-// Copyright (c) 2021-2026 Littleton Robotics
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by a BSD
-// license that can be found in the LICENSE file
-// at the root directory of this project.
-
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -16,18 +9,22 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.lib.subsystems.ServoMotorSubsystemConfig;
+import frc.lib.subsystems.SimTalonFXIO;
+import frc.lib.subsystems.TalonFXIO;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.velocity.VelocityControlIO;
-import frc.robot.subsystems.velocity.VelocityControlIOTalonFX;
+import frc.robot.subsystems.intake.IntakePivot;
+import frc.robot.subsystems.intake.IntakeRollers;
+import frc.robot.subsystems.scorer.flywheel.Flywheel;
+import frc.robot.subsystems.scorer.hood.Hood;
+import frc.robot.subsystems.scorer.turret.Turret;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -37,10 +34,134 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // Subsystems
-  private Drive drive;
-  private shooter intake;
-  private Agitator agitator;
+  // Subsystem Builders
+  private Drive buildDriveSystem() {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Drive(
+          new GyroIOPigeon2(),
+          new ModuleIOTalonFX(TunerConstants.FrontLeft),
+          new ModuleIOTalonFX(TunerConstants.FrontRight),
+          new ModuleIOTalonFX(TunerConstants.BackLeft),
+          new ModuleIOTalonFX(TunerConstants.BackRight));
+    } else {
+      return new Drive(
+          new GyroIO() {},
+          new ModuleIOSim(TunerConstants.FrontLeft),
+          new ModuleIOSim(TunerConstants.FrontRight),
+          new ModuleIOSim(TunerConstants.BackLeft),
+          new ModuleIOSim(TunerConstants.BackRight));
+    }
+  }
+
+  private Agitator buildAgitatorSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Agitator(config, new TalonFXIO(config));
+    } else {
+      return new Agitator(config, new SimTalonFXIO(config));
+    }
+  }
+
+  private IntakeRollers buildIntakeRollersSystem() {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new IntakeRollers(
+          Constants.kIntakeRollerConfig,
+          new TalonFXIO(Constants.kIntakeRollerConfig),
+          new TalonFXIO[] {new TalonFXIO(Constants.kIntakeRollerConfig.followers[0].config)});
+    } else {
+      return new IntakeRollers(
+          Constants.kIntakeRollerConfig,
+          new SimTalonFXIO(Constants.kIntakeRollerConfig),
+          new SimTalonFXIO[] {new SimTalonFXIO(Constants.kIntakeRollerConfig.followers[0].config)});
+    }
+  }
+
+  private IntakePivot buildIntakePivotSystem() {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new IntakePivot(
+          Constants.kIntakePivotConfig, new TalonFXIO(Constants.kIntakePivotConfig));
+    } else {
+      return new IntakePivot(
+          Constants.kIntakePivotConfig, new SimTalonFXIO(Constants.kIntakePivotConfig));
+    }
+  }
+
+  private Flywheel buildFlywheelSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Flywheel(config, new TalonFXIO(config));
+    } else {
+      return new Flywheel(config, new SimTalonFXIO(config));
+    }
+  }
+
+  private Hood buildHoodSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Hood(config, new TalonFXIO(config));
+    } else {
+      return new Hood(config, new SimTalonFXIO(config));
+    }
+  }
+
+  private Turret buildTurretSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Turret(config, new TalonFXIO(config));
+    } else {
+      return new Turret(config, new SimTalonFXIO(config));
+    }
+  }
+
+  // Subsystem Intances
+  private final Drive drive = buildDriveSystem();
+  private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
+  private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
+  private final Agitator verticalFeedRight =
+      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
+  private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
+  private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
+  private final IntakePivot intakePivot = buildIntakePivotSystem();
+  private final Hood hoodLeft = buildHoodSystem(Constants.kLeftHoodConfig);
+  private final Flywheel flywheelLeft = buildFlywheelSystem(Constants.kLeftFlywheelConfig);
+  private final Turret turretLeft = buildTurretSystem(Constants.kLeftTurretConfig);
+
+  // Acessors
+  public Drive getDrive() {
+    return drive;
+  }
+
+  public Agitator getAgitatorRight() {
+    return agitatorRight;
+  }
+
+  public Agitator getAgitatorLeft() {
+    return agitatorLeft;
+  }
+
+  public Agitator getVerticalFeedRight() {
+    return verticalFeedRight;
+  }
+
+  public Agitator getVerticalFeedLeft() {
+    return verticalFeedLeft;
+  }
+
+  public IntakeRollers getIntakeRollers() {
+    return intakeRollers;
+  }
+
+  public IntakePivot getIntakePivot() {
+    return intakePivot;
+  }
+
+  public Hood getHoodLeft() {
+    return hoodLeft;
+  }
+
+  public Flywheel getFlywheelLeft() {
+    return flywheelLeft;
+  }
+
+  public Turret getTurretLeft() {
+    return turretLeft;
+  }
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -53,66 +174,6 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
-        // a CANcoder
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-
-        // The ModuleIOTalonFXS implementation provides an example implementation for
-        // ModuleIOTalonFXS controller connected to a CANdi with a PWM encoder. The
-        // implementations
-        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
-        // swerve
-        // template) can be freely intermixed to support alternative hardware
-        // arrangements.
-        // Please see the AdvantageKit template documentation for more information:
-        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
-        //
-        // drive =
-        // new Drive(
-        // new GyroIOPigeon2(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
-
-        intake = new shooter(new VelocityControlIOTalonFX(59, TunerConstants.kRioCANBus));
-        agitator = new Agitator(new VelocityControlIOTalonFX(58, TunerConstants.kRioCANBus));
-        break;
-
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        intake = new shooter(new VelocityControlIO() {});
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        intake = new shooter(new VelocityControlIO() {});
-        break;
-    }
-
     // Initialize autonomous commands
     autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
 
@@ -185,18 +246,65 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // Intake controls
-    // Left Trigger - Run intake forward (hold to run forward)
-    controller.leftTrigger().whileTrue(intake.backwardCommand());
+    if (agitatorRight != null && agitatorLeft != null) {
+      // Y button = toggle agitator rollers on/off (closed loop PID)
+      controller
+          .y()
+          .toggleOnTrue(
+              Commands.parallel(agitatorRight.intakeCommand(), agitatorLeft.intakeCommand()));
+    }
 
-    // Right Trigger - Run intake backward (hold to run backward)
-    controller.rightTrigger().whileTrue(intake.forwardCommand());
+    if (verticalFeedRight != null && verticalFeedLeft != null) {
+      // Left Trigger = toggle left vertical feed roller on/off (closed loop PID)
+      controller.leftTrigger().toggleOnTrue(verticalFeedLeft.verticalFeedIntakeCommand());
 
-    // Left bumper
-    controller.leftBumper().whileTrue(agitator.backwardCommand());
+      // Right Trigger = toggle right vertical feed roller on/off (closed loop PID)
+      controller.rightTrigger().toggleOnTrue(verticalFeedRight.verticalFeedIntakeCommand());
+    }
 
-    // Right bumper
-    controller.rightBumper().whileTrue(agitator.forwardCommand());
+    if (intakeRollers != null && intakePivot != null) {
+      // Right bumper = toggle intake rollers on/off
+      controller
+          .rightBumper()
+          .toggleOnTrue(
+              Commands.parallel(
+                  intakeRollers.intakeCommand(), intakePivot.setDegreesCommand(145.0)));
+      // Left bumper = toggle outtake rollers on/off
+      controller
+          .leftBumper()
+          .toggleOnTrue(
+              Commands.parallel(intakeRollers.outakeCommand(), intakePivot.setDegreesCommand(0.0)));
+    }
+
+    // if (intakePivot != null) {
+    //   controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
+    //   controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
+    // }
+
+    // if (hoodLeft != null) {
+    //   controller.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
+    //   controller.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
+    // }
+
+    if (turretLeft != null) {
+      controller.povRight().onTrue(turretLeft.setDegreesCommand(-45.0));
+      controller.povLeft().onTrue(turretLeft.setDegreesCommand(0.0));
+    }
+
+    if (flywheelLeft != null && hoodLeft != null) {
+      controller
+          .povUp()
+          .onTrue(
+              Commands.parallel(
+                  flywheelLeft.forwardCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxPositionUnits)));
+      controller
+          .povDown()
+          .onTrue(
+              Commands.parallel(
+                  flywheelLeft.offCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)));
+    }
   }
 
   /**

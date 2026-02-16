@@ -13,8 +13,9 @@ import frc.robot.Constants;
  */
 public class TunerConstants {
   // Delegated constants - these forward to the selected variant based on Constants.currentBot
-  public static final CANBus kCANBus;
-  public static final CANBus kRioCANBus;
+  public static final CANBus kCANBus1;
+  public static final CANBus kCANBus2;
+  public static final CANBus kCANBusRio;
   public static final LinearVelocity kSpeedAt12Volts;
   public static final SwerveDrivetrainConstants DrivetrainConstants;
   public static final SwerveModuleConstants<
@@ -34,8 +35,9 @@ public class TunerConstants {
   static {
     switch (Constants.currentBot) {
       case SOFTWARE:
-        kCANBus = TunerConstantsSoftware.kCANBus;
-        kRioCANBus = TunerConstantsSoftware.kRioCANBus;
+        kCANBus1 = TunerConstantsSoftware.kCANBus1;
+        kCANBus2 = TunerConstantsSoftware.kCANBus2;
+        kCANBusRio = TunerConstantsSoftware.kCANBusRio;
         kSpeedAt12Volts = TunerConstantsSoftware.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsSoftware.DrivetrainConstants;
         FrontLeft = TunerConstantsSoftware.FrontLeft;
@@ -43,10 +45,21 @@ public class TunerConstants {
         BackLeft = TunerConstantsSoftware.BackLeft;
         BackRight = TunerConstantsSoftware.BackRight;
         break;
+      case BRAVO:
+        kCANBus1 = TunerConstantsBravo.kCANBus1;
+        kCANBus2 = TunerConstantsBravo.kCANBus2;
+        kCANBusRio = TunerConstantsBravo.kCANBusRio;
+        kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
+        DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;
+        FrontLeft = TunerConstantsBravo.FrontLeft;
+        FrontRight = TunerConstantsBravo.FrontRight;
+        BackLeft = TunerConstantsBravo.BackLeft;
+        BackRight = TunerConstantsBravo.BackRight;
+        break;
         // Add more cases here for additional robots:
         // case COMPETITION:
-        //   kCANBus = TunerConstantsCompetition.kCANBus;
-        //   kSpeedAt12Volts = TunerConstantsCompetition.kSpeedAt12Volts;
+        //   kCANBus1 = TunerConstantsCompetition.kCANBus1;
+        //   kCANBus2 = TunerConstantsCompetition.kCANBus2;
         //   DrivetrainConstants = TunerConstantsCompetition.DrivetrainConstants;
         //   FrontLeft = TunerConstantsCompetition.FrontLeft;
         //   FrontRight = TunerConstantsCompetition.FrontRight;
