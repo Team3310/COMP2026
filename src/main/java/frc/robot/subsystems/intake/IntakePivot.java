@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
 
@@ -50,6 +51,7 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
 
   @Override
   public void periodic() {
+    SmartDashboard.putNumber("Intake Position", getCurrentPosition());
     super.periodic();
   }
 }

@@ -47,4 +47,13 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseRPM)
         .withName("Flywheel Reverse");
   }
+
+  /**
+   * Command to stop the flywheel.
+   *
+   * @return Command that stops the flywheel
+   */
+  public Command offCommand() {
+    return velocitySetpointCommand(() -> 0.0).withName("Flywheel Off");
+  }
 }

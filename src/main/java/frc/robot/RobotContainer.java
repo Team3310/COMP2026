@@ -22,6 +22,8 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.IntakePivot;
 import frc.robot.subsystems.intake.IntakeRollers;
+import frc.robot.subsystems.scorer.flywheel.Flywheel;
+import frc.robot.subsystems.scorer.hood.Hood;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -82,6 +84,22 @@ public class RobotContainer {
     }
   }
 
+  private Flywheel buildFlywheelSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Flywheel(config, new TalonFXIO(config));
+    } else {
+      return new Flywheel(config, new SimTalonFXIO(config));
+    }
+  }
+
+  private Hood buildHoodSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Hood(config, new TalonFXIO(config));
+    } else {
+      return new Hood(config, new SimTalonFXIO(config));
+    }
+  }
+
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
@@ -91,8 +109,8 @@ public class RobotContainer {
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
   private final IntakePivot intakePivot = buildIntakePivotSystem();
-  // private final Hood hood;
-  // private final Flywheel flywheel;
+  private final Hood hoodLeft = buildHoodSystem(Constants.kLeftHoodConfig);
+  private final Flywheel flywheelLeft = buildFlywheelSystem(Constants.kLeftFlywheelConfig);
 
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
@@ -133,15 +151,6 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-
-    // TODO: Re-enable after subsystems are fixed
-    // Add SmartDashboard buttons for shooter (only if shooter exists)
-    // if (shooter != null) {
-    // SmartDashboard.putData("Shooter: 3000 RPM", shooter.RPMCommand(3000.0));
-    // SmartDashboard.putData("Shooter: 4000 RPM", shooter.RPMCommand(4000.0));
-    // SmartDashboard.putData("Shooter: 5000 RPM", shooter.RPMCommand(5000.0));
-    // SmartDashboard.putData("Shooter: Stop", shooter.dutyCycleCommand(() -> 0.0));
-    // }
 
     // Configure the button bindings
     configureButtonBindings();
@@ -186,20 +195,6 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // TODO: Re-enable after subsystems are fixed
-    // Intake controls
-    // Left Trigger - Run intake forward (hold to run forward)
-    // controller.leftTrigger().whileTrue(intakePivot.setDegreesCommand(180));
-
-    // Right Trigger - Run intake backward (hold to run backward)
-    // controller.rightTrigger().whileTrue(intakePivot.setDegreesCommand(-180.0));
-
-    // controller.leftBumper().whileTrue(hood.setDegreesCommand(0.0));
-
-    // controller.rightBumper().whileTrue(hood.setDegreesCommand(15.0));
-
-    // controller.rightBumper().whileTrue(flywheel.forwardCommand());
-
     if (agitatorRight != null && agitatorLeft != null) {
       // Y button = toggle agitator rollers on/off (closed loop PID)
       controller
@@ -224,10 +219,20 @@ public class RobotContainer {
     }
 
     if (intakePivot != null) {
-      // D-pad Up = pivot to stow position (0 degrees)
       controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
-      // D-pad Down = pivot to deploy/intake position (145 degrees per design sheet)
       controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
+    }
+
+    // if (hood != null) {
+    // controller.povUp().onTrue(hood.setDegreesCommand(15.0));
+    // controller.povDown().onTrue(hood.setDegreesCommand(0.0));
+    // }
+
+    if (flywheelLeft != null && hoodLeft != null) {
+      controller
+          .povLeft()
+          .toggleOnTrue(
+              Commands.parallel(flywheelLeft.forwardCommand(), hoodLeft.setDegreesCommand(15.0)));
     }
   }
 
