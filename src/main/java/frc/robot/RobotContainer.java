@@ -251,16 +251,40 @@ public class RobotContainer {
       controller
           .y()
           .toggleOnTrue(
-              Commands.parallel(agitatorRight.intakeCommand(), agitatorLeft.intakeCommand()));
+              Commands.parallel(agitatorRight.snowblowCommand(), agitatorLeft.snowblowCommand()));
     }
 
     if (verticalFeedRight != null && verticalFeedLeft != null) {
-      // Left Trigger = toggle left vertical feed roller on/off (closed loop PID)
-      controller.leftTrigger().toggleOnTrue(verticalFeedLeft.verticalFeedIntakeCommand());
 
-      // Right Trigger = toggle right vertical feed roller on/off (closed loop PID)
-      controller.rightTrigger().toggleOnTrue(verticalFeedRight.verticalFeedIntakeCommand());
+      // Left Trigger = toggle vertical feed roller on/off (closed loop PID)
+      controller
+          .leftTrigger()
+          .toggleOnTrue(
+              Commands.parallel(
+                  verticalFeedLeft.verticalFeedIntakeCommand(),
+                  verticalFeedRight.verticalFeedIntakeCommand()));
     }
+
+    controller
+        .rightTrigger()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  switch (Constants.overrideState) {
+                    case FALSE:
+                      Constants.overrideState = Constants.Override.COLLECT;
+                      break;
+                    case COLLECT:
+                      Constants.overrideState = Constants.Override.DEFENCE;
+                      break;
+                    case DEFENCE:
+                      Constants.overrideState = Constants.Override.FALSE;
+                      break;
+                    default:
+                      Constants.overrideState = Constants.Override.FALSE;
+                      break;
+                  }
+                }));
 
     if (intakeRollers != null && intakePivot != null) {
       // Right bumper = toggle intake rollers on/off

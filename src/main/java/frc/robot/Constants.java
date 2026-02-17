@@ -12,6 +12,8 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -30,7 +32,11 @@ import java.util.Enumeration;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-  public static final BotState currentState = BotState.COLLECT;
+  public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+
+  public static boolean activeHub = true;
+  public static BotState currentState = BotState.COLLECT;
+  public static Override overrideState = Override.FALSE;
 
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
@@ -65,9 +71,15 @@ public final class Constants {
 
   public static enum BotState {
     SNOWBLOW,
-    COLLECT
+    COLLECT,
+    DEFENCE
   }
 
+  public static enum Override {
+    FALSE,
+    COLLECT,
+    DEFENCE
+  }
 
   public static final ClosedLoopRampsConfigs makeDefaultClosedLoopRampConfig() {
     return new ClosedLoopRampsConfigs()
@@ -308,15 +320,14 @@ public final class Constants {
     // Floor Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
-    public static final double kFloorRollerIntakeRPM =
+    public static final double kFloorRollerSnowblowRPM =
         900.0; // RPM at output (increased for testing)
-    public static final double kFloorRollerOuttakeRPM =
-        -900.0; // RPM at output (increased for testing)
-    public static final double kFloorRollerIntakeRPS =
-        kFloorRollerIntakeRPM / 60.0; // RPS at output = 30 RPS
-    public static final double kFloorRollerOuttakeRPS =
-        kFloorRollerOuttakeRPM / 60.0; // RPS at output = -30 RPS
-
+    public static final double kFloorRollerCollectRPM =
+        100.0; // RPM at output (increased for testing)
+    public static final double kFloorRollerSnowblowRPS =
+        kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
+    public static final double kFloorRollerCollectRPS =
+        kFloorRollerCollectRPM / 60.0; // RPS at output = 6.67 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
     public static final double kVerticalFeedIntakeRPM = 3600.0; // RPM at output

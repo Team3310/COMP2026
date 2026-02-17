@@ -24,8 +24,8 @@ import org.littletonrobotics.junction.Logger;
  */
 public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public MotorIO motorIO;
-  private static final String INTAKE_RPM_KEY = "Agitator/IntakeRPM";
-  private static final String OUTTAKE_RPM_KEY = "Agitator/OuttakeRPM";
+  private static final String SNOWBLOW_RPM_KEY = "Agitator/SnowblowRPM";
+  private static final String COLLECT_RPM_KEY = "Agitator/CollectRPM";
 
   public Agitator(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -33,9 +33,9 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
 
     // Initialize SmartDashboard with default RPM values (converting from RPS)
     SmartDashboard.putNumber(
-        INTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
+        SNOWBLOW_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerSnowblowRPS));
     SmartDashboard.putNumber(
-        OUTTAKE_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerOuttakeRPS));
+        COLLECT_RPM_KEY, rpsToRpm(Constants.AgitatorConstants.kFloorRollerCollectRPS));
 
     // Log configuration to AdvantageKit (persists in logs, doesn't get overwritten)
     Logger.recordOutput(getName() + "/Config/Name", motorConfig.name);
@@ -43,10 +43,10 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     Logger.recordOutput(getName() + "/Config/CANBus", motorConfig.talonCANID.getBus());
     Logger.recordOutput(getName() + "/Config/GearRatio", motorConfig.unitToRotorRatio);
     Logger.recordOutput(
-        getName() + "/Config/TargetIntakeRPS", Constants.AgitatorConstants.kFloorRollerIntakeRPS);
+        getName() + "/Config/TargetIntakeRPS", Constants.AgitatorConstants.kFloorRollerSnowblowRPS);
     Logger.recordOutput(
         getName() + "/Config/TargetIntakeRPM",
-        rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS));
+        rpsToRpm(Constants.AgitatorConstants.kFloorRollerSnowblowRPS));
     Logger.recordOutput(getName() + "/Config/PID/kP", motorConfig.fxConfig.Slot0.kP);
     Logger.recordOutput(getName() + "/Config/PID/kI", motorConfig.fxConfig.Slot0.kI);
     Logger.recordOutput(getName() + "/Config/PID/kD", motorConfig.fxConfig.Slot0.kD);
@@ -64,9 +64,9 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
             + motorConfig.talonCANID.getBus());
     System.out.println(
         "  Target: "
-            + Constants.AgitatorConstants.kFloorRollerIntakeRPS
+            + Constants.AgitatorConstants.kFloorRollerSnowblowRPS
             + " RPS ("
-            + rpsToRpm(Constants.AgitatorConstants.kFloorRollerIntakeRPS)
+            + rpsToRpm(Constants.AgitatorConstants.kFloorRollerSnowblowRPS)
             + " RPM)");
     System.out.println(
         "  PID: kP="
@@ -131,19 +131,18 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    *
    * @return Command that runs roller in intake direction
    */
-  public Command intakeCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerIntakeRPM)
-        .withName(getName() + " Intake");
+  public Command snowblowCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerSnowblowRPM)
+        .withName(getName() + " Snowblow");
   }
-
   /**
    * Command to run roller at the floor roller outtake speed from SmartDashboard.
    *
    * @return Command that runs roller in outtake direction
    */
-  public Command outtakeCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerOuttakeRPM)
-        .withName(getName() + " Outtake");
+  public Command collectCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerCollectRPM)
+        .withName(getName() + " Collect");
   }
 
   /**
