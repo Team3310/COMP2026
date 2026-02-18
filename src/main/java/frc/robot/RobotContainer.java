@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
+import frc.lib.util.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -233,7 +234,17 @@ public class RobotContainer {
                 () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    controller
+        .x()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(
+                                FieldConstants.StartingPosition.BLUEHUB.getTranslation(),
+                                Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
 
     // Reset gyro to 0° when B button is pressed
     controller
@@ -301,13 +312,13 @@ public class RobotContainer {
     }
 
     // if (intakePivot != null) {
-    //   controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
-    //   controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
+    // controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
+    // controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
     // }
 
     // if (hoodLeft != null) {
-    //   controller.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
-    //   controller.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
+    // controller.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
+    // controller.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
     // }
 
     if (turretLeft != null) {

@@ -18,6 +18,25 @@ public class FieldConstants {
   public static final double fieldLength = Units.inchesToMeters(651.0);
   public static final double fieldWidth = Units.inchesToMeters(318.0);
 
+  public static enum StartingPosition { // measured with sim
+    BLUEDEP(new Translation2d(3.570, 7.617)),
+    BLUEHUB(new Translation2d(3.570, 3.977)),
+    BLUEOUT(new Translation2d(3.750, 0.463)),
+    REDDEP(new Translation2d(13.0, 0.463)),
+    REDHUB(new Translation2d(13.0, 3.977)),
+    REDOUT(new Translation2d(13.0, 7.617));
+
+    private Translation2d translation;
+
+    private StartingPosition(Translation2d translation) {
+      this.translation = translation;
+    }
+
+    public Translation2d getTranslation() {
+      return translation;
+    }
+  }
+
   public static enum
       Corner { // landing zones of where we want the balls to land when passing (little bit out from
     // corner)
