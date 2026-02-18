@@ -323,7 +323,7 @@ public final class Constants {
     public static final double kFloorRollerSnowblowRPM =
         900.0; // RPM at output (increased for testing)
     public static final double kFloorRollerCollectRPM =
-        100.0; // RPM at output (increased for testing)
+        100.0; // RPM while intaking (Decreased for Collect mode)
     public static final double kFloorRollerSnowblowRPS =
         kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
     public static final double kFloorRollerCollectRPS =
