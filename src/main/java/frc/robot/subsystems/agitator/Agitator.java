@@ -165,6 +165,10 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
         .withName(getName() + " VertFeed Outtake");
   }
 
+  public Command offCommand() {
+    return velocitySetpointCommand(() -> 0.0).withName("Intake Off");
+  }
+
   /**
    * Command to run roller at a custom velocity setpoint in RPS.
    *

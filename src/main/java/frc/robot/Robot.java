@@ -9,6 +9,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.util.FieldConstants.Zone;
@@ -90,6 +91,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
 
     double robotX = robotContainer.getDrive().getPose().getX();
+    Zone currentZone =
+        robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
     if (Constants.overrideState == Constants.Override.COLLECT) {
       Constants.currentState = Constants.BotState.COLLECT;
@@ -97,9 +100,9 @@ public class Robot extends LoggedRobot {
       Constants.currentState = Constants.BotState.DEFENCE;
     } else { // Override if FALSE
       // Automated State Machine
-      if (robotX < Zone.BLUE.getX() && Constants.alliance == Alliance.Blue && !(isHubActive())) {
+      if (currentZone == Zone.BLUE && Constants.alliance == Alliance.Blue && !(isHubActive())) {
         Constants.currentState = Constants.BotState.COLLECT;
-      } else if (robotX < Zone.RED.getX()
+      } else if (currentZone == Zone.RED
           && Constants.alliance == Alliance.Red
           && !(isHubActive())) {
         Constants.currentState = Constants.BotState.COLLECT;
@@ -107,6 +110,12 @@ public class Robot extends LoggedRobot {
         Constants.currentState = Constants.BotState.SNOWBLOW;
       }
     }
+
+    SmartDashboard.putString("currentState", "" + Constants.currentState);
+    SmartDashboard.putString("robotX", "" + robotX);
+    SmartDashboard.putString("currentZone", "" + currentZone);
+    SmartDashboard.putBoolean("activeHub", isHubActive());
+    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     switch (Constants.currentState) {
       case SNOWBLOW:
@@ -116,6 +125,7 @@ public class Robot extends LoggedRobot {
         collect();
         break;
       case DEFENCE:
+        defense();
         break;
     }
 
@@ -256,5 +266,13 @@ public class Robot extends LoggedRobot {
     robotContainer.getAgitatorLeft().collectCommand();
     robotContainer.getAgitatorRight().collectCommand();
     robotContainer.getIntakeRollers().intakeCommand();
+  }
+
+  private void defense() {
+    robotContainer.getAgitatorLeft().offCommand();
+    robotContainer.getAgitatorRight().offCommand();
+    robotContainer.getIntakeRollers().offCommand();
+    robotContainer.getVerticalFeedLeft().offCommand();
+    robotContainer.getVerticalFeedRight().offCommand();
   }
 }

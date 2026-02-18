@@ -84,4 +84,8 @@ public class IntakeRollers
   public Command offCommand() {
     return velocitySetpointCommand(() -> 0.0).withName("Intake Off");
   }
+
+  public Command customVelocityCommand(double velocityRPM) {
+    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+  }
 }
