@@ -98,6 +98,85 @@ public final class Constants {
         .withVoltageOpenLoopRampPeriod(0.02);
   }
 
+  // #region Vision
+  // -------------------------------------------------------------------------
+  // MegaTag 2 Vision Constants — 3× Limelight 4 cameras
+  // Camera positions are from the Practice Robot Software Design Sheet.
+  // Coordinate system: LL Robot-Space — forward(+X), side(+Y left), up(+Z).
+  // All linear values converted from inches to meters.
+  // -------------------------------------------------------------------------
+  public static final class VisionConstants {
+    // Camera hostnames (must match Limelight web UI / network config)
+    public static final String kLimelightRear = "limelight-rear";
+    public static final String kLimelightRight = "limelight-right";
+    public static final String kLimelightLeft = "limelight-left";
+
+    public static final String[] kCameraNames = {kLimelightRear, kLimelightRight, kLimelightLeft};
+
+    // ---- Camera #1  (Rear-facing) ----
+    // SDS: X = -1.098 in, Y = 0 in, Z = 20.338 in
+    //      Zrot = 180°, Yrot(pitch) = 20°, Xrot(roll) = 0° (TBD treated as 0)
+    public static final double kRearForwardM = Units.inchesToMeters(-1.098);
+    public static final double kRearSideM = Units.inchesToMeters(0.0);
+    public static final double kRearUpM = Units.inchesToMeters(20.338);
+    public static final double kRearRollDeg = 0.0;
+    public static final double kRearPitchDeg = 20.0;
+    public static final double kRearYawDeg = 180.0;
+
+    // ---- Camera #2  (Right-side, mounted upside-down) ----
+    // SDS: X = -3.132 in, Y = -13.179 in, Z = 13.558 in
+    //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
+    public static final double kRightForwardM = Units.inchesToMeters(-3.132);
+    public static final double kRightSideM = Units.inchesToMeters(-13.179);
+    public static final double kRightUpM = Units.inchesToMeters(13.558);
+    public static final double kRightRollDeg = 180.0; // upside-down
+    public static final double kRightPitchDeg = 0.0;
+    public static final double kRightYawDeg = -90.0;
+
+    // ---- Camera #3  (Left-side) ----
+    // SDS: X = -3.312 in, Y = 13.179 in, Z = 13.558 in
+    //      Zrot = 90°, Yrot = 0°, Xrot = 0°
+    public static final double kLeftForwardM = Units.inchesToMeters(-3.312);
+    public static final double kLeftSideM = Units.inchesToMeters(13.179);
+    public static final double kLeftUpM = Units.inchesToMeters(13.558);
+    public static final double kLeftRollDeg = 0.0;
+    public static final double kLeftPitchDeg = 0.0;
+    public static final double kLeftYawDeg = 90.0;
+
+    // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
+    // LimelightHelpers.setCameraPose_RobotSpace()
+    public static final double[][] kCameraPoses = {
+      {kRearForwardM, kRearSideM, kRearUpM, kRearRollDeg, kRearPitchDeg, kRearYawDeg},
+      {kRightForwardM, kRightSideM, kRightUpM, kRightRollDeg, kRightPitchDeg, kRightYawDeg},
+      {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
+    };
+
+    // ---- Filtering thresholds ----
+    // Maximum angular velocity (deg/s) before we reject vision updates.
+    // Fast rotation causes motion-blur → bad detections.
+    public static final double kMaxAngularVelocityDegPerSec = 720.0;
+
+    // Minimum average tag area (% of image) required to trust a single-tag result
+    public static final double kMinTagAreaForSingleTag = 0.1;
+
+    // Maximum allowed distance from prior pose before rejecting (meters)
+    public static final double kMaxPoseJumpMeters = 1.5;
+
+    // ---- Limelight NT std-dev array ----
+    // The Limelight publishes a 12-element "stddevs" array on NetworkTables:
+    //   [MT1x, MT1y, MT1z, MT1roll, MT1pitch, MT1yaw,
+    //    MT2x, MT2y, MT2z, MT2roll, MT2pitch, MT2yaw]
+    // We only use the MegaTag 2 entries (indices 6–11).
+    public static final int kExpectedStdDevArrayLength = 12;
+    public static final int kMT2XStdDevIndex = 6;
+    public static final int kMT2YStdDevIndex = 7;
+
+    // Theta std dev — set very high because MegaTag 2 uses gyro for rotation.
+    // We ignore the LL-reported yaw std dev and always override with this value.
+    public static final double kThetaStdDev = 999999.0;
+  }
+  // #endregion
+
   // #region Scorer Subsystems
   public static final class ScorerConstants {
     public static final double kShootRPM = 1000.0;
