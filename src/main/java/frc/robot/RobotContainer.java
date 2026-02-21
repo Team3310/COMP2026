@@ -3,6 +3,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -14,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
-import frc.lib.util.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -237,9 +237,7 @@ public class RobotContainer {
             Commands.runOnce(
                     () ->
                         drive.setPose(
-                            new Pose2d(
-                                FieldConstants.StartingPosition.REDHUB.getTranslation(),
-                                Rotation2d.kZero)),
+                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
 

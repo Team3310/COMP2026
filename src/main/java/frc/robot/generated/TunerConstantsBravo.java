@@ -97,7 +97,10 @@ public class TunerConstantsBravo {
 
   private static final double kDriveGearRatio = 5.8909090909090915;
   private static final double kSteerGearRatio = 12.1;
-  private static final Distance kWheelRadius = Inches.of(2);
+  private static final double kRadiusFactor =
+      ((78.7 - 20.5) / 78.7)
+          * ((78.7 - 1.0) / 78.7); // (2m in inches - error)/(2m in inches) Percent Error
+  private static final Distance kWheelRadius = Inches.of(2 * kRadiusFactor);
 
   private static final boolean kInvertLeftSide = false;
   private static final boolean kInvertRightSide = true;

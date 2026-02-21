@@ -96,7 +96,7 @@ public class Robot extends LoggedRobot {
         robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
     // Update Constants.activeHub based on match time / override flag
-    isHubActive();
+    updateHub();
 
     if (Constants.overrideState == Constants.Override.COLLECT) {
       Constants.currentState = Constants.BotState.COLLECT;
@@ -199,7 +199,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {}
 
-  public void isHubActive() {
+  public void updateHub() {
     // If manually overridden OFF via SmartDashboard button, skip automatic calculation
     if (Constants.hubOverride) {
       Constants.activeHub = false;
@@ -219,7 +219,6 @@ public class Robot extends LoggedRobot {
     }
     // At this point, if we're not teleop enabled, there is no hub.
     if (!DriverStation.isTeleopEnabled()) {
-      Constants.activeHub = false;
       return;
     }
 
@@ -228,7 +227,7 @@ public class Robot extends LoggedRobot {
     String gameData = DriverStation.getGameSpecificMessage();
     // If we have no game data, we cannot compute, assume hub is active, as its likely early in
     // teleop.
-    if (matchTime < 0) {
+    if (matchTime < 0 && (gameData == null || gameData.isEmpty())) {
       Constants.activeHub = true;
       return;
     }
