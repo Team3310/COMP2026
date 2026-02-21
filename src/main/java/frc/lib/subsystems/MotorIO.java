@@ -10,6 +10,8 @@ public interface MotorIO {
 
   void setOpenLoopDutyCycle(double dutyCycle);
 
+  void setNeutralOutput();
+
   // These are in the "units" of the subsystem (rad, m).
   void setPositionSetpoint(double units);
 

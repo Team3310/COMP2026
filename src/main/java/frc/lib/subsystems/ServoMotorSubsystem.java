@@ -29,9 +29,7 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     this.inputs = inputs;
 
     setDefaultCommand(
-        dutyCycleCommand(() -> 0.0)
-            .withName(getName() + " Default Command Neutral")
-            .ignoringDisable(true));
+        neutralCommand().withName(getName() + " Default Command Neutral").ignoringDisable(true));
   }
 
   @Override
@@ -140,6 +138,10 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
               setOpenLoopDutyCycleImpl(0.0);
             })
         .withName(getName() + " DutyCycleControl");
+  }
+
+  public Command neutralCommand() {
+    return run(() -> io.setNeutralOutput()).withName(getName() + " Neutral");
   }
 
   public Command dutyCycleCommandNoEnd(DoubleSupplier dutyCycle) {

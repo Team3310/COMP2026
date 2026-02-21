@@ -166,7 +166,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   }
 
   public Command offCommand() {
-    return velocitySetpointCommand(() -> 0.0).withName("Intake Off");
+    return neutralCommand();
   }
 
   /**

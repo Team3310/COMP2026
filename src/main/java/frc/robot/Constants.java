@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
-import frc.lib.subsystems.ServoMotorSubsystemWithFollowersConfig;
 import frc.robot.generated.TunerConstants;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -35,6 +34,7 @@ public final class Constants {
   public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
   public static boolean activeHub = true;
+  public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static BotState currentState = BotState.COLLECT;
   public static Override overrideState = Override.FALSE;
 
@@ -206,7 +206,7 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     public static final double kIntakeVelocityRPM = 1900.0;
-    public static final double kOutakeVelocityRPM = -1900.0;
+    public static final double kDeployVelocityRPM = -1000.0;
 
     public static final double kIntakePivotStowPositionRadians = Units.degreesToRadians(-80);
     public static final double kIntakePivotStowForClimbPositionRadians =
@@ -222,34 +222,8 @@ public final class Constants {
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
   }
 
-  public static final ServoMotorSubsystemWithFollowersConfig.FollowerConfig
-      kIntakeRollerFollowerConfig = new ServoMotorSubsystemWithFollowersConfig.FollowerConfig();
-
-  static {
-    kIntakeRollerFollowerConfig.config.name = "Intake_Roller_Follower";
-    kIntakeRollerFollowerConfig.config.talonCANID =
-        new CANDeviceId(14, TunerConstants.kCANBus1.getName()); // Motor 2 (slave)
-    kIntakeRollerFollowerConfig.inverted = true;
-    kIntakeRollerFollowerConfig.config.momentOfInertia = 0.00132536;
-    kIntakeRollerFollowerConfig.config.unitToRotorRatio =
-        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
-
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kI = 0.0;
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kD = 0.0;
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kS =
-        0.02; // Increased from 0.02 - overcome friction
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kV =
-        0.1; // Increased from 0.1 - velocity feedforward
-    kIntakeRollerFollowerConfig.config.fxConfig.Slot0.kA = 0.0;
-
-    kIntakeRollerFollowerConfig.config.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerFollowerConfig.config.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
-  }
-
-  public static final ServoMotorSubsystemWithFollowersConfig kIntakeRollerConfig =
-      new ServoMotorSubsystemWithFollowersConfig();
+  public static final ServoMotorSubsystemConfig kIntakeRollerConfig =
+      new ServoMotorSubsystemConfig();
 
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
@@ -257,7 +231,7 @@ public final class Constants {
         new CANDeviceId(13, TunerConstants.kCANBus1.getName()); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
-        18.0 / 20. * 10.0 / 32.0 * 60.0; // gear ratio in RPM to RPS
+        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
 
     kIntakeRollerConfig.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
@@ -270,8 +244,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
 
-    kIntakeRollerConfig.followers =
-        new ServoMotorSubsystemWithFollowersConfig.FollowerConfig[] {kIntakeRollerFollowerConfig};
+    kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
   }
 
   public static final ServoMotorSubsystemWithCanCoderConfig kIntakePivotConfig =
@@ -321,9 +294,9 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     public static final double kFloorRollerSnowblowRPM =
-        900.0; // RPM at output (increased for testing)
+        2000.0; // RPM at output (increased for testing)
     public static final double kFloorRollerCollectRPM =
-        100.0; // RPM while intaking (Decreased for Collect mode)
+        200.0; // RPM while intaking (Decreased for Collect mode)
     public static final double kFloorRollerSnowblowRPS =
         kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
     public static final double kFloorRollerCollectRPS =

@@ -5,8 +5,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -65,14 +67,10 @@ public class RobotContainer {
   private IntakeRollers buildIntakeRollersSystem() {
     if (Constants.currentMode == Constants.Mode.REAL) {
       return new IntakeRollers(
-          Constants.kIntakeRollerConfig,
-          new TalonFXIO(Constants.kIntakeRollerConfig),
-          new TalonFXIO[] {new TalonFXIO(Constants.kIntakeRollerConfig.followers[0].config)});
+          Constants.kIntakeRollerConfig, new TalonFXIO(Constants.kIntakeRollerConfig));
     } else {
       return new IntakeRollers(
-          Constants.kIntakeRollerConfig,
-          new SimTalonFXIO(Constants.kIntakeRollerConfig),
-          new SimTalonFXIO[] {new SimTalonFXIO(Constants.kIntakeRollerConfig.followers[0].config)});
+          Constants.kIntakeRollerConfig, new SimTalonFXIO(Constants.kIntakeRollerConfig));
     }
   }
 
@@ -204,6 +202,10 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    SmartDashboard.putData(
+        "Change Hub Active",
+        new InstantCommand(() -> Constants.hubOverride = !Constants.hubOverride));
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -241,7 +243,7 @@ public class RobotContainer {
                     () ->
                         drive.setPose(
                             new Pose2d(
-                                FieldConstants.StartingPosition.BLUEHUB.getTranslation(),
+                                FieldConstants.StartingPosition.REDHUB.getTranslation(),
                                 Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
@@ -249,6 +251,17 @@ public class RobotContainer {
     // Reset gyro to 0° when B button is pressed
     controller
         .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
+
+    // Zero gyro with Start button (same as B, easier to reach mid-match)
+    controller
+        .start()
         .onTrue(
             Commands.runOnce(
                     () ->
@@ -302,13 +315,13 @@ public class RobotContainer {
       controller
           .rightBumper()
           .toggleOnTrue(
-              Commands.parallel(
-                  intakeRollers.intakeCommand(), intakePivot.setDegreesCommand(145.0)));
+              Commands.parallel(intakeRollers.deployCommand(), intakePivot.setDegreesCommand(145.0))
+                  .andThen(intakeRollers.intakeCommand()));
       // Left bumper = toggle outtake rollers on/off
       controller
           .leftBumper()
           .toggleOnTrue(
-              Commands.parallel(intakeRollers.outakeCommand(), intakePivot.setDegreesCommand(0.0)));
+              Commands.parallel(intakeRollers.offCommand(), intakePivot.setDegreesCommand(0.0)));
     }
 
     // if (intakePivot != null) {

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.util.FieldConstants.Zone;
 import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -94,17 +95,22 @@ public class Robot extends LoggedRobot {
     Zone currentZone =
         robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
+    // Update Constants.activeHub based on match time / override flag
+    isHubActive();
+
     if (Constants.overrideState == Constants.Override.COLLECT) {
       Constants.currentState = Constants.BotState.COLLECT;
     } else if (Constants.overrideState == Constants.Override.DEFENCE) {
       Constants.currentState = Constants.BotState.DEFENCE;
     } else { // Override if FALSE
       // Automated State Machine
-      if (currentZone == Zone.BLUE && Constants.alliance == Alliance.Blue && !(isHubActive())) {
+      if (currentZone == Zone.BLUE
+          && Constants.alliance == Alliance.Blue
+          && !(Constants.activeHub)) {
         Constants.currentState = Constants.BotState.COLLECT;
       } else if (currentZone == Zone.RED
           && Constants.alliance == Alliance.Red
-          && !(isHubActive())) {
+          && !(Constants.activeHub)) {
         Constants.currentState = Constants.BotState.COLLECT;
       } else {
         Constants.currentState = Constants.BotState.SNOWBLOW;
@@ -112,9 +118,11 @@ public class Robot extends LoggedRobot {
     }
 
     SmartDashboard.putString("currentState", "" + Constants.currentState);
+    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
     SmartDashboard.putString("robotX", "" + robotX);
     SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", isHubActive());
+    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
+    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     switch (Constants.currentState) {
@@ -191,19 +199,28 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {}
 
-  public boolean isHubActive() {
+  public void isHubActive() {
+    // If manually overridden OFF via SmartDashboard button, skip automatic calculation
+    if (Constants.hubOverride) {
+      Constants.activeHub = false;
+      return;
+    }
+
     Optional<Alliance> alliance = DriverStation.getAlliance();
     // If we have no alliance, we cannot be enabled, therefore no hub.
     if (alliance.isEmpty()) {
-      return false;
+      Constants.activeHub = false;
+      return;
     }
     // Hub is always enabled in autonomous.
     if (DriverStation.isAutonomousEnabled()) {
-      return true;
+      Constants.activeHub = true;
+      return;
     }
     // At this point, if we're not teleop enabled, there is no hub.
     if (!DriverStation.isTeleopEnabled()) {
-      return false;
+      Constants.activeHub = false;
+      return;
     }
 
     // We're teleop enabled, compute.
@@ -211,8 +228,9 @@ public class Robot extends LoggedRobot {
     String gameData = DriverStation.getGameSpecificMessage();
     // If we have no game data, we cannot compute, assume hub is active, as its likely early in
     // teleop.
-    if (gameData.isEmpty()) {
-      return true;
+    if (matchTime < 0) {
+      Constants.activeHub = true;
+      return;
     }
     boolean redInactiveFirst = false;
     switch (gameData.charAt(0)) {
@@ -220,7 +238,8 @@ public class Robot extends LoggedRobot {
       case 'B' -> redInactiveFirst = false;
       default -> {
         // If we have invalid game data, assume hub is active.
-        return true;
+        Constants.activeHub = true;
+        return;
       }
     }
 
@@ -233,46 +252,66 @@ public class Robot extends LoggedRobot {
 
     if (matchTime > 130) {
       // Transition shift, hub is active.
-      return true;
+      Constants.activeHub = true;
+      return;
     } else if (matchTime > 105) {
       // Shift 1
-      return shift1Active;
+      Constants.activeHub = shift1Active;
+      return;
     } else if (matchTime > 80) {
       // Shift 2
-      return !shift1Active;
+      Constants.activeHub = !shift1Active;
+      return;
     } else if (matchTime > 55) {
       // Shift 3
-      return shift1Active;
+      Constants.activeHub = shift1Active;
+      return;
     } else if (matchTime > 30) {
       // Shift 4
-      return !shift1Active;
+      Constants.activeHub = !shift1Active;
+      return;
     } else {
       // End game, hub always active.
-      return true;
+      Constants.activeHub = true;
+      return;
     }
   }
 
   private void snowblow() {
-    // TODO: ADD TURRENT SUBSYSTEMS (flywheel, pivots)
-    robotContainer.getAgitatorLeft().snowblowCommand();
-    robotContainer.getAgitatorRight().snowblowCommand();
-    robotContainer.getIntakeRollers().intakeCommand();
-    robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand();
-    robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand();
+    Commands.runOnce(
+            () -> {
+              // TODO: ADD TURRET SUBSYSTEMS (flywheel, pivots)
+              robotContainer.getAgitatorLeft().snowblowCommand().schedule();
+              robotContainer.getAgitatorRight().snowblowCommand().schedule();
+              robotContainer.getIntakeRollers().intakeCommand().schedule();
+              robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand().schedule();
+              robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand().schedule();
+            })
+        .schedule();
   }
 
   private void collect() {
-    // TODO: ADD TURRENT SUBSYSTEMS (flywheel, pivots)
-    robotContainer.getAgitatorLeft().collectCommand();
-    robotContainer.getAgitatorRight().collectCommand();
-    robotContainer.getIntakeRollers().intakeCommand();
+    Commands.runOnce(
+            () -> {
+              // TODO: ADD TURRET SUBSYSTEMS (flywheel, pivots)
+              robotContainer.getAgitatorLeft().collectCommand().schedule();
+              robotContainer.getAgitatorRight().collectCommand().schedule();
+              robotContainer.getIntakeRollers().intakeCommand().schedule();
+              robotContainer.getVerticalFeedLeft().offCommand().schedule();
+              robotContainer.getVerticalFeedRight().offCommand().schedule();
+            })
+        .schedule();
   }
 
   private void defense() {
-    robotContainer.getAgitatorLeft().offCommand();
-    robotContainer.getAgitatorRight().offCommand();
-    robotContainer.getIntakeRollers().offCommand();
-    robotContainer.getVerticalFeedLeft().offCommand();
-    robotContainer.getVerticalFeedRight().offCommand();
+    Commands.runOnce(
+            () -> {
+              robotContainer.getAgitatorLeft().offCommand().schedule();
+              robotContainer.getAgitatorRight().offCommand().schedule();
+              robotContainer.getIntakeRollers().offCommand().schedule();
+              robotContainer.getVerticalFeedLeft().offCommand().schedule();
+              robotContainer.getVerticalFeedRight().offCommand().schedule();
+            })
+        .schedule();
   }
 }

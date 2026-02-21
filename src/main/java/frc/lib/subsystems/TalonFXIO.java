@@ -21,6 +21,7 @@ public class TalonFXIO implements MotorIO {
   protected final ServoMotorSubsystemConfig config;
 
   protected final DutyCycleOut dutyCycleControl = new DutyCycleOut(0.0);
+  private final NeutralOut neutralControl = new NeutralOut();
   private final VelocityVoltage velocityVoltageControl = new VelocityVoltage(0.0);
   private final VoltageOut voltageControl = new VoltageOut(0.0);
   private final PositionVoltage positionVoltageControl = new PositionVoltage(0.0);
@@ -101,6 +102,11 @@ public class TalonFXIO implements MotorIO {
   @Override
   public void setOpenLoopDutyCycle(double dutyCycle) {
     talon.setControl(dutyCycleControl.withOutput(dutyCycle));
+  }
+
+  @Override
+  public void setNeutralOutput() {
+    talon.setControl(neutralControl);
   }
 
   @Override
