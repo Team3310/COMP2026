@@ -178,6 +178,65 @@ public final class Constants {
   }
   // #endregion
 
+  // #region Sim Physics
+  // -------------------------------------------------------------------------
+  // Simulation inertia model — adds whole-robot mass & rotational inertia to
+  // sim mode so that AdvantageScope odometry shows realistic acceleration,
+  // deceleration, and slip-like behavior instead of instant velocity changes.
+  //
+  // The model applies a first-order exponential lag to the commanded
+  // ChassisSpeeds on each axis independently:
+  //   actual += (commanded - actual) * (1 - e^(-dt / tau))
+  //
+  // Larger tau = more sluggish response (heavier / more friction).
+  // -------------------------------------------------------------------------
+  public static final class SimPhysicsConstants {
+    // ---- Translational inertia (forward / backward) ----
+    // Time constant in seconds. Higher = slower acceleration.
+    // ~0.15 s approximates a 75 kg robot with ~4 Kraken X60s on geared swerve.
+    // public static double kTranslationalTauSeconds = 0.15;
+    public static double kTranslationalTauSeconds = 0.12;
+
+    // ---- Lateral (strafe) inertia ----
+    // Typically similar to translational, but can be tuned separately to model
+    // higher lateral scrub / lower traction.
+    // public static double kLateralTauSeconds = 0.18;
+    public static double kLateralTauSeconds = 0.12;
+
+    // ---- Rotational inertia ----
+    // Time constant for angular velocity. Higher = harder to start/stop spinning.
+    // ~0.12 s is reasonable for a compact swerve with MOI ~6.9 kg·m².
+    public static double kRotationalTauSeconds = 0.12;
+
+    // ---- Soft speed caps ----
+    // These define the *effective* top speed the sim robot can reach.
+    // Instead of a hard wall, a drag model smoothly reduces acceleration as
+    // speed approaches the cap.  The robot asymptotically approaches but never
+    // exceeds the cap.  Set these independently of the tau values above.
+    //
+    // Translational soft cap (m/s).  The real kSpeedAt12Volts is the motor's
+    // theoretical max; this should be ≤ that value to model traction limits,
+    // carpet drag, etc.
+    public static double kTranslationalSoftCapMps = 4.5;
+
+    // Rotational soft cap (rad/s).  Real max ≈ kSpeedAt12Volts / driveBaseRadius.
+    // Lower this to model realistic turn-rate limits.
+    public static double kRotationalSoftCapRadPerSec = 8.0;
+
+    // ---- Drag curve exponent ----
+    // Controls the shape of the rolloff near the soft cap.
+    //   1.0  = linear rolloff   (gentle, starts limiting early)
+    //   2.0  = quadratic        (moderate — good default)
+    //   3.0+ = sharper knee     (feels fast until near the cap, then drops off)
+    // The drag factor is:  max(0, 1 - (speed / softCap) ^ exponent)
+    public static double kDragExponent = 2.0;
+
+    // ---- Simulated gyro noise (degrees per second, 1σ) ----
+    // Adds a small random walk to the sim gyro to mimic real sensor noise.
+    public static double kGyroNoiseDegPerSec = 0.05;
+  }
+  // #endregion
+
   // #region Scorer Subsystems
   public static final class ScorerConstants {
     public static final double kShootRPM = 1000.0;

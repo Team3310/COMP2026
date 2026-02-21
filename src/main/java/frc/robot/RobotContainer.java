@@ -20,8 +20,8 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.IntakePivot;
@@ -49,7 +49,7 @@ public class RobotContainer {
           new ModuleIOTalonFX(TunerConstants.BackRight));
     } else {
       return new Drive(
-          new GyroIO() {},
+          new GyroIOSim(),
           new ModuleIOSim(TunerConstants.FrontLeft),
           new ModuleIOSim(TunerConstants.FrontRight),
           new ModuleIOSim(TunerConstants.BackLeft),
