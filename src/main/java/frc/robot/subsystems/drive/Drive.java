@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.Constants.SimPhysicsConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
@@ -97,6 +98,11 @@ public class Drive extends SubsystemBase {
       };
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
+
+  // --- Sim inertia model ---
+  // Tracks the "actual" chassis speeds after filtering through the inertia model.
+  // Only used when Constants.currentMode == Mode.SIM.
+  private ChassisSpeeds simActualSpeeds = new ChassisSpeeds();
 
   public Drive(
       GyroIO gyroIO,
@@ -214,8 +220,89 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    // In sim mode, filter the commanded speeds through an inertial model with
+    // velocity-dependent drag so that:
+    //   1) The robot cannot change velocity instantaneously (tau-based inertia).
+    //   2) There is a smooth, continuous soft speed cap — the robot asymptotically
+    //      approaches the limit rather than hitting a brick wall.
+    //
+    // Drag model:  alpha_eff = alpha_base * max(0, 1 - (|v| / softCap) ^ n)
+    //   - When |v| is small the full alpha applies → normal acceleration.
+    //   - As |v| approaches softCap the alpha → 0 → no more acceleration.
+    //   - The exponent n controls the rolloff shape (see SimPhysicsConstants).
+    ChassisSpeeds effectiveSpeeds = speeds;
+    if (Constants.currentMode == Mode.SIM) {
+      final double dt = 0.02; // 50 Hz loop
+      final double exp = SimPhysicsConstants.kDragExponent;
+
+      // Base response alphas (from inertia tau values)
+      double alphaVx = 1.0 - Math.exp(-dt / SimPhysicsConstants.kTranslationalTauSeconds);
+      double alphaVy = 1.0 - Math.exp(-dt / SimPhysicsConstants.kLateralTauSeconds);
+      double alphaOmega = 1.0 - Math.exp(-dt / SimPhysicsConstants.kRotationalTauSeconds);
+
+      // Current translational speed magnitude (used for drag on both vx & vy)
+      double currentTransSpeed =
+          Math.hypot(simActualSpeeds.vxMetersPerSecond, simActualSpeeds.vyMetersPerSecond);
+      double transSoftCap = SimPhysicsConstants.kTranslationalSoftCapMps;
+      double rotSoftCap = SimPhysicsConstants.kRotationalSoftCapRadPerSec;
+
+      // Drag factors: 1 at rest, smoothly → 0 at the cap.
+      // Only applied when accelerating *toward* the cap (not when decelerating).
+      double transDrag =
+          Math.max(0.0, 1.0 - Math.pow(Math.min(currentTransSpeed / transSoftCap, 1.0), exp));
+      double rotDrag =
+          Math.max(
+              0.0,
+              1.0
+                  - Math.pow(
+                      Math.min(Math.abs(simActualSpeeds.omegaRadiansPerSecond) / rotSoftCap, 1.0),
+                      exp));
+
+      // Determine if the command would increase speed (accelerating) or decrease it
+      // (decelerating). Only apply drag when accelerating — braking should always be
+      // fully responsive.
+      double commandedTransSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+      boolean transAccelerating = commandedTransSpeed >= currentTransSpeed;
+      boolean rotAccelerating =
+          Math.abs(speeds.omegaRadiansPerSecond) >= Math.abs(simActualSpeeds.omegaRadiansPerSecond);
+
+      double effectiveAlphaVx = transAccelerating ? alphaVx * transDrag : alphaVx;
+      double effectiveAlphaVy = transAccelerating ? alphaVy * transDrag : alphaVy;
+      double effectiveAlphaOmega = rotAccelerating ? alphaOmega * rotDrag : alphaOmega;
+
+      simActualSpeeds =
+          new ChassisSpeeds(
+              simActualSpeeds.vxMetersPerSecond
+                  + effectiveAlphaVx
+                      * (speeds.vxMetersPerSecond - simActualSpeeds.vxMetersPerSecond),
+              simActualSpeeds.vyMetersPerSecond
+                  + effectiveAlphaVy
+                      * (speeds.vyMetersPerSecond - simActualSpeeds.vyMetersPerSecond),
+              simActualSpeeds.omegaRadiansPerSecond
+                  + effectiveAlphaOmega
+                      * (speeds.omegaRadiansPerSecond - simActualSpeeds.omegaRadiansPerSecond));
+
+      effectiveSpeeds = simActualSpeeds;
+
+      // Log for tuning in AdvantageScope
+      Logger.recordOutput("SwerveChassisSpeeds/Commanded", speeds);
+      Logger.recordOutput("SwerveChassisSpeeds/SimActual", simActualSpeeds);
+      Logger.recordOutput(
+          "SimPhysics/TranslationalSpeed",
+          Math.hypot(simActualSpeeds.vxMetersPerSecond, simActualSpeeds.vyMetersPerSecond));
+      Logger.recordOutput(
+          "SimPhysics/RotationalSpeed", Math.abs(simActualSpeeds.omegaRadiansPerSecond));
+      Logger.recordOutput("SimPhysics/TransDragFactor", transAccelerating ? transDrag : 1.0);
+      Logger.recordOutput("SimPhysics/RotDragFactor", rotAccelerating ? rotDrag : 1.0);
+
+      // Feed the simulated gyro with the inertia-filtered omega
+      if (gyroIO instanceof GyroIOSim simGyro) {
+        simGyro.updateFromChassisSpeeds(simActualSpeeds, dt);
+      }
+    }
+
     // Calculate module setpoints
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(effectiveSpeeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
 
@@ -326,6 +413,12 @@ public class Drive extends SubsystemBase {
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+
+    // Also reset the sim gyro so heading stays in sync
+    if (gyroIO instanceof GyroIOSim simGyro) {
+      simGyro.setYaw(pose.getRotation());
+      rawGyroRotation = pose.getRotation();
+    }
   }
 
   /** Adds a new timestamped vision measurement. */
