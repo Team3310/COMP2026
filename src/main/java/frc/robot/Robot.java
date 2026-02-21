@@ -97,7 +97,7 @@ public class Robot extends LoggedRobot {
 
     // Update Constants.activeHub based on match time / override flag
     updateHub();
-    if (!Constants.deploying || !Constants.retracting) {
+    if (!Constants.deploying && !Constants.retracting) {
       if (Constants.overrideState == Constants.Override.COLLECT) {
         Constants.currentState = Constants.BotState.COLLECT;
       } else if (Constants.overrideState == Constants.Override.DEFENCE) {
@@ -286,6 +286,7 @@ public class Robot extends LoggedRobot {
   private void autoAim() {}
 
   private void snowblow() {
+    deploy();
     Commands.runOnce(
             () -> {
               // TODO: ADD TURRET SUBSYSTEMS (flywheel, pivots)
@@ -299,6 +300,7 @@ public class Robot extends LoggedRobot {
   }
 
   private void collect() {
+    deploy();
     Commands.runOnce(
             () -> {
               // TODO: ADD TURRET SUBSYSTEMS (flywheel, pivots)
@@ -312,6 +314,7 @@ public class Robot extends LoggedRobot {
   }
 
   private void defense() {
+    retract();
     Commands.runOnce(
             () -> {
               robotContainer.getAgitatorLeft().offCommand().schedule();
@@ -332,11 +335,13 @@ public class Robot extends LoggedRobot {
               })
           .schedule();
     }
-    Constants.deploying = false;
+    if (robotContainer.getIntakePivot().getCurrentPosition() > 130.0) {
+      Commands.runOnce(() -> Constants.deploying = false).schedule();
+    }
   }
 
   private void retract() {
-    if (robotContainer.getIntakePivot().getCurrentPosition() > 40.0) {
+    if (robotContainer.getIntakePivot().getCurrentPosition() > 100.0) {
       Commands.runOnce(
               () -> {
                 robotContainer.getIntakeRollers().offCommand().schedule();
@@ -344,6 +349,8 @@ public class Robot extends LoggedRobot {
               })
           .schedule();
     }
-    Constants.retracting = false;
+    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
+      Commands.runOnce(() -> Constants.retracting = false).schedule();
+    }
   }
 }

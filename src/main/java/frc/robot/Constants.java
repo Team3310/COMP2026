@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -365,7 +366,7 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     public static final double kIntakeVelocityRPM = 1900.0;
-    public static final double kDeployVelocityRPM = -100.0;
+    public static final double kDeployVelocityRPM = -500.0;
 
     public static final double kIntakePivotToleranceRadians = 0.05;
     public static final double kIntakeRollerRadius = 0.0269875; // in m

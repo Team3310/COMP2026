@@ -29,7 +29,6 @@ import frc.robot.subsystems.intake.IntakeRollers;
 import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
-import frc.robot.subsystems.vision.Vision;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -126,10 +125,6 @@ public class RobotContainer {
   private final Flywheel flywheelLeft = buildFlywheelSystem(Constants.kLeftFlywheelConfig);
   private final Turret turretLeft = buildTurretSystem(Constants.kLeftTurretConfig);
 
-  // Vision subsystem — MegaTag 2 odometry seeding with 3× Limelight 4 cameras.
-  // Constructed after drive so it can reference the drive subsystem.
-  private final Vision vision = new Vision(drive);
-
   private final Hood hoodRight = buildHoodSystem(Constants.kRightHoodConfig);
   private final Flywheel flywheelRight = buildFlywheelSystem(Constants.kRightFlywheelConfig);
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
@@ -173,10 +168,6 @@ public class RobotContainer {
 
   public Turret getTurretLeft() {
     return turretLeft;
-  }
-
-  public Vision getVision() {
-    return vision;
   }
 
   public Hood getHoodRight() {
