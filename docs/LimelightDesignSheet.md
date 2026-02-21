@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Version:** | 1.0 |
+| **Version:** | 1.1 |
 | **Date:** | 2/21/2026 |
 | **Author(s):** | Software Team |
 | **Robot:** | Practice Robot |
@@ -101,15 +101,22 @@ The Limelight web UI uses the following coordinate system:
 
 ## 4. IMU Mode
 
-The robot code sends our NavX/Pigeon gyro heading to each Limelight every loop via `SetRobotOrientation()`. For this to work, each camera must be set to accept **external** orientation data.
+Limelight 4 has a built-in IMU that runs at 1 kHz — much faster than the 50 Hz robot loop. To get the best MegaTag 2 accuracy, the robot code uses a **two-phase** IMU strategy recommended by the official Limelight docs:
 
-In **Settings → 3D → IMU Mode**:
+1. **While disabled (pre-match):** IMU mode **1** — "External Seed". The LL4's internal IMU is continuously calibrated to match the gyro heading sent via `SetRobotOrientation()`.
+2. **While enabled (auto / teleop):** IMU mode **4** — "Internal + External Assist". The LL4 uses its own 1 kHz IMU for frame-by-frame motion, while the robot's gyro gently corrects drift over time.
+
+This gives MegaTag 2 the most accurate yaw input possible during rapid turns.
+
+In **Settings → 3D → IMU Mode**, set the **initial** value:
 
 | Setting | Value |
 |---------|-------|
-| **IMU Mode** | **Use External (mode 0)** |
+| **IMU Mode** | **External Seed (mode 1)** |
 
-> The code also pushes this setting automatically every ~5 seconds, but setting it in the web UI ensures it's correct immediately on boot.
+> The code automatically switches between mode 1 (disabled) and mode 4 (enabled) every ~5 seconds, but setting mode 1 in the web UI ensures the internal IMU begins seeding immediately on boot.
+
+> ⚠️ **Landscape mount required:** The LL4's internal IMU only works correctly when the camera is mounted in **landscape** orientation (the default, long edge horizontal). Verify all three cameras are landscape-mounted.
 
 ---
 
@@ -130,7 +137,8 @@ After configuring each camera, verify the following:
 - [ ] **IP address** is in the `10.33.10.x` range (check Settings → Networking)
 - [ ] **Pipeline 0** is an AprilTag pipeline with 36h11 family
 - [ ] **Camera Pose** values match Section 3 above (spot-check all 6 fields)
-- [ ] **IMU Mode** is set to "Use External" (mode 0)
+- [ ] **IMU Mode** is set to "External Seed" (mode 1)
+- [ ] **Camera orientation** is landscape (long edge horizontal) on all three cameras
 - [ ] **LED Mode** is off
 - [ ] Camera can see at least one AprilTag and the 3D visualization shows a reasonable pose
 - [ ] **NetworkTables** shows entries under `limelight-rear`, `limelight-right`, `limelight-left` (check with OutlineViewer or AdvantageScope)
@@ -147,8 +155,8 @@ After configuring each camera, verify the following:
 | `VisionConstants.kLimelightRight` | `"limelight-right"` | Hostname in LL web UI |
 | `VisionConstants.kLimelightLeft` | `"limelight-left"` | Hostname in LL web UI |
 | `kRearForwardM` / etc. | See Section 3 | Camera Pose in 3D tab (entered in inches) |
-| `SetIMUMode(name, 0)` | Mode 0 | IMU Mode in 3D tab |
-| `SetRobotOrientation()` | Called every loop | Requires IMU Mode = 0 to take effect |
+| `SetIMUMode(name, 1)` / `SetIMUMode(name, 4)` | Mode 1 (disabled) / Mode 4 (enabled) | IMU Mode in 3D tab (set to 1 initially) |
+| `SetRobotOrientation()` | Called every loop | Feeds gyro yaw for both seeding and MT2 |
 | `getBotPoseEstimate_wpiBlue_MegaTag2()` | reads `botpose_orb_wpiblue` | Pipeline must be AprilTag with 3D enabled |
 | `getLimelightNTDoubleArray(name, "stddevs")` | 12-element array | Published automatically by LLOS ≥ 2026.0 |
 
@@ -161,7 +169,7 @@ After configuring each camera, verify the following:
 | Camera not visible on network | Wrong IP / hostname | Re-flash via USB, check hostname and static IP |
 | `tv` always 0 | Pipeline not set to AprilTag, or no tags in view | Switch to AprilTag pipeline, point at a tag |
 | Pose estimate is wildly wrong | Camera pose values are incorrect | Double-check all 6 fields in Section 3 |
-| Pose estimate works but drifts | IMU mode not set to external | Set IMU Mode to 0 in web UI |
+| Pose estimate works but drifts | IMU mode incorrect or not seeded | Verify mode 1 in web UI; ensure robot was disabled long enough to seed before enabling |
 | `stddevs` array is empty or all zeros | LLOS version too old | Update to LLOS 2026.0+ |
 | Robot code logs `stddevs_missing` | Camera offline or LLOS too old | Check network, update firmware |
 | Robot code logs `stddevs_zero` | No valid solve yet | Ensure tags are visible and 3D mode is on |

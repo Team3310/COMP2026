@@ -15,6 +15,7 @@ import org.littletonrobotics.junction.Logger;
  * Vision subsystem using MegaTag 2 pose estimation with 3× Limelight 4 cameras. Each loop we:
  *
  * <ol>
+ *   <li>Push IMU mode (1 while disabled for seeding, 4 while enabled for best accuracy).
  *   <li>Feed the robot's current gyro yaw to every Limelight via {@code SetRobotOrientation()}.
  *   <li>Query {@code getBotPoseEstimate_wpiBlue_MegaTag2()} for each camera.
  *   <li>Filter out bad results (no tags, spinning too fast, off-field, big jumps).
@@ -57,14 +58,22 @@ public class Vision extends SubsystemBase {
       configCounter = 0;
     }
 
-    // Don't process vision while disabled — no point in seeding when we might be moving the robot
-    // manually, and it avoids spamming pose estimator with stale data.
+    // Always push IMU mode every cycle so the transition from mode 1 → 4
+    // happens promptly when the robot is enabled.
+    setIMUModes();
+
+    // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
+    // and MegaTag 2 has up-to-date yaw while enabled.
+    double robotYawDeg = drive.getRotation().getDegrees();
+    for (String name : VisionConstants.kCameraNames) {
+      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+    }
+
+    // Don't process vision while disabled — no point in seeding pose data when we might be moving
+    // the robot manually, and it avoids spamming pose estimator with stale data.
     if (DriverStation.isDisabled()) {
       return;
     }
-
-    // Current gyro heading — MegaTag 2 needs this to solve for XY-only pose.
-    double robotYawDeg = drive.getRotation().getDegrees();
 
     // Current angular velocity — used to reject updates during fast spins.
     double yawRateDegPerSec = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
@@ -79,8 +88,8 @@ public class Vision extends SubsystemBase {
   //  Camera configuration (called once)
   // -----------------------------------------------------------------------
   /**
-   * Pushes the measured camera poses into each Limelight and sets the IMU mode to "external
-   * orientation" (mode 0), which tells MegaTag 2 to use the yaw we feed via SetRobotOrientation().
+   * Pushes the measured camera poses into each Limelight. Called periodically so cameras that boot
+   * late or power-cycle mid-match still get the correct poses.
    */
   private void configureCameras() {
     for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
@@ -91,10 +100,25 @@ public class Vision extends SubsystemBase {
       // Args: forward, side, up, roll, pitch, yaw (meters / degrees)
       LimelightHelpers.setCameraPose_RobotSpace(
           name, pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+    }
+  }
 
-      // IMU mode 0 = use external orientation data (our gyro).
-      // This is required for MegaTag 2 to function correctly.
-      LimelightHelpers.SetIMUMode(name, 0);
+  /**
+   * Sets the IMU mode on every camera. Uses a two-phase strategy recommended by the official
+   * Limelight docs:
+   *
+   * <ul>
+   *   <li><b>Disabled (pre-match):</b> Mode 1 — "External Seed". The LL4's internal IMU is
+   *       continuously calibrated to match the gyro heading we send via {@code
+   *       SetRobotOrientation()}.
+   *   <li><b>Enabled (auto / teleop):</b> Mode 4 — "Internal + External Assist". The LL4 uses its 1
+   *       kHz internal IMU for frame-by-frame motion while the robot's gyro gently corrects drift.
+   * </ul>
+   */
+  private void setIMUModes() {
+    int mode = DriverStation.isDisabled() ? 1 : 4;
+    for (String name : VisionConstants.kCameraNames) {
+      LimelightHelpers.SetIMUMode(name, mode);
     }
   }
 
@@ -113,13 +137,10 @@ public class Vision extends SubsystemBase {
   private void processCamera(
       String cameraName, double robotYawDeg, double yawRateDegPerSec, int cameraIndex) {
 
-    // 1. Feed robot orientation to this Limelight so MegaTag 2 can solve XY.
-    LimelightHelpers.SetRobotOrientation(cameraName, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
-
-    // 2. Read the MegaTag 2 pose estimate.
+    // 1. Read the MegaTag 2 pose estimate.
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
 
-    // 3. Null / no-tag guard.
+    // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
       Logger.recordOutput("Vision/" + cameraName + "/accepted", false);
       return;
@@ -127,21 +148,21 @@ public class Vision extends SubsystemBase {
 
     Pose2d visionPose = estimate.pose;
 
-    // 4. Reject if the robot is spinning too fast (motion blur degrades detection).
+    // 3. Reject if the robot is spinning too fast (motion blur degrades detection).
     if (Math.abs(yawRateDegPerSec) > VisionConstants.kMaxAngularVelocityDegPerSec) {
       Logger.recordOutput("Vision/" + cameraName + "/accepted", false);
       Logger.recordOutput("Vision/" + cameraName + "/rejectReason", "yaw_rate");
       return;
     }
 
-    // 5. Reject single-tag results that are too small (far away / ambiguous).
+    // 4. Reject single-tag results that are too small (far away / ambiguous).
     if (estimate.tagCount == 1 && estimate.avgTagArea < VisionConstants.kMinTagAreaForSingleTag) {
       Logger.recordOutput("Vision/" + cameraName + "/accepted", false);
       Logger.recordOutput("Vision/" + cameraName + "/rejectReason", "single_tag_area");
       return;
     }
 
-    // 6. Reject poses that are clearly off the field (with small margin to reject origin).
+    // 5. Reject poses that are clearly off the field (with small margin to reject origin).
     if (visionPose.getX() < 0.01
         || visionPose.getX() > Constants.kFieldLengthMeters
         || visionPose.getY() < 0.01
@@ -151,7 +172,7 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // 7. Reject large jumps from the current pose estimate (likely a false detection).
+    // 6. Reject large jumps from the current pose estimate (likely a false detection).
     double poseJump = drive.getPose().getTranslation().getDistance(visionPose.getTranslation());
     if (poseJump > VisionConstants.kMaxPoseJumpMeters) {
       Logger.recordOutput("Vision/" + cameraName + "/accepted", false);
@@ -159,7 +180,7 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // 8. Read the Limelight's own MegaTag 2 std devs from NetworkTables.
+    // 7. Read the Limelight's own MegaTag 2 std devs from NetworkTables.
     //    The "stddevs" entry is a 12-element array:
     //      [MT1x, MT1y, MT1z, MT1roll, MT1pitch, MT1yaw,
     //       MT2x, MT2y, MT2z, MT2roll, MT2pitch, MT2yaw]
@@ -184,13 +205,13 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // 9. Inject into the drive pose estimator.
+    // 8. Inject into the drive pose estimator.
     drive.addVisionMeasurement(
         visionPose,
         estimate.timestampSeconds,
         VecBuilder.fill(xyStdDev, xyStdDev, VisionConstants.kThetaStdDev));
 
-    // 10. Logging for AdvantageScope.
+    // 9. Logging for AdvantageScope.
     Logger.recordOutput("Vision/" + cameraName + "/accepted", true);
     Logger.recordOutput("Vision/" + cameraName + "/pose", visionPose);
     Logger.recordOutput("Vision/" + cameraName + "/tagCount", estimate.tagCount);
