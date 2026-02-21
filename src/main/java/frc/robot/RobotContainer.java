@@ -29,6 +29,7 @@ import frc.robot.subsystems.intake.IntakeRollers;
 import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
+import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -129,6 +130,10 @@ public class RobotContainer {
   private final Flywheel flywheelRight = buildFlywheelSystem(Constants.kRightFlywheelConfig);
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
 
+  // Turret aim calculator — computes desired turret/hood angles every cycle based
+  // on robot pose, alliance color, and field zone.  Logs everything via AdvantageKit IO.
+  private final TurretAimManager turretAimManager = new TurretAimManager(drive::getPose);
+
   // Acessors
   public Drive getDrive() {
     return drive;
@@ -180,6 +185,10 @@ public class RobotContainer {
 
   public Turret getTurretRight() {
     return turretRight;
+  }
+
+  public TurretAimManager getTurretAimManager() {
+    return turretAimManager;
   }
 
   // Autonomous commands
