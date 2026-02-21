@@ -165,8 +165,9 @@ public class RobotContainer {
   // Autonomous commands
   private final frc.robot.Auton.AutonCommandBase autonCommands;
 
-  // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  // Controllers
+  private final CommandXboxController driver = new CommandXboxController(1);
+  private final CommandXboxController operator = new CommandXboxController(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -220,23 +221,17 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     // Lock to 0° when A button is held
-    controller
+    driver
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero));
+                drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
-    controller
+    driver
         .x()
         .onTrue(
             Commands.runOnce(
@@ -249,7 +244,7 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     // Reset gyro to 0° when B button is pressed
-    controller
+    driver
         .b()
         .onTrue(
             Commands.runOnce(
@@ -260,7 +255,7 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     // Zero gyro with Start button (same as B, easier to reach mid-match)
-    controller
+    driver
         .start()
         .onTrue(
             Commands.runOnce(
@@ -272,7 +267,7 @@ public class RobotContainer {
 
     if (agitatorRight != null && agitatorLeft != null) {
       // Y button = toggle agitator rollers on/off (closed loop PID)
-      controller
+      operator
           .y()
           .toggleOnTrue(
               Commands.parallel(agitatorRight.snowblowCommand(), agitatorLeft.snowblowCommand()));
@@ -281,7 +276,7 @@ public class RobotContainer {
     if (verticalFeedRight != null && verticalFeedLeft != null) {
 
       // Left Trigger = toggle vertical feed roller on/off (closed loop PID)
-      controller
+      operator
           .leftTrigger()
           .toggleOnTrue(
               Commands.parallel(
@@ -289,7 +284,7 @@ public class RobotContainer {
                   verticalFeedRight.verticalFeedIntakeCommand()));
     }
 
-    controller
+    operator
         .rightTrigger()
         .onTrue(
             Commands.runOnce(
@@ -312,41 +307,41 @@ public class RobotContainer {
 
     if (intakeRollers != null && intakePivot != null) {
       // Right bumper = toggle intake rollers on/off
-      controller
+      operator
           .rightBumper()
           .toggleOnTrue(
               Commands.parallel(intakeRollers.deployCommand(), intakePivot.setDegreesCommand(145.0))
                   .andThen(intakeRollers.intakeCommand()));
       // Left bumper = toggle outtake rollers on/off
-      controller
+      operator
           .leftBumper()
           .toggleOnTrue(
               Commands.parallel(intakeRollers.offCommand(), intakePivot.setDegreesCommand(0.0)));
     }
 
     // if (intakePivot != null) {
-    // controller.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
-    // controller.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
+    // operator.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
+    // operator.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
     // }
 
     // if (hoodLeft != null) {
-    // controller.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
-    // controller.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
+    // operator.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
+    // operator.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
     // }
 
     if (turretLeft != null) {
-      controller.povRight().onTrue(turretLeft.setDegreesCommand(-45.0));
-      controller.povLeft().onTrue(turretLeft.setDegreesCommand(0.0));
+      operator.povRight().onTrue(turretLeft.setDegreesCommand(-45.0));
+      operator.povLeft().onTrue(turretLeft.setDegreesCommand(0.0));
     }
 
     if (flywheelLeft != null && hoodLeft != null) {
-      controller
+      operator
           .povUp()
           .onTrue(
               Commands.parallel(
                   flywheelLeft.forwardCommand(),
                   hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxPositionUnits)));
-      controller
+      operator
           .povDown()
           .onTrue(
               Commands.parallel(
