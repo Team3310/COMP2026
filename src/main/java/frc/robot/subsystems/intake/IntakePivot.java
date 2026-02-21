@@ -50,6 +50,16 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
     return motionMagicSetpointCommand(() -> degrees).withName("Intake Pivot " + degrees + " deg");
   }
 
+  public Command deployCommand() {
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakeDeployDegrees)
+        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakeDeployDegrees + " deg");
+  }
+
+  public Command retractCommand() {
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakeStowDegrees)
+        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakeStowDegrees + " deg");
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Intake Position", getCurrentPosition());

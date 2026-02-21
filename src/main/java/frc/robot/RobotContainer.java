@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
+import frc.robot.Constants.BotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -110,16 +111,23 @@ public class RobotContainer {
 
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
+
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
   private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
   private final Agitator verticalFeedRight =
       buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
+
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
   private final IntakePivot intakePivot = buildIntakePivotSystem();
+
   private final Hood hoodLeft = buildHoodSystem(Constants.kLeftHoodConfig);
   private final Flywheel flywheelLeft = buildFlywheelSystem(Constants.kLeftFlywheelConfig);
   private final Turret turretLeft = buildTurretSystem(Constants.kLeftTurretConfig);
+
+  private final Hood hoodRight = buildHoodSystem(Constants.kRightHoodConfig);
+  private final Flywheel flywheelRight = buildFlywheelSystem(Constants.kRightFlywheelConfig);
+  private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
 
   // Acessors
   public Drive getDrive() {
@@ -160,6 +168,18 @@ public class RobotContainer {
 
   public Turret getTurretLeft() {
     return turretLeft;
+  }
+
+  public Hood getHoodRight() {
+    return hoodRight;
+  }
+
+  public Flywheel getFlywheelRight() {
+    return flywheelRight;
+  }
+
+  public Turret getTurretRight() {
+    return turretRight;
   }
 
   // Autonomous commands
@@ -304,17 +324,24 @@ public class RobotContainer {
                 }));
 
     if (intakeRollers != null && intakePivot != null) {
-      // Right bumper = toggle intake rollers on/off
+      // Right bumper = deploy intake
       operator
           .rightBumper()
-          .toggleOnTrue(
-              Commands.parallel(intakeRollers.deployCommand(), intakePivot.setDegreesCommand(145.0))
-                  .andThen(intakeRollers.intakeCommand()));
-      // Left bumper = toggle outtake rollers on/off
+          .onTrue(
+              Commands.runOnce(
+                  () -> {
+                    Constants.currentState = BotState.DEPLOY;
+                    Constants.deploying = true;
+                  }));
+      // Left bumper = retract intake
       operator
           .leftBumper()
-          .toggleOnTrue(
-              Commands.parallel(intakeRollers.offCommand(), intakePivot.setDegreesCommand(0.0)));
+          .onTrue(
+              Commands.runOnce(
+                  () -> {
+                    Constants.currentState = BotState.RETRACT;
+                    Constants.retracting = true;
+                  }));
     }
 
     // if (intakePivot != null) {

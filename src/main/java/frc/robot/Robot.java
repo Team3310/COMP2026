@@ -97,23 +97,24 @@ public class Robot extends LoggedRobot {
 
     // Update Constants.activeHub based on match time / override flag
     updateHub();
-
-    if (Constants.overrideState == Constants.Override.COLLECT) {
-      Constants.currentState = Constants.BotState.COLLECT;
-    } else if (Constants.overrideState == Constants.Override.DEFENCE) {
-      Constants.currentState = Constants.BotState.DEFENCE;
-    } else { // Override if FALSE
-      // Automated State Machine
-      if (currentZone == Zone.BLUE
-          && Constants.alliance == Alliance.Blue
-          && !(Constants.activeHub)) {
+    if (!Constants.deploying || !Constants.retracting) {
+      if (Constants.overrideState == Constants.Override.COLLECT) {
         Constants.currentState = Constants.BotState.COLLECT;
-      } else if (currentZone == Zone.RED
-          && Constants.alliance == Alliance.Red
-          && !(Constants.activeHub)) {
-        Constants.currentState = Constants.BotState.COLLECT;
-      } else {
-        Constants.currentState = Constants.BotState.SNOWBLOW;
+      } else if (Constants.overrideState == Constants.Override.DEFENCE) {
+        Constants.currentState = Constants.BotState.DEFENCE;
+      } else { // Override if FALSE
+        // Automated State Machine
+        if (currentZone == Zone.BLUE
+            && Constants.alliance == Alliance.Blue
+            && !(Constants.activeHub)) {
+          Constants.currentState = Constants.BotState.COLLECT;
+        } else if (currentZone == Zone.RED
+            && Constants.alliance == Alliance.Red
+            && !(Constants.activeHub)) {
+          Constants.currentState = Constants.BotState.COLLECT;
+        } else {
+          Constants.currentState = Constants.BotState.SNOWBLOW;
+        }
       }
     }
 
@@ -134,6 +135,12 @@ public class Robot extends LoggedRobot {
         break;
       case DEFENCE:
         defense();
+        break;
+      case DEPLOY:
+        deploy();
+        break;
+      case RETRACT:
+        retract();
         break;
     }
 
@@ -276,6 +283,8 @@ public class Robot extends LoggedRobot {
     }
   }
 
+  private void autoAim() {}
+
   private void snowblow() {
     Commands.runOnce(
             () -> {
@@ -312,5 +321,29 @@ public class Robot extends LoggedRobot {
               robotContainer.getVerticalFeedRight().offCommand().schedule();
             })
         .schedule();
+  }
+
+  private void deploy() {
+    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
+      Commands.runOnce(
+              () -> {
+                robotContainer.getIntakeRollers().deployCommand().schedule();
+                robotContainer.getIntakePivot().deployCommand().schedule();
+              })
+          .schedule();
+    }
+    Constants.deploying = false;
+  }
+
+  private void retract() {
+    if (robotContainer.getIntakePivot().getCurrentPosition() > 40.0) {
+      Commands.runOnce(
+              () -> {
+                robotContainer.getIntakeRollers().offCommand().schedule();
+                robotContainer.getIntakePivot().retractCommand().schedule();
+              })
+          .schedule();
+    }
+    Constants.retracting = false;
   }
 }

@@ -11,7 +11,6 @@ import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -33,6 +32,8 @@ public final class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
+  public static boolean deploying = false;
+  public static boolean retracting = false;
   public static boolean activeHub = true;
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static BotState currentState = BotState.COLLECT;
@@ -72,7 +73,9 @@ public final class Constants {
   public static enum BotState {
     SNOWBLOW,
     COLLECT,
-    DEFENCE
+    DEFENCE,
+    DEPLOY,
+    RETRACT
   }
 
   public static enum Override {
@@ -149,7 +152,7 @@ public final class Constants {
 
   static {
     kLeftTurretConfig.name = "Left Turret";
-    kLeftTurretConfig.talonCANID = new CANDeviceId(27, TunerConstants.kCANBus1.getName());
+    kLeftTurretConfig.talonCANID = new CANDeviceId(22, TunerConstants.kCANBus1.getName());
 
     kLeftTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
     kLeftTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
@@ -172,7 +175,7 @@ public final class Constants {
     kLeftTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftFlywheelConfig =
@@ -194,8 +197,85 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
+  public static final ServoMotorSubsystemConfig kRightHoodConfig = new ServoMotorSubsystemConfig();
+
+  static {
+    kRightHoodConfig.name = "Right Hood";
+    kRightHoodConfig.talonCANID = new CANDeviceId(28, TunerConstants.kCANBus1.getName());
+    kRightHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
+    kRightHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxPositionUnits;
+    kRightHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinPositionUnits;
+    kRightHoodConfig.momentOfInertia = ScorerConstants.kHoodMomentOfInertia;
+    kRightHoodConfig.fxConfig.Slot0.kP = 2.0;
+    kRightHoodConfig.fxConfig.Slot0.kD = 0.0;
+    kRightHoodConfig.fxConfig.Slot0.kV = 0.2;
+    kRightHoodConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
+    kRightHoodConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
+
+    kRightHoodConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kRightHoodConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        kRightHoodConfig.kMaxPositionUnits / kRightHoodConfig.unitToRotorRatio;
+    kRightHoodConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kRightHoodConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        kRightHoodConfig.kMinPositionUnits / kRightHoodConfig.unitToRotorRatio;
+
+    kRightHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kRightHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+  }
+
+  public static final ServoMotorSubsystemConfig kRightTurretConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kRightTurretConfig.name = "Right Turret";
+    kRightTurretConfig.talonCANID = new CANDeviceId(27, TunerConstants.kCANBus1.getName());
+    kRightTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
+    kRightTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
+    kRightTurretConfig.kMinPositionUnits = ScorerConstants.kTurretMinPositionUnits;
+    kRightTurretConfig.momentOfInertia = ScorerConstants.kTurretMomentOfInertia;
+    kRightTurretConfig.fxConfig.Slot0.kP = 2.0;
+    kRightTurretConfig.fxConfig.Slot0.kD = 0.0;
+    kRightTurretConfig.fxConfig.Slot0.kV = 0.2;
+    kRightTurretConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
+    kRightTurretConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
+
+    kRightTurretConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kRightTurretConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        kRightTurretConfig.kMaxPositionUnits / kRightTurretConfig.unitToRotorRatio;
+    kRightTurretConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kRightTurretConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        kRightTurretConfig.kMinPositionUnits / kRightTurretConfig.unitToRotorRatio;
+
+    kRightTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kRightTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
+  }
+
+  public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
+      new ServoMotorSubsystemConfig();
+
+  static {
+    kRightFlywheelConfig.name = "Right Flywheel";
+    kRightFlywheelConfig.talonCANID = new CANDeviceId(29, TunerConstants.kCANBus1.getName());
+    kRightFlywheelConfig.momentOfInertia = 0.00132536;
+    kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
+
+    kRightFlywheelConfig.fxConfig.Slot0.kP = 0.5;
+    kRightFlywheelConfig.fxConfig.Slot0.kS = 0.02;
+    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.1;
+
+    kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+  }
+
   // #endregion
 
+  // #region Intake Subsystems
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedPosition = 0.0; // degrees
@@ -206,20 +286,15 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     public static final double kIntakeVelocityRPM = 1900.0;
-    public static final double kDeployVelocityRPM = -1000.0;
+    public static final double kDeployVelocityRPM = -100.0;
 
-    public static final double kIntakePivotStowPositionRadians = Units.degreesToRadians(-80);
-    public static final double kIntakePivotStowForClimbPositionRadians =
-        Units.degreesToRadians(-90);
-    public static final double kIntakePivotDeployPositionRadians = 0.0;
-    public static final double kIntakePivotCoralPushedPositionRadians =
-        Units.degreesToRadians(-0.5);
-    public static final double kIntakePivotLollipopDeployPositionRadians =
-        Units.degreesToRadians(30);
     public static final double kIntakePivotToleranceRadians = 0.05;
     public static final double kIntakeRollerRadius = 0.0269875; // in m
 
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
+
+    public static final double kIntakeStowDegrees = 0.0;
+    public static final double kIntakeDeployDegrees = 145.0;
   }
 
   public static final ServoMotorSubsystemConfig kIntakeRollerConfig =
@@ -288,6 +363,10 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Per design sheet
   }
+
+  // #endregion
+
+  // #region Agitator Subsystems
 
   public static final class AgitatorConstants {
     // Floor Roller speeds (Velocity Voltage Control)
@@ -399,6 +478,8 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
+
+  // #endregion
 
   /**
    * Check if this system has a certain mac address in any network device.
