@@ -97,6 +97,9 @@ public class Robot extends LoggedRobot {
 
     // Update Constants.activeHub based on match time / override flag
     updateHub();
+
+    //This basically says if we are not deploying or retracting, then we can change states.
+    //If we are deploying or retracting, we want to stay in deploy or retract until we are done.
     if (!Constants.deploying && !Constants.retracting) {
       if (Constants.overrideState == Constants.Override.COLLECT) {
         Constants.currentState = Constants.BotState.COLLECT;
@@ -117,6 +120,7 @@ public class Robot extends LoggedRobot {
         }
       }
     }
+
 
     SmartDashboard.putString("currentState", "" + Constants.currentState);
     SmartDashboard.putString("overrideState", "" + Constants.overrideState);
@@ -286,6 +290,8 @@ public class Robot extends LoggedRobot {
   private void autoAim() {}
 
   private void snowblow() {
+
+    // Deploy intake to snowblow, and run motors to snowblow. 
     deploy();
     Commands.runOnce(
             () -> {
@@ -300,6 +306,8 @@ public class Robot extends LoggedRobot {
   }
 
   private void collect() {
+
+    // Deploy intake to collect, and run motors to intake and agitator motors.
     deploy();
     Commands.runOnce(
             () -> {
@@ -314,6 +322,8 @@ public class Robot extends LoggedRobot {
   }
 
   private void defense() {
+
+    //Retract intake to prevent damage, and stop all motors to save battery.
     retract();
     Commands.runOnce(
             () -> {
@@ -327,6 +337,8 @@ public class Robot extends LoggedRobot {
   }
 
   private void deploy() {
+
+    // Deploy intake to collect, and run motors to intake.
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
       Commands.runOnce(
               () -> {
@@ -341,6 +353,8 @@ public class Robot extends LoggedRobot {
   }
 
   private void retract() {
+
+    // Retract intake to prevent damage.
     if (robotContainer.getIntakePivot().getCurrentPosition() > 100.0) {
       Commands.runOnce(
               () -> {
