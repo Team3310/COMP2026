@@ -36,7 +36,7 @@ public class TurretAimManager extends SubsystemBase {
     char alliance = getAllianceChar();
 
     // Run the aim calculator
-    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(pose, alliance);
+    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(pose);
     latestResult = result;
 
     // Pack into IO inputs struct (auto-logged by AdvantageKit)
@@ -45,7 +45,6 @@ public class TurretAimManager extends SubsystemBase {
     inputs.rightTurretAngleDeg = result.rightTurretDeg;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
 
-    inputs.zone = result.zone.name();
     inputs.allianceColor = String.valueOf(alliance);
 
     inputs.targetXMeters = result.target.getX();
@@ -65,7 +64,6 @@ public class TurretAimManager extends SubsystemBase {
     Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
     Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
     Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
-    Logger.recordOutput("TurretAim/Zone", result.zone.name());
     Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
   }
 

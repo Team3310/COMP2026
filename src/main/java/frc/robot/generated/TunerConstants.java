@@ -56,6 +56,17 @@ public class TunerConstants {
         BackLeft = TunerConstantsBravo.BackLeft;
         BackRight = TunerConstantsBravo.BackRight;
         break;
+      case PRACTICE:
+        kCANBus1 = TunerConstantsPractice.kCANBus1;
+        kCANBus2 = TunerConstantsPractice.kCANBus2;
+        kCANBusRio = TunerConstantsPractice.kCANBusRio;
+        kSpeedAt12Volts = TunerConstantsPractice.kSpeedAt12Volts;
+        DrivetrainConstants = TunerConstantsPractice.DrivetrainConstants;
+        FrontLeft = TunerConstantsPractice.FrontLeft;
+        FrontRight = TunerConstantsPractice.FrontRight;
+        BackLeft = TunerConstantsPractice.BackLeft;
+        BackRight = TunerConstantsPractice.BackRight;
+        break;
         // Add more cases here for additional robots:
         // case COMPETITION:
         //   kCANBus1 = TunerConstantsCompetition.kCANBus1;

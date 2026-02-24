@@ -15,8 +15,8 @@ import edu.wpi.first.math.util.Units;
  * have a blue alliance origin.
  */
 public class FieldConstants {
-  public static final double fieldLength = Units.inchesToMeters(651.0);
-  public static final double fieldWidth = Units.inchesToMeters(318.0);
+  public static final double kFieldLength = Units.inchesToMeters(651.0);
+  public static final double kFieldWidth = Units.inchesToMeters(318.0);
 
   public static enum StartingPosition { // measured with sim
     BLUEDEP(new Translation2d(3.570, 7.617)),
@@ -43,8 +43,9 @@ public class FieldConstants {
     BLUEOUT(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(79.5))),
     BLUEDEP(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
     REDOUT(
-        new Translation2d(Units.inchesToMeters(fieldLength - 80.0), Units.inchesToMeters(238.5))),
-    REDDEP(new Translation2d(Units.inchesToMeters(fieldLength - 80.0), Units.inchesToMeters(79.5)));
+        new Translation2d(Units.inchesToMeters(kFieldLength - 80.0), Units.inchesToMeters(238.5))),
+    REDDEP(
+        new Translation2d(Units.inchesToMeters(kFieldLength - 80.0), Units.inchesToMeters(79.5)));
 
     private final double x;
     private final double y;
@@ -68,7 +69,7 @@ public class FieldConstants {
     // BLUETRENCH(), TODO
     MID(Units.inchesToMeters(472.0)),
     // REDTRENCH(),
-    RED(fieldLength);
+    RED(kFieldLength);
 
     private final double x;
 

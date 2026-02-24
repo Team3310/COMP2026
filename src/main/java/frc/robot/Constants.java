@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
+import frc.lib.util.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -33,18 +34,20 @@ public final class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
+  // Set this to select which robot's tuner constants to use
+  public static final Bot currentBot = Bot.PRACTICE;
+
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static BotState currentState = BotState.COLLECT;
   public static Override overrideState = Override.FALSE;
+  public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+  public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
 
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
-
-  // Set this to select which robot's tuner constants to use
-  public static final Bot currentBot = Bot.BRAVO;
 
   // Field dimensions for 2026 Reefscape
   public static final double kFieldLengthMeters = 16.54;
@@ -65,10 +68,10 @@ public final class Constants {
     /** Software robot (default configuration) */
     SOFTWARE,
     /** Bravo robot */
-    BRAVO
+    BRAVO,
     // Add more robot variants here as needed, e.g.:
     // COMPETITION,
-    // PRACTICE
+    PRACTICE
   }
 
   public static enum BotState {
@@ -255,48 +258,13 @@ public final class Constants {
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
-  }
-
-  // ---- Field geometry for turret aiming ----
-  // All values from PracticeRobotSDS.md Appendix 2, converted to meters.
-  public static final class FieldConstants {
-    // Hub locations (center of each hub)
-    public static final double kBlueHubXMeters = Units.inchesToMeters(182.0);
-    public static final double kBlueHubYMeters = Units.inchesToMeters(159.0);
-    public static final double kBlueHubZMeters = Units.inchesToMeters(79.5);
-
-    public static final double kRedHubXMeters = Units.inchesToMeters(469.0);
-    public static final double kRedHubYMeters = Units.inchesToMeters(159.0);
-    public static final double kRedHubZMeters = Units.inchesToMeters(79.5);
-
-    // Zone X-boundaries (meters)
-    public static final double kBlueZoneEndXMeters = Units.inchesToMeters(179.0);
-    public static final double kRedZoneStartXMeters = Units.inchesToMeters(472.0);
-    // Neutral zone is between kBlueZoneEndXMeters and kRedZoneStartXMeters.
-
-    // Landing zone targets — aim here when in "pass" mode (neutral zone).
-    // Blue Outpost Landing Zone center: (80, 36) inches
-    public static final double kBlueOutpostLandingXMeters = Units.inchesToMeters(80.0);
-    public static final double kBlueOutpostLandingYMeters = Units.inchesToMeters(36.0);
-    // Blue Depot Landing Zone center: (80, 238) inches
-    public static final double kBlueDepotLandingXMeters = Units.inchesToMeters(80.0);
-    public static final double kBlueDepotLandingYMeters = Units.inchesToMeters(238.0);
-
-    // Red Outpost Landing Zone center: (571, 36) inches
-    public static final double kRedOutpostLandingXMeters = Units.inchesToMeters(571.0);
-    public static final double kRedOutpostLandingYMeters = Units.inchesToMeters(36.0);
-    // Red Depot Landing Zone center: (571, 238) inches
-    public static final double kRedDepotLandingXMeters = Units.inchesToMeters(571.0);
-    public static final double kRedDepotLandingYMeters = Units.inchesToMeters(238.0);
-
-    // Shooter exit heights above the floor (from SDS §3.9 / §3.10)
-    public static final double kShooterExitZMeters = Units.inchesToMeters(20.5);
 
     // Shooter lateral offsets from robot center (SDS §3.9 / §3.10)
     public static final double kLeftShooterXOffsetMeters = Units.inchesToMeters(-6.4);
     public static final double kLeftShooterYOffsetMeters = Units.inchesToMeters(6.831);
     public static final double kRightShooterXOffsetMeters = Units.inchesToMeters(-6.4);
     public static final double kRightShooterYOffsetMeters = Units.inchesToMeters(-6.831);
+    public static final double kShooterExitZMeters = Units.inchesToMeters(20.5);
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

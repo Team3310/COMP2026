@@ -13,8 +13,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
-import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -94,6 +94,8 @@ public class Robot extends LoggedRobot {
     double robotX = robotContainer.getDrive().getPose().getX();
     Zone currentZone =
         robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
+
+    updateZone();
 
     // Update Constants.activeHub based on match time / override flag
     updateHub();
@@ -209,6 +211,18 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {}
 
+  public void updateZone() {
+    double robotX = robotContainer.getDrive().getPose().getX();
+
+    if (robotX < FieldConstants.Zone.BLUE.getX()) {
+      Constants.currentZone = Zone.BLUE;
+    } else if (robotX < FieldConstants.Zone.MID.getX()) {
+      Constants.currentZone = Zone.MID;
+    } else { // Red
+      Constants.currentZone = Zone.RED;
+    }
+  }
+
   public void updateHub() {
     // If manually overridden OFF via SmartDashboard button, skip automatic calculation
     if (Constants.hubOverride) {
@@ -216,12 +230,6 @@ public class Robot extends LoggedRobot {
       return;
     }
 
-    Optional<Alliance> alliance = DriverStation.getAlliance();
-    // If we have no alliance, we cannot be enabled, therefore no hub.
-    if (alliance.isEmpty()) {
-      Constants.activeHub = false;
-      return;
-    }
     // Hub is always enabled in autonomous.
     if (DriverStation.isAutonomousEnabled()) {
       Constants.activeHub = true;
@@ -254,7 +262,7 @@ public class Robot extends LoggedRobot {
 
     // Shift was is active for blue if red won auto, or red if blue won auto.
     boolean shift1Active =
-        switch (alliance.get()) {
+        switch (Constants.currentAlliance) {
           case Red -> !redInactiveFirst;
           case Blue -> redInactiveFirst;
         };

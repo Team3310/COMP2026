@@ -346,11 +346,11 @@ public class RobotContainer {
       operator
           .leftBumper()
           .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    Constants.currentState = BotState.RETRACT;
-                    Constants.retracting = true;
-                  }));
+              Commands.parallel(
+                  hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
+                  hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
+                  turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
+                  turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())));
     }
 
     // if (intakePivot != null) {

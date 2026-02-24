@@ -3,7 +3,9 @@ package frc.robot.subsystems.scorer.turret;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.Constants.FieldConstants;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.lib.util.FieldConstants;
+import frc.robot.Constants;
 
 /**
  * Pure-math utility that computes the desired turret (lateral) and hood (vertical) angles for the
@@ -43,8 +45,6 @@ public final class TurretAimCalculator {
     /** Right hood vertical angle in degrees (elevation above horizontal). */
     public final double rightHoodDeg;
 
-    /** Which zone the robot is currently in. */
-    public final Zone zone;
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
 
@@ -53,21 +53,13 @@ public final class TurretAimCalculator {
         double leftHoodDeg,
         double rightTurretDeg,
         double rightHoodDeg,
-        Zone zone,
         Translation2d target) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.rightTurretDeg = rightTurretDeg;
       this.rightHoodDeg = rightHoodDeg;
-      this.zone = zone;
       this.target = target;
     }
-  }
-
-  public enum Zone {
-    OWN_ALLIANCE,
-    NEUTRAL,
-    OPPONENT
   }
 
   // Hood limits from ScorerConstants (duplicated here to avoid circular dep)
@@ -84,61 +76,41 @@ public final class TurretAimCalculator {
    * @param allianceColor 'R' for red, 'B' for blue.
    * @return An {@link AimResult} with four angles plus debug info.
    */
-  public static AimResult calculate(Pose2d robotPose, char allianceColor) {
-    boolean isBlue = (allianceColor == 'B');
+  public static AimResult calculate(Pose2d robotPose) {
+    boolean isBlue = (Constants.alliance == Alliance.Blue);
 
-    // ---- Determine zone ----
-    double robotX = robotPose.getX();
-    Zone zone;
-    if (isBlue) {
-      if (robotX <= FieldConstants.kBlueZoneEndXMeters) {
-        zone = Zone.OWN_ALLIANCE;
-      } else if (robotX >= FieldConstants.kRedZoneStartXMeters) {
-        zone = Zone.OPPONENT;
-      } else {
-        zone = Zone.NEUTRAL;
-      }
-    } else { // Red
-      if (robotX >= FieldConstants.kRedZoneStartXMeters) {
-        zone = Zone.OWN_ALLIANCE;
-      } else if (robotX <= FieldConstants.kBlueZoneEndXMeters) {
-        zone = Zone.OPPONENT;
-      } else {
-        zone = Zone.NEUTRAL;
-      }
-    }
-
+    FieldConstants.Zone zone = Constants.currentZone;
     // ---- Pick field-space target ----
     Translation2d fieldTarget;
     double targetZ; // height of the target above the floor (meters)
 
-    switch (zone) {
-      case OWN_ALLIANCE:
-        // Aim at our hub
-        if (isBlue) {
-          fieldTarget =
-              new Translation2d(FieldConstants.kBlueHubXMeters, FieldConstants.kBlueHubYMeters);
-          targetZ = FieldConstants.kBlueHubZMeters;
-        } else {
-          fieldTarget =
-              new Translation2d(FieldConstants.kRedHubXMeters, FieldConstants.kRedHubYMeters);
-          targetZ = FieldConstants.kRedHubZMeters;
-        }
-        break;
+    boolean home = false;
+    if (isBlue && zone == FieldConstants.Zone.BLUE) {
+      home = true;
+    } else if (!isBlue && zone == FieldConstants.Zone.RED) {
+      home = true;
+    }
 
-      case NEUTRAL:
-        // Pass mode — aim at the landing zone on OUR side.
-        // Choose whichever landing zone (outpost vs depot) is closer to the
-        // robot's current Y to minimize turret travel.
-        fieldTarget = pickLandingTarget(robotPose.getY(), isBlue);
-        // Landing zones are on the floor — target Z = 0 (lob arc, not a line
-        // drive). We'll set a fixed hood angle for passing.
-        targetZ = 0.0;
-        break;
+    if (home) {
+      // Aim at our hub
+      if (isBlue) {
+        fieldTarget =
+            new Translation2d(FieldConstants.Hub.BLUE.getX(), FieldConstants.Hub.BLUE.getY());
+        targetZ = FieldConstants.Hub.BLUE.getZ();
+      } else {
+        fieldTarget =
+            new Translation2d(FieldConstants.Hub.RED.getX(), FieldConstants.Hub.RED.getY());
+        targetZ = FieldConstants.Hub.RED.getZ();
+      }
+    } else { // Midfield or Opponents
 
-      default: // OPPONENT zone — stow
-        return new AimResult(
-            0.0, HOOD_MIN_DEG, 0.0, HOOD_MIN_DEG, zone, robotPose.getTranslation());
+      // Pass mode — aim at the landing zone on OUR side.
+      // Choose whichever landing zone (outpost vs depot) is closer to the
+      // robot's current Y to minimize turret travel.
+      fieldTarget = pickLandingTarget(robotPose.getY(), isBlue);
+      // Landing zones are on the floor — target Z = 0 (lob arc, not a line
+      // drive). We'll set a fixed hood angle for passing.
+      targetZ = 0.0;
     }
 
     // ---- Compute aim from midpoint of the two shooter exits ----
@@ -147,10 +119,12 @@ public final class TurretAimCalculator {
     Rotation2d heading = robotPose.getRotation();
 
     double midShooterX =
-        (FieldConstants.kLeftShooterXOffsetMeters + FieldConstants.kRightShooterXOffsetMeters)
+        (Constants.ScorerConstants.kLeftShooterXOffsetMeters
+                + Constants.ScorerConstants.kRightShooterXOffsetMeters)
             / 2.0;
     double midShooterY =
-        (FieldConstants.kLeftShooterYOffsetMeters + FieldConstants.kRightShooterYOffsetMeters)
+        (Constants.ScorerConstants.kLeftShooterYOffsetMeters
+                + Constants.ScorerConstants.kRightShooterYOffsetMeters)
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
@@ -160,7 +134,7 @@ public final class TurretAimCalculator {
     double hoodDeg = angles[1];
 
     // Same angles for both sides (parallel turrets)
-    return new AimResult(turretDeg, hoodDeg, turretDeg, hoodDeg, zone, fieldTarget);
+    return new AimResult(turretDeg, hoodDeg, turretDeg, hoodDeg, fieldTarget);
   }
 
   // ====================================================================
@@ -212,7 +186,7 @@ public final class TurretAimCalculator {
 
     // --- Vertical (hood) angle ---
     double horizontalDist = Math.hypot(dx, dy);
-    double dz = targetZ - FieldConstants.kShooterExitZMeters;
+    double dz = targetZ - Constants.ScorerConstants.kShooterExitZMeters;
     double hoodDeg = Math.toDegrees(Math.atan2(dz, horizontalDist));
 
     // Clamp hood to physical limits
@@ -231,13 +205,13 @@ public final class TurretAimCalculator {
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
     double outpostY, depotY, targetX;
     if (isBlue) {
-      outpostY = FieldConstants.kBlueOutpostLandingYMeters;
-      depotY = FieldConstants.kBlueDepotLandingYMeters;
-      targetX = FieldConstants.kBlueOutpostLandingXMeters; // same X for both blue landing zones
+      outpostY = FieldConstants.Corner.BLUEOUT.getY();
+      depotY = FieldConstants.Corner.BLUEDEP.getY();
+      targetX = FieldConstants.Corner.BLUEOUT.getX(); // same X for both blue landing zones
     } else {
-      outpostY = FieldConstants.kRedOutpostLandingYMeters;
-      depotY = FieldConstants.kRedDepotLandingYMeters;
-      targetX = FieldConstants.kRedOutpostLandingXMeters; // same X for both red landing zones
+      outpostY = FieldConstants.Corner.REDOUT.getY();
+      depotY = FieldConstants.Corner.REDDEP.getY();
+      targetX = FieldConstants.Corner.REDOUT.getX(); // same X for both red landing zones
     }
 
     // Pick whichever landing zone is closer to the robot in Y
