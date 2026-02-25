@@ -253,8 +253,8 @@ public final class Constants {
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
 
     public static final double kTurretStowedPosition = 0.0; // degrees
-    public static final double kTurretMaxPositionUnits = 90.0; // degrees
-    public static final double kTurretMinPositionUnits = -90.0; // degrees
+    public static final double kTurretMaxPositionUnits = 220.0; // degrees
+    public static final double kTurretMinPositionUnits = -220.0; // degrees
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
