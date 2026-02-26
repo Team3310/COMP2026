@@ -33,9 +33,12 @@ import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -115,8 +118,7 @@ public class RobotContainer {
 
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
   private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
-  private final Agitator verticalFeedRight =
-      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
+  private final Agitator verticalFeedRight = buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
 
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
@@ -131,7 +133,8 @@ public class RobotContainer {
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
 
   // Turret aim calculator — computes desired turret/hood angles every cycle based
-  // on robot pose, alliance color, and field zone.  Logs everything via AdvantageKit IO.
+  // on robot pose, alliance color, and field zone. Logs everything via
+  // AdvantageKit IO.
   private final TurretAimManager turretAimManager = new TurretAimManager(drive::getPose);
 
   // Acessors
@@ -201,7 +204,9 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
     // Initialize autonomous commands
     autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
@@ -232,18 +237,120 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    // #region Dashboard Buttons
+    SmartDashboard.putData(
+        "inPitSwitch",
+        Commands.parallel(
+            new InstantCommand(() -> Constants.currentState = BotState.PIT),
+            new InstantCommand(() -> Constants.inPit = !Constants.inPit),
+            intakePivot.setCoast(),
+            intakeRollers.setCoast(),
+            agitatorLeft.setCoast(),
+            agitatorRight.setCoast(),
+            verticalFeedLeft.setCoast(),
+            verticalFeedRight.setCoast(),
+            hoodLeft.setCoast(),
+            hoodRight.setCoast(),
+            turretLeft.setCoast(),
+            turretRight.setCoast(),
+            flywheelLeft.setCoast(),
+            flywheelRight.setCoast()));
+
+    SmartDashboard.putData("intake", intakeRollers.intakeCommand());
+    SmartDashboard.putData("outtake", intakeRollers.outtakeCommand());
+    SmartDashboard.putData(
+        "shoot",
+        Commands.parallel(
+            flywheelLeft.shootCommand(),
+            flywheelRight.shootCommand(),
+            verticalFeedLeft.verticalFeedIntakeCommand(),
+            verticalFeedRight.verticalFeedIntakeCommand(),
+            hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(0.0)));
+    SmartDashboard.putData(
+        "rotate Robot 90°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(90.0)));
+    SmartDashboard.putData(
+        "rotate Robot 180°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(180.0)));
+    SmartDashboard.putData(
+        "rotate Robot 270°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(270.0)));
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(0.0)));
+
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0,
+            () -> 0.0,
+            () -> Rotation2d.fromDegrees(0.0)));
+    SmartDashboard.putData(
+        "rotate left turret", turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 90.0));
+    SmartDashboard.putData(
+        "rotate right turret",
+        turretRight.setDegreesCommand(turretRight.getCurrentPosition() + 90.0));
+    SmartDashboard.putData(
+        "deploy intake",
+        intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
+    SmartDashboard.putData(
+        "retract intake",
+        intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees));
+    SmartDashboard.putData(
+        "floors on",
+        Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()));
+    SmartDashboard.putData(
+        "floors off", Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()));
+    SmartDashboard.putData(
+        "flywheel on", Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
+    SmartDashboard.putData(
+        "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
+    SmartDashboard.putData(
+        "Move Hood 5 degrees",
+        Commands.parallel(
+            hoodLeft.setDegreesCommand(hoodLeft.getCurrentPosition() + 5.0),
+            hoodRight.setDegreesCommand(hoodRight.getCurrentPosition() + 5.0)));
+
     SmartDashboard.putData(
         "Change Hub Active",
         new InstantCommand(() -> Constants.hubOverride = !Constants.hubOverride));
+    // #endregion
 
     // Configure the button bindings
     configureButtonBindings();
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -264,10 +371,9 @@ public class RobotContainer {
         .x()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     // Reset gyro to 0° when B button is pressed
@@ -275,10 +381,9 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     // Zero gyro with Start button (same as B, easier to reach mid-match)
@@ -286,10 +391,9 @@ public class RobotContainer {
         .start()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     if (agitatorRight != null && agitatorLeft != null) {
@@ -373,14 +477,14 @@ public class RobotContainer {
           .povUp()
           .onTrue(
               Commands.parallel(
-                  flywheelLeft.forwardCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxPositionUnits)));
+                  flywheelLeft.shootCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)));
       operator
           .povDown()
           .onTrue(
               Commands.parallel(
                   flywheelLeft.offCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)));
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     }
   }
 

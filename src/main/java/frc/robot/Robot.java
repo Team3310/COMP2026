@@ -102,7 +102,7 @@ public class Robot extends LoggedRobot {
 
     // This basically says if we are not deploying or retracting, then we can change states.
     // If we are deploying or retracting, we want to stay in deploy or retract until we are done.
-    if (!Constants.deploying && !Constants.retracting) {
+    if (!Constants.deploying && !Constants.retracting && !Constants.inPit) {
       if (Constants.overrideState == Constants.Override.COLLECT) {
         Constants.currentState = Constants.BotState.COLLECT;
       } else if (Constants.overrideState == Constants.Override.DEFENCE) {
@@ -123,14 +123,6 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    SmartDashboard.putString("currentState", "" + Constants.currentState);
-    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
-    SmartDashboard.putString("robotX", "" + robotX);
-    SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
-    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
-    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
-
     switch (Constants.currentState) {
       case SNOWBLOW:
         snowblow();
@@ -147,7 +139,19 @@ public class Robot extends LoggedRobot {
       case RETRACT:
         retract();
         break;
+      case PIT:
+        // In pit mode, we want to be able to manually control the robot without the state machine
+        break;
     }
+    //logging
+    SmartDashboard.putBoolean("inPit", Constants.inPit);
+    SmartDashboard.putString("currentState", "" + Constants.currentState);
+    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
+    SmartDashboard.putString("robotX", "" + robotX);
+    SmartDashboard.putString("currentZone", "" + currentZone);
+    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
+    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
+    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);

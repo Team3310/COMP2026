@@ -37,12 +37,14 @@ public final class Constants {
   // Set this to select which robot's tuner constants to use
   public static final Bot currentBot = Bot.PRACTICE;
 
+  public static boolean inPit = false;
+
+  public static BotState currentState = BotState.SNOWBLOW;
+  public static Override overrideState = Override.FALSE;
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
-  public static BotState currentState = BotState.COLLECT;
-  public static Override overrideState = Override.FALSE;
   public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
 
@@ -79,7 +81,8 @@ public final class Constants {
     COLLECT,
     DEFENCE,
     DEPLOY,
-    RETRACT
+    RETRACT,
+    PIT
   }
 
   public static enum Override {
@@ -242,12 +245,12 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kShootRPM = 1000.0;
-    public static final double kReverseRPM = -1000.0;
+    public static final double kShootRPM = 5700.0;
+    public static final double kReverseShootRPM = -5700.0;
 
-    public static final double kHoodStowedPosition = 10.0; // degrees
-    public static final double kHoodMaxPositionUnits = 35.0; // degrees
-    public static final double kHoodMinPositionUnits = 10.0; // degrees
+    public static final double kHoodStowedDegrees = 0.0; // degrees
+    public static final double kHoodMaxDegrees = 35.0; // degrees
+    public static final double kHoodMinDegrees = 10.0; // degrees
     public static final double kHoodUnitToRotorRatio =
         (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
@@ -274,8 +277,8 @@ public final class Constants {
     kLeftHoodConfig.talonCANID = new CANDeviceId(23, TunerConstants.kCANBus1.getName());
 
     kLeftHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
-    kLeftHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxPositionUnits;
-    kLeftHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinPositionUnits;
+    kLeftHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
+    kLeftHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinDegrees;
     kLeftHoodConfig.momentOfInertia = ScorerConstants.kHoodMomentOfInertia;
 
     kLeftHoodConfig.fxConfig.Slot0.kP = 2.0;
@@ -352,8 +355,8 @@ public final class Constants {
     kRightHoodConfig.name = "Right Hood";
     kRightHoodConfig.talonCANID = new CANDeviceId(28, TunerConstants.kCANBus1.getName());
     kRightHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
-    kRightHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxPositionUnits;
-    kRightHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinPositionUnits;
+    kRightHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
+    kRightHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinDegrees;
     kRightHoodConfig.momentOfInertia = ScorerConstants.kHoodMomentOfInertia;
     kRightHoodConfig.fxConfig.Slot0.kP = 2.0;
     kRightHoodConfig.fxConfig.Slot0.kD = 0.0;
@@ -427,23 +430,23 @@ public final class Constants {
   // #region Intake Subsystems
   public static final class IntakeConstants {
 
-    public static final double kIntakePivotStowedPosition = 0.0; // degrees
+    public static final double kIntakePivotStowedDegrees = 0.0; // degrees
+    public static final double kIntakePivotDeployDegrees = 145.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
 
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
-    public static final double kIntakeVelocityRPM = 1900.0;
-    public static final double kDeployVelocityRPM = -500.0;
+    public static final double kIntakeVelocityRPM = 2109.0;
+    public static final double kOuttakeVelocityRPM = -2109.0;
+
+    public static final double kDeployVelocityRPM = -1375.0;
 
     public static final double kIntakePivotToleranceRadians = 0.05;
     public static final double kIntakeRollerRadius = 0.0269875; // in m
 
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
-
-    public static final double kIntakeStowDegrees = 0.0;
-    public static final double kIntakeDeployDegrees = 145.0;
   }
 
   public static final ServoMotorSubsystemConfig kIntakeRollerConfig =
@@ -493,9 +496,12 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0; // rot/s²
 
     // Units = degrees
-    // TODO 1.8125 is a fudge factor. Something is different between CAD and Bravo robot
     kIntakePivotConfig.unitToRotorRatio =
-        (12.0 / 32.0) * (16.0 / 38.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125;
+        (12.0 / 32.0)
+            * (16.0 / 38.0)
+            * (16.0 / 40.0)
+            * (14.0 / 18.0)
+            * 360.0; // per design sheet, convert rotations to degrees
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
     kIntakePivotConfig.kMaxPositionUnits = 145.0; // degrees (fully deployed)
@@ -510,7 +516,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kIntakePivotConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Per design sheet
+    kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0; // Per design sheet
   }
 
   // #endregion
@@ -522,17 +528,17 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     public static final double kFloorRollerSnowblowRPM =
-        2000.0; // RPM at output (increased for testing)
+        4500.0; // RPM at output (increased for testing)
     public static final double kFloorRollerCollectRPM =
-        200.0; // RPM while intaking (Decreased for Collect mode)
+        500.0; // RPM while intaking (Decreased for Collect mode)
     public static final double kFloorRollerSnowblowRPS =
         kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
     public static final double kFloorRollerCollectRPS =
         kFloorRollerCollectRPM / 60.0; // RPS at output = 6.67 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static final double kVerticalFeedIntakeRPM = 3600.0; // RPM at output
-    public static final double kVerticalFeedOuttakeRPM = -3600.0; // RPM at output
+    public static final double kVerticalFeedIntakeRPM = 5000.0; // RPM at output
+    public static final double kVerticalFeedOuttakeRPM = -5000.0; // RPM at output
     public static final double kVerticalFeedIntakeRPS =
         kVerticalFeedIntakeRPM / 60.0; // RPS at output
     public static final double kVerticalFeedOuttakeRPS =

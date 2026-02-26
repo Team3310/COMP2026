@@ -194,7 +194,12 @@ public final class TurretAimCalculator {
     // --- Vertical (hood) angle ---
     double horizontalDist = Math.hypot(dx, dy);
     double dz = targetZ - Constants.ScorerConstants.kShooterExitZMeters;
-    double hoodDeg = Math.toDegrees(Math.atan2(dz, horizontalDist)); //TODO tune this formula for a better arc (currently just a line drive)
+    double hoodDeg =
+        Math.toDegrees(
+            Math.atan2(
+                dz,
+                horizontalDist)); // TODO tune this formula for a better arc (currently just a line
+    // drive)
 
     // Clamp hood to physical limits
     hoodDeg = clamp(hoodDeg, HOOD_MIN_DEG, HOOD_MAX_DEG);
