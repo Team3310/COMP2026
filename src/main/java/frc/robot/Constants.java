@@ -39,8 +39,8 @@ public final class Constants {
 
   public static boolean inPit = false;
 
-  public static BotState currentState = BotState.SNOWBLOW;
-  public static Override overrideState = Override.FALSE;
+  public static BotState currentState = BotState.PIT;
+  public static Override overrideState = Override.OFF;
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
@@ -86,7 +86,8 @@ public final class Constants {
   }
 
   public static enum Override {
-    FALSE,
+    OFF,
+    ON,
     COLLECT,
     DEFENCE
   }

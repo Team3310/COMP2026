@@ -103,23 +103,30 @@ public class Robot extends LoggedRobot {
     // This basically says if we are not deploying or retracting, then we can change states.
     // If we are deploying or retracting, we want to stay in deploy or retract until we are done.
     if (!Constants.deploying && !Constants.retracting && !Constants.inPit) {
-      if (Constants.overrideState == Constants.Override.COLLECT) {
-        Constants.currentState = Constants.BotState.COLLECT;
-      } else if (Constants.overrideState == Constants.Override.DEFENCE) {
-        Constants.currentState = Constants.BotState.DEFENCE;
-      } else { // Override if FALSE
-        // Automated State Machine
-        if (currentZone == Zone.BLUE
-            && Constants.alliance == Alliance.Blue
-            && !(Constants.activeHub)) {
+      switch (Constants.overrideState) {
+        case OFF: // nothing runs
+          Constants.currentState = Constants.BotState.PIT;
+          break;
+        case COLLECT:
           Constants.currentState = Constants.BotState.COLLECT;
-        } else if (currentZone == Zone.RED
-            && Constants.alliance == Alliance.Red
-            && !(Constants.activeHub)) {
-          Constants.currentState = Constants.BotState.COLLECT;
-        } else {
-          Constants.currentState = Constants.BotState.SNOWBLOW;
-        }
+          break;
+        case DEFENCE:
+          Constants.currentState = Constants.BotState.DEFENCE;
+          break;
+        case ON:
+        default:
+          // Automated State Machine
+          if (currentZone == Zone.BLUE
+              && Constants.alliance == Alliance.Blue
+              && !(Constants.activeHub)) {
+            Constants.currentState = Constants.BotState.COLLECT;
+          } else if (currentZone == Zone.RED
+              && Constants.alliance == Alliance.Red
+              && !(Constants.activeHub)) {
+            Constants.currentState = Constants.BotState.COLLECT;
+          } else {
+            Constants.currentState = Constants.BotState.SNOWBLOW;
+          }
       }
     }
 
@@ -143,7 +150,7 @@ public class Robot extends LoggedRobot {
         // In pit mode, we want to be able to manually control the robot without the state machine
         break;
     }
-    //logging
+    // logging
     SmartDashboard.putBoolean("inPit", Constants.inPit);
     SmartDashboard.putString("currentState", "" + Constants.currentState);
     SmartDashboard.putString("overrideState", "" + Constants.overrideState);

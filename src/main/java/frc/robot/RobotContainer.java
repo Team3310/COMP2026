@@ -33,12 +33,9 @@ import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since
- * Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in
- * the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of
- * the robot (including
+ * This class is where the bulk of the robot should be declared. Since Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -118,7 +115,8 @@ public class RobotContainer {
 
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
   private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
-  private final Agitator verticalFeedRight = buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
+  private final Agitator verticalFeedRight =
+      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
 
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
@@ -204,9 +202,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Initialize autonomous commands
     autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
@@ -241,7 +237,7 @@ public class RobotContainer {
     SmartDashboard.putData(
         "inPitSwitch",
         Commands.parallel(
-            new InstantCommand(() -> Constants.currentState = BotState.PIT),
+            new InstantCommand(() -> Constants.overrideState = Constants.Override.OFF),
             new InstantCommand(() -> Constants.inPit = !Constants.inPit),
             intakePivot.setCoast(),
             intakeRollers.setCoast(),
@@ -270,46 +266,28 @@ public class RobotContainer {
     SmartDashboard.putData(
         "rotate Robot 0°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(0.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
     SmartDashboard.putData(
         "rotate Robot 90°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(90.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(90.0)));
     SmartDashboard.putData(
         "rotate Robot 180°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(180.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(180.0)));
     SmartDashboard.putData(
         "rotate Robot 270°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(270.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(270.0)));
     SmartDashboard.putData(
         "rotate Robot 0°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(0.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
 
     SmartDashboard.putData(
         "rotate Robot 0°",
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0,
-            () -> 0.0,
-            () -> Rotation2d.fromDegrees(0.0)));
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
     SmartDashboard.putData(
         "rotate left turret", turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 90.0));
     SmartDashboard.putData(
@@ -327,7 +305,8 @@ public class RobotContainer {
     SmartDashboard.putData(
         "floors off", Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()));
     SmartDashboard.putData(
-        "flywheel on", Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
+        "flywheel on",
+        Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
     SmartDashboard.putData(
         "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
     SmartDashboard.putData(
@@ -346,11 +325,9 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be
-   * created by
+   * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
-   * it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -371,9 +348,10 @@ public class RobotContainer {
         .x()
         .onTrue(
             Commands.runOnce(
-                () -> drive.setPose(
-                    new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
-                drive)
+                    () ->
+                        drive.setPose(
+                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
+                    drive)
                 .ignoringDisable(true));
 
     // Reset gyro to 0° when B button is pressed
@@ -381,9 +359,10 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                () -> drive.setPose(
-                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                drive)
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
                 .ignoringDisable(true));
 
     // Zero gyro with Start button (same as B, easier to reach mid-match)
@@ -391,9 +370,10 @@ public class RobotContainer {
         .start()
         .onTrue(
             Commands.runOnce(
-                () -> drive.setPose(
-                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                drive)
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
                 .ignoringDisable(true));
 
     if (agitatorRight != null && agitatorLeft != null) {
@@ -421,17 +401,20 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   switch (Constants.overrideState) {
-                    case FALSE:
+                    case OFF:
+                      Constants.overrideState = Constants.Override.ON;
+                      break;
+                    case ON:
                       Constants.overrideState = Constants.Override.COLLECT;
                       break;
                     case COLLECT:
                       Constants.overrideState = Constants.Override.DEFENCE;
                       break;
                     case DEFENCE:
-                      Constants.overrideState = Constants.Override.FALSE;
+                      Constants.overrideState = Constants.Override.ON;
                       break;
                     default:
-                      Constants.overrideState = Constants.Override.FALSE;
+                      Constants.overrideState = Constants.Override.OFF;
                       break;
                   }
                 }));
