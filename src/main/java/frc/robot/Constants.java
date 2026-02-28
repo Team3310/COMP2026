@@ -242,6 +242,16 @@ public final class Constants {
     // ---- Simulated gyro noise (degrees per second, 1σ) ----
     // Adds a small random walk to the sim gyro to mimic real sensor noise.
     public static double kGyroNoiseDegPerSec = 0.05;
+
+    // ---- Turret rotational inertia (simulation only) ----
+    // First-order lag time constant for the turret mechanism.
+    // Higher = heavier/slower turret.  ~0.20 s for a geared turret with
+    // a ~2 kg·m² MOI driven by a single Kraken/Falcon.
+    public static double kTurretSimTauSeconds = 0.20;
+
+    // Maximum turret angular velocity in degrees per second.
+    // Prevents the simulated turret from slewing unrealistically fast.
+    public static double kTurretSimMaxVelocityDegPerSec = 360.0;
   }
   // #endregion
 
@@ -250,12 +260,19 @@ public final class Constants {
     public static final double kShootRPM = 5700.0;
     public static final double kReverseShootRPM = -5700.0;
 
-    public static final double kHoodStowedDegrees = 10.0; // degrees
-    public static final double kHoodMaxDegrees = 35.0; // degrees
-    public static final double kHoodMinDegrees = 10.0; // degrees
+    public static final double kHoodStowedDegrees = 0.0; // degrees from vertical
+    public static final double kHoodMaxDegrees =
+        35.0; // degrees from vertical (flattest shot, 55° elevation)
+    public static final double kHoodMinDegrees =
+        10.0; // degrees from vertical (steepest shot, 80° elevation)
     public static final double kHoodUnitToRotorRatio =
         (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
+
+    // Distance (meters) within which the robot is considered "near" a landing /
+    // intake zone.  When inside this radius the hood stows to kHoodMinDegrees so
+    // the intake can receive balls unobstructed.
+    public static final double kHoodStowDistanceMeters = 1.5; // meters
 
     public static final double kTurretStowedPosition = 0.0; // degrees
     public static final double kTurretMaxPositionUnits = 220.0; // degrees
@@ -270,6 +287,48 @@ public final class Constants {
     public static final double kRightShooterXOffsetMeters = Units.inchesToMeters(-6.4);
     public static final double kRightShooterYOffsetMeters = Units.inchesToMeters(-6.831);
     public static final double kShooterExitZMeters = Units.inchesToMeters(20.5);
+
+    // ---- Ballistics lookup tables ----
+    // Each row: { distance (m), hood angle (deg from vertical), feeder speed (RPM) }
+    //
+    // Hood angle = degrees from vertical (ball exits perpendicular to hood face).
+    //   Actual launch elevation from horizontal = 90° − hoodDeg.
+    //   10° hood → 80° elevation (nearly straight up, steep arc)
+    //   35° hood → 55° elevation (flatter, faster trajectory)
+    //
+    // The calculator linearly interpolates between rows.  Values beyond the
+    // first / last row are clamped to that row's values.
+    //
+    // Tune these per-robot during practice by shooting at known distances.
+    // Add or remove rows as needed — just keep them sorted by distance.
+
+    // Hub (scoring) — aim at the elevated hub target.
+    // Close range = steep arc (low hood), far range = flatter shot (high hood).
+    // Feeder speed ramps up with distance to maintain ball energy.
+    public static final double[][] kHubTable = {
+      // { distance_m, hoodDeg, feederRPM }
+      {2.0, 12.0, 2000.0},
+      {4.0, 18.0, 2800.0},
+      {6.0, 24.0, 3400.0},
+      {8.0, 29.0, 3800.0},
+      {10.0, 32.0, 4200.0},
+      {12.0, 34.0, 4500.0},
+    };
+
+    // Pass (lob) — lob to a landing zone on our side of the field.
+    // Stays closer to vertical (lower hood values) for hang time / height.
+    // Feeder speed is lower — we just need the ball to arc over, not blast.
+    public static final double[][] kPassTable = {
+      // { distance_m, hoodDeg, feederRPM }
+      {3.0, 13.0, 1800.0},
+      {5.0, 16.0, 2200.0},
+      {7.0, 19.0, 2600.0},
+      {9.0, 21.0, 2800.0},
+      {12.0, 23.0, 3000.0},
+    };
+
+    // Default feeder speed when stowing (turret idle / trench zone).
+    public static final double kFeederStowRPM = 0.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

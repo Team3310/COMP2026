@@ -29,7 +29,10 @@ import frc.robot.Constants;
  *   <li>Field origin at blue-alliance corner (0, 0). X runs toward red wall.
  *   <li>Robot heading 0° = facing red wall (+X).
  *   <li>Turret 0° = facing robot-forward. Positive = CCW (left when viewed from above).
- *   <li>Hood angle = elevation above horizontal (10°–35° limits from ScorerConstants).
+ *   <li>Hood angle = degrees from vertical (0° = straight up, 35° = 55° from horizontal). The ball
+ *       exits perpendicular to the hood face, so the actual launch elevation from horizontal is
+ *       {@code 90 − hoodDeg}. Lower hood values produce steeper (more vertical) trajectories;
+ *       higher values produce flatter trajectories.
  * </ul>
  */
 public final class TurretAimCalculator {
@@ -38,12 +41,16 @@ public final class TurretAimCalculator {
   public static class AimResult {
     /** Left turret lateral angle in degrees (0 = forward, + = left). */
     public final double leftTurretDeg;
-    /** Left hood vertical angle in degrees (elevation above horizontal). */
+    /** Left hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double leftHoodDeg;
+    /** Left vertical-feeder speed in RPM (0 = off). */
+    public final double leftFeederRPM;
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
-    /** Right hood vertical angle in degrees (elevation above horizontal). */
+    /** Right hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double rightHoodDeg;
+    /** Right vertical-feeder speed in RPM (0 = off). */
+    public final double rightFeederRPM;
 
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
@@ -51,20 +58,23 @@ public final class TurretAimCalculator {
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
+        double leftFeederRPM,
         double rightTurretDeg,
         double rightHoodDeg,
+        double rightFeederRPM,
         Translation2d target) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
+      this.leftFeederRPM = leftFeederRPM;
       this.rightTurretDeg = rightTurretDeg;
       this.rightHoodDeg = rightHoodDeg;
+      this.rightFeederRPM = rightFeederRPM;
       this.target = target;
     }
   }
 
-  // Hood limits from ScorerConstants (duplicated here to avoid circular dep)
-  private static final double HOOD_MIN_DEG = 10.0;
-  private static final double HOOD_MAX_DEG = 35.0;
+  // Hood limits — read from Constants so they stay tunable in one place.
+  // (No circular dependency: Constants is a leaf class with only static finals.)
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -73,16 +83,19 @@ public final class TurretAimCalculator {
    * Compute aim angles for both turrets and hoods.
    *
    * @param robotPose Current robot field pose from odometry / pose estimator.
-   * @param allianceColor 'R' for red, 'B' for blue.
-   * @return An {@link AimResult} with four angles plus debug info.
+   * @return An {@link AimResult} with six values (L/R turret, hood, feeder) plus debug info.
    */
   public static AimResult calculate(Pose2d robotPose) {
     boolean isBlue = (Constants.alliance == Alliance.Blue);
 
     FieldConstants.Zone zone = Constants.currentZone;
+
+    // ---- Trench zone: stow hood to lowest angle, zero feeder ----
+    boolean inTrench =
+        (zone == FieldConstants.Zone.BLUETRENCH || zone == FieldConstants.Zone.REDTRENCH);
+
     // ---- Pick field-space target ----
     Translation2d fieldTarget;
-    double targetZ; // height of the target above the floor (meters)
 
     boolean home = false;
     if (isBlue && zone == FieldConstants.Zone.BLUE) {
@@ -96,26 +109,18 @@ public final class TurretAimCalculator {
       if (isBlue) {
         fieldTarget =
             new Translation2d(FieldConstants.Hub.BLUE.getX(), FieldConstants.Hub.BLUE.getY());
-        targetZ = FieldConstants.Hub.BLUE.getZ();
       } else {
         fieldTarget =
             new Translation2d(FieldConstants.Hub.RED.getX(), FieldConstants.Hub.RED.getY());
-        targetZ = FieldConstants.Hub.RED.getZ();
       }
-    } else { // Midfield or Opponents
-
+    } else { // Midfield, trench, or opponent zone
       // Pass mode — aim at the landing zone on OUR side.
       // Choose whichever landing zone (outpost vs depot) is closer to the
       // robot's current Y to minimize turret travel.
       fieldTarget = pickLandingTarget(robotPose.getY(), isBlue);
-      // Landing zones are on the floor — target Z = 0 (lob arc, not a line
-      // drive). We'll set a fixed hood angle for passing.
-      targetZ = 0.0;
     }
 
     // ---- Compute aim from midpoint of the two shooter exits ----
-    // Both turrets are parallel, so we use a single aim solution from the
-    // midpoint between left and right shooter positions.
     Rotation2d heading = robotPose.getRotation();
 
     double midShooterX =
@@ -128,13 +133,14 @@ public final class TurretAimCalculator {
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
-    double[] angles = computeAngles(midShooterField, fieldTarget, targetZ, heading);
+    double[] result = computeAngles(midShooterField, fieldTarget, heading, home, inTrench);
 
-    double turretDeg = angles[0];
-    double hoodDeg = angles[1];
+    double turretDeg = result[0];
+    double hoodDeg = result[1];
+    double feederRPM = result[2];
 
-    // Same angles for both sides (parallel turrets)
-    return new AimResult(turretDeg, hoodDeg, turretDeg, hoodDeg, fieldTarget);
+    // Same values for both sides (parallel turrets)
+    return new AimResult(turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget);
   }
 
   // ====================================================================
@@ -155,19 +161,21 @@ public final class TurretAimCalculator {
   }
 
   /**
-   * Compute turret and hood angles for a single shooter.
+   * Compute turret angle, hood angle, and feeder speed for a single shooter.
    *
    * @param shooterField Field-space XY of the shooter exit.
    * @param targetField Field-space XY of the target.
-   * @param targetZ Target height above floor (m).
    * @param robotHeading Current robot heading on the field.
-   * @return double[2]: [turretDeg, hoodDeg].
+   * @param home true when in own alliance zone (aim at hub); false for pass/lob mode.
+   * @param inTrench true when in a trench zone — forces hood to minimum and feeder off.
+   * @return double[3]: [turretDeg, hoodDeg, feederRPM].
    */
   private static double[] computeAngles(
       Translation2d shooterField,
       Translation2d targetField,
-      double targetZ,
-      Rotation2d robotHeading) {
+      Rotation2d robotHeading,
+      boolean home,
+      boolean inTrench) {
     // --- Lateral (turret) angle ---
     // Vector from shooter to target in field frame
     double dx = targetField.getX() - shooterField.getX();
@@ -180,31 +188,88 @@ public final class TurretAimCalculator {
     // This gives the angle in the robot's reference frame.
     double turretRad = fieldBearing - robotHeading.getRadians();
 
-    // Normalize to [−π, π]
-    turretRad = Math.atan2(Math.sin(turretRad), Math.cos(turretRad));
+    // Normalize to [-220°, +220°] to match the physical turret range.
     double turretDeg = Math.toDegrees(turretRad);
+    double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
+    double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Clamp turret to physical limits
-    if (turretDeg > Constants.ScorerConstants.kTurretMaxPositionUnits) {
-      turretDeg = 360.0 - turretDeg; // wrap around to negative angles
-    } else if (turretDeg < Constants.ScorerConstants.kTurretMinPositionUnits) {
-      turretDeg = 360.0 + turretDeg; // wrap around to positive angles
+    // Normalize into (-360, 360) first, then shift into [turretMin, turretMax]
+    turretDeg = turretDeg % 360.0;
+    if (turretDeg > turretMax) {
+      turretDeg -= 360.0;
+    } else if (turretDeg < turretMin) {
+      turretDeg += 360.0;
     }
 
-    // --- Vertical (hood) angle ---
+    // If still out of range (target in the ±(220–360) dead-band), pick the
+    // closer physical limit.
+    if (turretDeg > turretMax) {
+      turretDeg = turretMax;
+    } else if (turretDeg < turretMin) {
+      turretDeg = turretMin;
+    }
+
+    // --- Vertical (hood) angle and feeder speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
-    double dz = targetZ - Constants.ScorerConstants.kShooterExitZMeters;
-    double hoodDeg =
-        Math.toDegrees(
-            Math.atan2(
-                dz,
-                horizontalDist)); // TODO tune this formula for a better arc (currently just a line
-    // drive)
+    double hoodDeg;
+    double feederRPM;
 
-    // Clamp hood to physical limits
-    hoodDeg = clamp(hoodDeg, HOOD_MIN_DEG, HOOD_MAX_DEG);
+    if (inTrench) {
+      // Trench zone: hood as low (steep) as possible, feeder off.
+      hoodDeg = Constants.ScorerConstants.kHoodMinDegrees;
+      feederRPM = Constants.ScorerConstants.kFeederStowRPM;
+    } else {
+      // Pick the correct lookup table
+      double[][] table = home
+          ? Constants.ScorerConstants.kHubTable
+          : Constants.ScorerConstants.kPassTable;
 
-    return new double[] {turretDeg, hoodDeg};
+      hoodDeg = interpolateTable(table, horizontalDist, 1); // column 1 = hood
+      feederRPM = interpolateTable(table, horizontalDist, 2); // column 2 = feeder
+
+      // Clamp hood to physical limits
+      hoodDeg =
+          clamp(
+              hoodDeg,
+              Constants.ScorerConstants.kHoodMinDegrees,
+              Constants.ScorerConstants.kHoodMaxDegrees);
+    }
+
+    return new double[] {turretDeg, hoodDeg, feederRPM};
+  }
+
+  /**
+   * Linearly interpolate a value from a sorted lookup table.
+   *
+   * <p>The table must be sorted ascending by column 0 (distance). If the input distance is below
+   * the first row or above the last row, the corresponding row's value is returned (clamped, not
+   * extrapolated).
+   *
+   * @param table 2-D array where each row is {distance, ...values...}.
+   * @param distance The horizontal distance to look up.
+   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 = feeder).
+   * @return The interpolated value.
+   */
+  private static double interpolateTable(double[][] table, double distance, int valueColumn) {
+    // Below first row — clamp
+    if (distance <= table[0][0]) {
+      return table[0][valueColumn];
+    }
+    // Above last row — clamp
+    if (distance >= table[table.length - 1][0]) {
+      return table[table.length - 1][valueColumn];
+    }
+    // Find the bracketing rows and lerp
+    for (int i = 0; i < table.length - 1; i++) {
+      double d0 = table[i][0];
+      double d1 = table[i + 1][0];
+      if (distance >= d0 && distance <= d1) {
+        double t = (distance - d0) / (d1 - d0);
+        return table[i][valueColumn] + t * (table[i + 1][valueColumn] - table[i][valueColumn]);
+      }
+    }
+    // Fallback (should never reach here if table is sorted)
+    return table[table.length - 1][valueColumn];
   }
 
   /**
