@@ -141,7 +141,8 @@ public class RobotContainer {
   // Turret aim calculator — computes desired turret/hood angles every cycle based
   // on robot pose, alliance color, and field zone. Logs everything via
   // AdvantageKit IO.
-  private final TurretAimManager turretAimManager = new TurretAimManager(drive::getPose);
+  private final TurretAimManager turretAimManager =
+      new TurretAimManager(drive::getPose, drive::getChassisSpeeds);
 
   // #region getters
   public Drive getDrive() {

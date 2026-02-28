@@ -56,6 +56,9 @@ public final class TurretAimCalculator {
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
 
+    /** True when in own-alliance zone (aim at hub); false for pass/lob/stow. */
+    public final boolean home;
+
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
@@ -63,7 +66,8 @@ public final class TurretAimCalculator {
         double rightTurretDeg,
         double rightHoodDeg,
         double rightFeederRPM,
-        Translation2d target) {
+        Translation2d target,
+        boolean home) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.leftFeederRPM = leftFeederRPM;
@@ -71,11 +75,18 @@ public final class TurretAimCalculator {
       this.rightHoodDeg = rightHoodDeg;
       this.rightFeederRPM = rightFeederRPM;
       this.target = target;
+      this.home = home;
     }
   }
 
   // Hood limits — read from Constants so they stay tunable in one place.
   // (No circular dependency: Constants is a leaf class with only static finals.)
+
+  // ---- Turret wrap-around state ----
+  // Tracks which 360° wrap the turret is on (0 or ±360).
+  // Added to the normalized [-180,+180] angle so the turret doesn't jump at ±180°.
+  // Flips only when the result actually hits ±220°.
+  private static double wrapOffset = 0.0;
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -141,7 +152,8 @@ public final class TurretAimCalculator {
     double feederRPM = result[2];
 
     // Same values for both sides (parallel turrets)
-    return new AimResult(turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget);
+    return new AimResult(
+        turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget, home);
   }
 
   // ====================================================================
@@ -149,9 +161,26 @@ public final class TurretAimCalculator {
   // ====================================================================
 
   /**
+   * Estimate the ball's time-of-flight in seconds for a hub shot at the given distance.
+   *
+   * <p>Interpolates from the TOF column (column 3) of {@link Constants.ScorerConstants#kHubTable}.
+   * Returns 0 if not in hub-scoring mode (pass/lob shots don't use aim-ahead lead).
+   *
+   * @param distance Horizontal distance in meters from shooter to target.
+   * @param home true when in own-alliance zone (hub scoring); false for pass mode.
+   * @return Estimated flight time in seconds, or 0 if not in hub mode.
+   */
+  public static double estimateTimeOfFlight(double distance, boolean home) {
+    if (!home) {
+      return 0.0; // No lead for pass/lob shots
+    }
+    return interpolateTable(Constants.ScorerConstants.kHubTable, distance, 3);
+  }
+
+  /**
    * Convert a robot-relative offset to a field-space Translation2d using the robot's current pose.
    */
-  private static Translation2d robotToField(Pose2d robotPose, double robotRelX, double robotRelY) {
+  public static Translation2d robotToField(Pose2d robotPose, double robotRelX, double robotRelY) {
     // Rotate the offset by the robot heading, then translate to the robot's
     // field position.
     double cos = robotPose.getRotation().getCos();
@@ -189,26 +218,37 @@ public final class TurretAimCalculator {
     // This gives the angle in the robot's reference frame.
     double turretRad = fieldBearing - robotHeading.getRadians();
 
-    // Normalize to [-220°, +220°] to match the physical turret range.
+    // ---- Wrap-around ----
+    // The turret can physically travel ±220° from forward (440° total).
+    // atan2 gives [-180, +180] which always fits in [-220, +220].
+    // We track a wrapOffset (0 or ±360) so the turret doesn't jump at ±180°.
+    // When the tracked angle hits +220 we subtract 360 (→ ~-140).
+    // When the tracked angle hits -220 we add 360 (→ ~+140).
+
     double turretDeg = Math.toDegrees(turretRad);
     double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
     double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Normalize into (-360, 360) first, then shift into [turretMin, turretMax]
+    // Normalize to [-180, +180]
     turretDeg = turretDeg % 360.0;
-    if (turretDeg > turretMax) {
+    if (turretDeg > 180.0) {
       turretDeg -= 360.0;
-    } else if (turretDeg < turretMin) {
+    } else if (turretDeg <= -180.0) {
       turretDeg += 360.0;
     }
 
-    // If still out of range (target in the ±(220–360) dead-band), pick the
-    // closer physical limit.
+    // Apply current wrap offset and flip if we hit a limit
+    turretDeg += wrapOffset;
     if (turretDeg > turretMax) {
-      turretDeg = turretMax;
+      wrapOffset -= 360.0;
+      turretDeg -= 360.0;
     } else if (turretDeg < turretMin) {
-      turretDeg = turretMin;
+      wrapOffset += 360.0;
+      turretDeg += 360.0;
     }
+
+    // Final safety clamp (dead-band behind robot where neither wrap fits)
+    turretDeg = Math.max(turretMin, Math.min(turretMax, turretDeg));
 
     // --- Vertical (hood) angle and feeder speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
@@ -247,11 +287,11 @@ public final class TurretAimCalculator {
    *
    * @param table 2-D array where each row is {distance, ...values...}.
    * @param distance The horizontal distance to look up.
-   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 =
-   *     feeder).
+   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 = feeder,
+   *     3 = TOF).
    * @return The interpolated value.
    */
-  private static double interpolateTable(double[][] table, double distance, int valueColumn) {
+  public static double interpolateTable(double[][] table, double distance, int valueColumn) {
     // Below first row — clamp
     if (distance <= table[0][0]) {
       return table[0][valueColumn];

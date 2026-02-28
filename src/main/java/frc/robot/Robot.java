@@ -363,8 +363,16 @@ public class Robot extends LoggedRobot {
               robotContainer.getAgitatorLeft().snowblowCommand().schedule();
               robotContainer.getAgitatorRight().snowblowCommand().schedule();
               robotContainer.getIntakeRollers().intakeCommand().schedule();
-              robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand().schedule();
-              robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand().schedule();
+
+              // Only feed balls up to the shooter when the turret is aimed at the target.
+              // This prevents blowing balls out while the turret is spinning around.
+              if (robotContainer.getTurretAimManager().isLockedOn()) {
+                robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand().schedule();
+                robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand().schedule();
+              } else {
+                robotContainer.getVerticalFeedLeft().offCommand().schedule();
+                robotContainer.getVerticalFeedRight().offCommand().schedule();
+              }
             })
         .schedule();
   }

@@ -252,6 +252,22 @@ public final class Constants {
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
 
+    // Lock-on tolerance — the turret must be within this many degrees of the
+    // commanded angle before the feeders are allowed to run (snowblow/shoot).
+    public static final double kTurretLockOnToleranceDeg = 20.0;
+
+    // ---- Aim-ahead (lead) compensation ----
+    // Phase delay (seconds) to compensate for sensor/processing pipeline latency.
+    // The aim calculator shifts the estimated pose forward by this amount using
+    // Pose2d.exp(Twist2d) before any TOF-based prediction.  Typical: 0.02–0.05s.
+    public static double kPhaseDelaySeconds = 0.03;
+
+    // Maximum iterations for TOF ↔ distance convergence loop.
+    // The time-of-flight depends on distance, which changes with the lookahead
+    // offset, which depends on TOF — a circular dependency solved by iteration.
+    // 10 iterations is more than enough for convergence in practice.
+    public static final int kTofIterations = 10;
+
     // Shooter lateral offsets from robot center (SDS §3.9 / §3.10)
     public static final double kLeftShooterXOffsetMeters = Units.inchesToMeters(-6.4);
     public static final double kLeftShooterYOffsetMeters = Units.inchesToMeters(6.831);
@@ -276,19 +292,32 @@ public final class Constants {
     // Hub (scoring) — aim at the elevated hub target.
     // Close range = steep arc (low hood), far range = flatter shot (high hood).
     // Feeder speed ramps up with distance to maintain ball energy.
+    //
+    // Column 0: distance (meters) — horizontal distance from shooter to target
+    // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
+    // Column 2: feeder speed (RPM) — vertical feeder roller speed
+    // Column 3: time of flight (seconds) — predicted ball flight time at this distance
+    //           Used for aim-ahead: the turret leads the target by velocity × TOF.
+    //           Tune by measuring actual flight times or via ballistic simulation.
     public static final double[][] kHubTable = {
-      // { distance_m, hoodDeg, feederRPM }
-      {2.0, 12.0, 2000.0},
-      {4.0, 18.0, 2800.0},
-      {6.0, 24.0, 3400.0},
-      {8.0, 29.0, 3800.0},
-      {10.0, 32.0, 4200.0},
-      {12.0, 34.0, 4500.0},
+      // { distance_m, hoodDeg, feederRPM, tofSeconds }
+      {2.0, 12.0, 2000.0, 0.55},
+      {4.0, 18.0, 2800.0, 0.70},
+      {6.0, 24.0, 3400.0, 0.85},
+      {8.0, 29.0, 3800.0, 1.00},
+      {10.0, 32.0, 4200.0, 1.10},
+      {12.0, 34.0, 4500.0, 1.20},
     };
 
     // Pass (lob) — lob to a landing zone on our side of the field.
     // Stays closer to vertical (lower hood values) for hang time / height.
     // Feeder speed is lower — we just need the ball to arc over, not blast.
+    // No TOF column — passes aim at a large landing zone, not a precise target,
+    // so aim-ahead lead is not applied in pass mode.
+    //
+    // Column 0: distance (meters) — horizontal distance from shooter to target
+    // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
+    // Column 2: feeder speed (RPM) — vertical feeder roller speed
     public static final double[][] kPassTable = {
       // { distance_m, hoodDeg, feederRPM }
       {3.0, 13.0, 1800.0},
@@ -329,7 +358,7 @@ public final class Constants {
     kLeftHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftTurretConfig = new ServoMotorSubsystemConfig();
@@ -406,7 +435,7 @@ public final class Constants {
     kRightHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightTurretConfig =

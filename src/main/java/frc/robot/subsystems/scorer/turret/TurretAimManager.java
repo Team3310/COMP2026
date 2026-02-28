@@ -3,10 +3,13 @@ package frc.robot.subsystems.scorer.turret;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.ScorerConstants;
 import frc.robot.Constants.SimPhysicsConstants;
 import java.util.function.Supplier;
@@ -23,6 +26,7 @@ import org.littletonrobotics.junction.Logger;
  */
 public class TurretAimManager extends SubsystemBase {
   private final Supplier<Pose2d> poseSupplier;
+  private final Supplier<ChassisSpeeds> speedsSupplier;
   private final TurretAimIOInputsAutoLogged inputs = new TurretAimIOInputsAutoLogged();
 
   // Cached latest result for external consumers
@@ -37,18 +41,113 @@ public class TurretAimManager extends SubsystemBase {
 
   /**
    * @param poseSupplier Supplies the robot's current field pose (usually {@code drive::getPose}).
+   * @param speedsSupplier Supplies the robot's current robot-relative chassis speeds (usually
+   *     {@code drive::getChassisSpeeds}). Used for aim-ahead prediction.
    */
-  public TurretAimManager(Supplier<Pose2d> poseSupplier) {
+  public TurretAimManager(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier) {
     this.poseSupplier = poseSupplier;
+    this.speedsSupplier = speedsSupplier;
   }
 
   @Override
   public void periodic() {
     Pose2d pose = poseSupplier.get();
     char alliance = getAllianceChar();
+    ChassisSpeeds robotSpeeds = speedsSupplier.get();
 
-    // Run the aim calculator (instant — where the turret *wants* to be)
-    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(pose);
+    // ================================================================
+    // Step 1: Phase-delay compensation
+    // ================================================================
+    // Shift the estimated pose forward by kPhaseDelaySeconds to account for
+    // sensor / processing pipeline latency.  Pose2d.exp(Twist2d) properly
+    // handles the arc the robot follows during rotation (unlike linear extrap).
+    double phaseDelay = ScorerConstants.kPhaseDelaySeconds;
+    Pose2d phaseCorrectedPose =
+        pose.exp(
+            new Twist2d(
+                robotSpeeds.vxMetersPerSecond * phaseDelay,
+                robotSpeeds.vyMetersPerSecond * phaseDelay,
+                robotSpeeds.omegaRadiansPerSecond * phaseDelay));
+
+    // ================================================================
+    // Step 2: Initial aim calculation (at phase-corrected pose, no TOF lead yet)
+    // ================================================================
+    // We need this first pass to determine (a) the target location and (b)
+    // whether we're in hub mode (home=true) so we know if TOF lead applies.
+    TurretAimCalculator.AimResult initialResult = TurretAimCalculator.calculate(phaseCorrectedPose);
+
+    // ================================================================
+    // Step 3: Iterative TOF-based aim-ahead convergence
+    // ================================================================
+    // The time-of-flight depends on distance, which changes with the velocity
+    // offset, which depends on TOF — a circular dependency.  We iterate:
+    //   1. Estimate TOF from current shooter→target distance
+    //   2. Extrapolate shooter position by fieldVelocity × TOF
+    //   3. Recompute distance from extrapolated position to target
+    //   4. Repeat until converged
+    //
+    // Only hub shots use TOF lead.  Pass/lob shots aim at a large landing zone,
+    // so lead is unnecessary (TOF returns 0 for non-home zones).
+
+    // Compute field-relative velocity from robot-relative ChassisSpeeds
+    double cosH = phaseCorrectedPose.getRotation().getCos();
+    double sinH = phaseCorrectedPose.getRotation().getSin();
+    double fieldVx = robotSpeeds.vxMetersPerSecond * cosH - robotSpeeds.vyMetersPerSecond * sinH;
+    double fieldVy = robotSpeeds.vxMetersPerSecond * sinH + robotSpeeds.vyMetersPerSecond * cosH;
+
+    // Midpoint of the two shooter exits (robot-relative)
+    double midShooterX =
+        (Constants.ScorerConstants.kLeftShooterXOffsetMeters
+                + Constants.ScorerConstants.kRightShooterXOffsetMeters)
+            / 2.0;
+    double midShooterY =
+        (Constants.ScorerConstants.kLeftShooterYOffsetMeters
+                + Constants.ScorerConstants.kRightShooterYOffsetMeters)
+            / 2.0;
+
+    // Shooter position in field space (from phase-corrected pose)
+    Translation2d shooterField =
+        TurretAimCalculator.robotToField(phaseCorrectedPose, midShooterX, midShooterY);
+    Translation2d target = initialResult.target;
+    boolean home = initialResult.home;
+
+    // Iterative convergence loop
+    double convergedTof = 0.0;
+    Translation2d lookaheadShooter = shooterField;
+    double lookaheadDist = shooterField.getDistance(target);
+
+    for (int i = 0; i < ScorerConstants.kTofIterations; i++) {
+      convergedTof = TurretAimCalculator.estimateTimeOfFlight(lookaheadDist, home);
+      if (convergedTof <= 0.0) break; // No lead (pass mode or zero TOF)
+
+      // Extrapolate shooter position by field velocity × TOF
+      lookaheadShooter =
+          new Translation2d(
+              shooterField.getX() + fieldVx * convergedTof,
+              shooterField.getY() + fieldVy * convergedTof);
+      lookaheadDist = lookaheadShooter.getDistance(target);
+    }
+
+    // ================================================================
+    // Step 4: Final aim calculation at the predicted pose
+    // ================================================================
+    // Build the predicted robot pose by offsetting position by velocity × TOF
+    // and heading by omega × TOF from the phase-corrected pose.
+    Pose2d predictedPose;
+    if (convergedTof > 0.0) {
+      predictedPose =
+          new Pose2d(
+              phaseCorrectedPose.getX() + fieldVx * convergedTof,
+              phaseCorrectedPose.getY() + fieldVy * convergedTof,
+              phaseCorrectedPose
+                  .getRotation()
+                  .plus(Rotation2d.fromRadians(robotSpeeds.omegaRadiansPerSecond * convergedTof)));
+    } else {
+      predictedPose = phaseCorrectedPose;
+    }
+
+    // Run the aim calculator on the PREDICTED pose
+    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(predictedPose);
     latestResult = result;
 
     // ---- Simulated turret inertia ----
@@ -111,6 +210,14 @@ public class TurretAimManager extends SubsystemBase {
     Logger.recordOutput("TurretAim/RightFeederRPM", result.rightFeederRPM);
     Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
 
+    // ---- TOF aim-ahead logging ----
+    Logger.recordOutput("TurretAim/ConvergedTofSeconds", convergedTof);
+    Logger.recordOutput("TurretAim/PhaseDelaySeconds", phaseDelay);
+    Logger.recordOutput("TurretAim/PhaseCorrectedPose", phaseCorrectedPose);
+    Logger.recordOutput("TurretAim/PredictedPose", predictedPose);
+    Logger.recordOutput("TurretAim/FieldVelocityMps", Math.hypot(fieldVx, fieldVy));
+    Logger.recordOutput("TurretAim/Home", home);
+
     // ---- Instant aim line (where calculator WANTS to aim) ----
     Translation2d targetXY = result.target;
     double dx = targetXY.getX() - pose.getX();
@@ -134,6 +241,7 @@ public class TurretAimManager extends SubsystemBase {
     // Also log the raw sim angle for graphing alongside the commanded angle
     Logger.recordOutput("TurretAim/SimTurretAngleDeg", simTurretAngleDeg);
     Logger.recordOutput("TurretAim/CommandedTurretAngleDeg", targetAngleDeg);
+    Logger.recordOutput("TurretAim/LockedOn", isLockedOn());
   }
 
   // ---- Accessors for other subsystems ----
@@ -172,6 +280,17 @@ public class TurretAimManager extends SubsystemBase {
   /** Returns the simulated (lagged) turret angle in degrees, for visualization. */
   public double getSimTurretAngleDeg() {
     return simTurretAngleDeg;
+  }
+
+  /**
+   * Returns true when the simulated turret position is within the lock-on tolerance of the
+   * commanded angle. Use this to gate feeders / shooting — don't blow balls until the turret is
+   * actually pointed at the target.
+   */
+  public boolean isLockedOn() {
+    if (latestResult == null) return false;
+    double error = Math.abs(simTurretAngleDeg - latestResult.leftTurretDeg);
+    return error <= ScorerConstants.kTurretLockOnToleranceDeg;
   }
 
   // ---- Helpers ----
