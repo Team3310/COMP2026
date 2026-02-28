@@ -23,7 +23,7 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
     this.motorIO = motorIO;
 
     // Initialize at stow position (0 degrees)
-    this.setCurrentPosition(Constants.IntakeConstants.kIntakePivotStowedPosition);
+    this.setCurrentPosition(Constants.IntakeConstants.kIntakePivotStowedDegrees);
     this.positionSetpointUnits = 0.0;
   }
 
@@ -33,6 +33,12 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
         motionMagicSetpointCommand(this::getPositionSetpointUnits)
             .withName("Intake Pivot Maintain Setpoint (default)")
             .ignoringDisable(true));
+  }
+
+  // -------------------- Torque Current Control Command --------------------
+
+  public Command setTorqueCurrentFOCCommand(double torqueCurrent) {
+    return setTorqueCurrentFOC(() -> torqueCurrent); // change to DoubleSupplier
   }
 
   // -------------------- Position Control Commands --------------------
@@ -51,13 +57,13 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
   }
 
   public Command deployCommand() {
-    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakeDeployDegrees)
-        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakeDeployDegrees + " deg");
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotDeployDegrees)
+        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakePivotDeployDegrees + " deg");
   }
 
   public Command retractCommand() {
-    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakeStowDegrees)
-        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakeStowDegrees + " deg");
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotStowedDegrees)
+        .withName("Intake Pivot " + Constants.IntakeConstants.kIntakePivotStowedDegrees + " deg");
   }
 
   @Override

@@ -26,6 +26,12 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
     super.periodic();
   }
 
+  // -------------------- Torque Current Control Command --------------------
+
+  public Command setTorqueCurrentFOCCommand(double torqueCurrent) {
+    return setTorqueCurrentFOC(() -> torqueCurrent); // change to DoubleSupplier
+  }
+
   // -------------------- Velocity Control Commands --------------------
 
   /**
@@ -36,6 +42,11 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
   public Command intakeCommand() {
     return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityRPM)
         .withName("Intake Forward");
+  }
+
+  public Command outtakeCommand() {
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kOuttakeVelocityRPM)
+        .withName("Intake Outtake");
   }
 
   /**

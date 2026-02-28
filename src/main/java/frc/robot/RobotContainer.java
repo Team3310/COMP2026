@@ -131,7 +131,8 @@ public class RobotContainer {
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
 
   // Turret aim calculator — computes desired turret/hood angles every cycle based
-  // on robot pose, alliance color, and field zone.  Logs everything via AdvantageKit IO.
+  // on robot pose, alliance color, and field zone. Logs everything via
+  // AdvantageKit IO.
   private final TurretAimManager turretAimManager = new TurretAimManager(drive::getPose);
 
   // Acessors
@@ -232,9 +233,92 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    // #region Dashboard Buttons
+    SmartDashboard.putData(
+        "inPitSwitch",
+        Commands.parallel(
+            new InstantCommand(() -> Constants.overrideState = Constants.Override.OFF),
+            new InstantCommand(() -> Constants.inPit = !Constants.inPit),
+            intakePivot.setCoast(),
+            intakeRollers.setCoast(),
+            agitatorLeft.setCoast(),
+            agitatorRight.setCoast(),
+            verticalFeedLeft.setCoast(),
+            verticalFeedRight.setCoast(),
+            hoodLeft.setCoast(),
+            hoodRight.setCoast(),
+            turretLeft.setCoast(),
+            turretRight.setCoast(),
+            flywheelLeft.setCoast(),
+            flywheelRight.setCoast()));
+
+    SmartDashboard.putData("intake", intakeRollers.intakeCommand());
+    SmartDashboard.putData("outtake", intakeRollers.outtakeCommand());
+    SmartDashboard.putData(
+        "shoot",
+        Commands.parallel(
+            flywheelLeft.shootCommand(),
+            flywheelRight.shootCommand(),
+            verticalFeedLeft.verticalFeedIntakeCommand(),
+            verticalFeedRight.verticalFeedIntakeCommand(),
+            hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
+    SmartDashboard.putData(
+        "rotate Robot 90°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(90.0)));
+    SmartDashboard.putData(
+        "rotate Robot 180°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(180.0)));
+    SmartDashboard.putData(
+        "rotate Robot 270°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(270.0)));
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
+
+    SmartDashboard.putData(
+        "rotate Robot 0°",
+        DriveCommands.joystickDriveAtAngle(
+            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
+    SmartDashboard.putData(
+        "rotate left turret", turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 90.0));
+    SmartDashboard.putData(
+        "rotate right turret",
+        turretRight.setDegreesCommand(turretRight.getCurrentPosition() + 90.0));
+    SmartDashboard.putData(
+        "deploy intake",
+        intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
+    SmartDashboard.putData(
+        "retract intake",
+        intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees));
+    SmartDashboard.putData(
+        "floors on",
+        Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()));
+    SmartDashboard.putData(
+        "floors off", Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()));
+    SmartDashboard.putData(
+        "flywheel on",
+        Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
+    SmartDashboard.putData(
+        "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
+    SmartDashboard.putData(
+        "Move Hood 5 degrees",
+        Commands.parallel(
+            hoodLeft.setDegreesCommand(hoodLeft.getCurrentPosition() + 5.0),
+            hoodRight.setDegreesCommand(hoodRight.getCurrentPosition() + 5.0)));
+
     SmartDashboard.putData(
         "Change Hub Active",
         new InstantCommand(() -> Constants.hubOverride = !Constants.hubOverride));
+    // #endregion
 
     // Configure the button bindings
     configureButtonBindings();
@@ -317,17 +401,20 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   switch (Constants.overrideState) {
-                    case FALSE:
+                    case OFF:
+                      Constants.overrideState = Constants.Override.ON;
+                      break;
+                    case ON:
                       Constants.overrideState = Constants.Override.COLLECT;
                       break;
                     case COLLECT:
                       Constants.overrideState = Constants.Override.DEFENCE;
                       break;
                     case DEFENCE:
-                      Constants.overrideState = Constants.Override.FALSE;
+                      Constants.overrideState = Constants.Override.ON;
                       break;
                     default:
-                      Constants.overrideState = Constants.Override.FALSE;
+                      Constants.overrideState = Constants.Override.OFF;
                       break;
                   }
                 }));
@@ -373,14 +460,14 @@ public class RobotContainer {
           .povUp()
           .onTrue(
               Commands.parallel(
-                  flywheelLeft.forwardCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxPositionUnits)));
+                  flywheelLeft.shootCommand(),
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)));
       operator
           .povDown()
           .onTrue(
               Commands.parallel(
                   flywheelLeft.offCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)));
+                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     }
   }
 

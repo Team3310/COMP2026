@@ -184,10 +184,22 @@ public final class TurretAimCalculator {
     turretRad = Math.atan2(Math.sin(turretRad), Math.cos(turretRad));
     double turretDeg = Math.toDegrees(turretRad);
 
+    // Clamp turret to physical limits
+    if (turretDeg > Constants.ScorerConstants.kTurretMaxPositionUnits) {
+      turretDeg = 360.0 - turretDeg; // wrap around to negative angles
+    } else if (turretDeg < Constants.ScorerConstants.kTurretMinPositionUnits) {
+      turretDeg = 360.0 + turretDeg; // wrap around to positive angles
+    }
+
     // --- Vertical (hood) angle ---
     double horizontalDist = Math.hypot(dx, dy);
     double dz = targetZ - Constants.ScorerConstants.kShooterExitZMeters;
-    double hoodDeg = Math.toDegrees(Math.atan2(dz, horizontalDist));
+    double hoodDeg =
+        Math.toDegrees(
+            Math.atan2(
+                dz,
+                horizontalDist)); // TODO tune this formula for a better arc (currently just a line
+    // drive)
 
     // Clamp hood to physical limits
     hoodDeg = clamp(hoodDeg, HOOD_MIN_DEG, HOOD_MAX_DEG);

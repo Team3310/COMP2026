@@ -26,6 +26,12 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     super.periodic();
   }
 
+  // -------------------- Torque Current Control Command --------------------
+
+  public Command setTorqueCurrentFOCCommand(double torqueCurrent) {
+    return setTorqueCurrentFOC(() -> torqueCurrent); // change to DoubleSupplier
+  }
+
   // -------------------- Velocity Control Commands --------------------
 
   /**
@@ -33,7 +39,7 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    *
    * @return Command that runs flywheel forward
    */
-  public Command forwardCommand() {
+  public Command shootCommand() {
     return velocitySetpointCommand(() -> Constants.ScorerConstants.kShootRPM)
         .withName("Flywheel Forward");
   }
@@ -43,8 +49,8 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    *
    * @return Command that runs flywheel backward
    */
-  public Command backwardCommand() {
-    return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseRPM)
+  public Command reverseCommand() {
+    return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseShootRPM)
         .withName("Flywheel Reverse");
   }
 

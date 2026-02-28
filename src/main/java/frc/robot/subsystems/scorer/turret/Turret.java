@@ -24,6 +24,12 @@ public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> 
             .ignoringDisable(true));
   }
 
+  // -------------------- Torque Current Control Command --------------------
+
+  public Command setTorqueCurrentFOCCommand(double torqueCurrent) {
+    return setTorqueCurrentFOC(() -> torqueCurrent); // change to DoubleSupplier
+  }
+
   // -------------------- Position Control Commands --------------------
 
   /**

@@ -12,8 +12,8 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public Hood(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
-    this.setCurrentPosition(Constants.ScorerConstants.kHoodStowedPosition);
-    this.positionSetpointUnits = Constants.ScorerConstants.kHoodStowedPosition;
+    this.setCurrentPosition(Constants.ScorerConstants.kHoodStowedDegrees);
+    this.positionSetpointUnits = Constants.ScorerConstants.kHoodStowedDegrees;
   }
 
   public void setTeleopDefaultCommand() {
@@ -22,6 +22,12 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
         motionMagicSetpointCommand(this::getPositionSetpointUnits)
             .withName("Hood Maintain Setpoint (default)")
             .ignoringDisable(true));
+  }
+
+  // -------------------- Torque Current Control Command --------------------
+
+  public Command setTorqueCurrentFOCCommand(double torqueCurrent) {
+    return setTorqueCurrentFOC(() -> torqueCurrent); // change to DoubleSupplier
   }
 
   // -------------------- Position Control Commands --------------------

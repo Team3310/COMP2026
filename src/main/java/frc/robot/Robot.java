@@ -102,34 +102,33 @@ public class Robot extends LoggedRobot {
 
     // This basically says if we are not deploying or retracting, then we can change states.
     // If we are deploying or retracting, we want to stay in deploy or retract until we are done.
-    if (!Constants.deploying && !Constants.retracting) {
-      if (Constants.overrideState == Constants.Override.COLLECT) {
-        Constants.currentState = Constants.BotState.COLLECT;
-      } else if (Constants.overrideState == Constants.Override.DEFENCE) {
-        Constants.currentState = Constants.BotState.DEFENCE;
-      } else { // Override if FALSE
-        // Automated State Machine
-        if (currentZone == Zone.BLUE
-            && Constants.alliance == Alliance.Blue
-            && !(Constants.activeHub)) {
+    if (!Constants.deploying && !Constants.retracting && !Constants.inPit) {
+      switch (Constants.overrideState) {
+        case OFF: // nothing runs
+          Constants.currentState = Constants.BotState.PIT;
+          break;
+        case COLLECT:
           Constants.currentState = Constants.BotState.COLLECT;
-        } else if (currentZone == Zone.RED
-            && Constants.alliance == Alliance.Red
-            && !(Constants.activeHub)) {
-          Constants.currentState = Constants.BotState.COLLECT;
-        } else {
-          Constants.currentState = Constants.BotState.SNOWBLOW;
-        }
+          break;
+        case DEFENCE:
+          Constants.currentState = Constants.BotState.DEFENCE;
+          break;
+        case ON:
+        default:
+          // Automated State Machine
+          if (currentZone == Zone.BLUE
+              && Constants.alliance == Alliance.Blue
+              && !(Constants.activeHub)) {
+            Constants.currentState = Constants.BotState.COLLECT;
+          } else if (currentZone == Zone.RED
+              && Constants.alliance == Alliance.Red
+              && !(Constants.activeHub)) {
+            Constants.currentState = Constants.BotState.COLLECT;
+          } else {
+            Constants.currentState = Constants.BotState.SNOWBLOW;
+          }
       }
     }
-
-    SmartDashboard.putString("currentState", "" + Constants.currentState);
-    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
-    SmartDashboard.putString("robotX", "" + robotX);
-    SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
-    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
-    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     switch (Constants.currentState) {
       case SNOWBLOW:
@@ -147,7 +146,19 @@ public class Robot extends LoggedRobot {
       case RETRACT:
         retract();
         break;
+      case PIT:
+        // In pit mode, we want to be able to manually control the robot without the state machine
+        break;
     }
+    // logging
+    SmartDashboard.putBoolean("inPit", Constants.inPit);
+    SmartDashboard.putString("currentState", "" + Constants.currentState);
+    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
+    SmartDashboard.putString("robotX", "" + robotX);
+    SmartDashboard.putString("currentZone", "" + currentZone);
+    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
+    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
+    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
