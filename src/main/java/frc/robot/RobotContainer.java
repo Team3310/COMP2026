@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
-import frc.robot.Constants.BotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -280,15 +279,6 @@ public class RobotContainer {
         DriveCommands.joystickDriveAtAngle(
             drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(270.0)));
     SmartDashboard.putData(
-        "rotate Robot 0°",
-        DriveCommands.joystickDriveAtAngle(
-            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
-
-    SmartDashboard.putData(
-        "rotate Robot 0°",
-        DriveCommands.joystickDriveAtAngle(
-            drive, () -> 0.0, () -> 0.0, () -> Rotation2d.fromDegrees(0.0)));
-    SmartDashboard.putData(
         "rotate left turret", turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 90.0));
     SmartDashboard.putData(
         "rotate right turret",
@@ -419,26 +409,24 @@ public class RobotContainer {
                   }
                 }));
 
-    if (intakeRollers != null && intakePivot != null) {
-      // Right bumper = deploy intake
-      operator
-          .rightBumper()
-          .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    Constants.currentState = BotState.DEPLOY;
-                    Constants.deploying = true;
-                  }));
-      // Left bumper = retract intake
-      operator
-          .leftBumper()
-          .onTrue(
-              Commands.parallel(
-                  hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
-                  hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
-                  turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
-                  turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())));
-    }
+    // Right bumper = deploy intake
+    operator
+        .rightBumper()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  // Constants.currentState = BotState.DEPLOY;
+                  // Constants.deploying = true;
+                }));
+    // Left bumper = retract intake
+    operator
+        .leftBumper()
+        .onTrue(
+            Commands.parallel(
+                hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
+                hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
+                turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
+                turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())));
 
     // if (intakePivot != null) {
     // operator.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
