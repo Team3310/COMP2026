@@ -124,6 +124,8 @@ public class Robot extends LoggedRobot {
               && Constants.alliance == Alliance.Red
               && !(Constants.activeHub)) {
             Constants.currentState = Constants.BotState.COLLECT;
+          } else if (isInTrenchZone()) {
+            Constants.currentState = Constants.BotState.TRENCH;
           } else {
             Constants.currentState = Constants.BotState.SNOWBLOW;
           }
@@ -145,6 +147,9 @@ public class Robot extends LoggedRobot {
         break;
       case RETRACT:
         retract();
+        break;
+      case TRENCH:
+        trench();
         break;
       case PIT:
         // In pit mode, we want to be able to manually control the robot without the state machine
@@ -227,9 +232,13 @@ public class Robot extends LoggedRobot {
 
     if (robotX < FieldConstants.Zone.BLUE.getX()) {
       Constants.currentZone = Zone.BLUE;
+    } else if (robotX < FieldConstants.Zone.BLUETRENCH.getX()) {
+      Constants.currentZone = Zone.BLUETRENCH;
     } else if (robotX < FieldConstants.Zone.MID.getX()) {
       Constants.currentZone = Zone.MID;
-    } else { // Red
+    } else if (robotX < FieldConstants.Zone.REDTRENCH.getX()) {
+      Constants.currentZone = Zone.REDTRENCH;
+    } else {
       Constants.currentZone = Zone.RED;
     }
   }
@@ -305,7 +314,12 @@ public class Robot extends LoggedRobot {
     }
   }
 
-  private void autoAim() {}
+  private boolean isInTrenchZone() {
+    if (Constants.currentZone == Zone.BLUETRENCH || Constants.currentZone == Zone.REDTRENCH) {
+      return true;
+    }
+    return false;
+  }
 
   private void snowblow() {
 
@@ -384,5 +398,18 @@ public class Robot extends LoggedRobot {
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
       Commands.runOnce(() -> Constants.retracting = false).schedule();
     }
+  }
+
+  private void trench() {
+    Commands.runOnce(
+            () -> {
+              robotContainer
+                  .getHoodLeft()
+                  .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees);
+              robotContainer
+                  .getHoodRight()
+                  .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees);
+            })
+        .schedule();
   }
 }

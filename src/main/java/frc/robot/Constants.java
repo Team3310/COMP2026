@@ -82,6 +82,7 @@ public final class Constants {
     DEFENCE,
     DEPLOY,
     RETRACT,
+    TRENCH,
     PIT
   }
 
