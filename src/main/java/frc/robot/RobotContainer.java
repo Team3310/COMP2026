@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
+import frc.robot.Constants.BotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -32,9 +33,12 @@ import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -114,8 +118,7 @@ public class RobotContainer {
 
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
   private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
-  private final Agitator verticalFeedRight =
-      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
+  private final Agitator verticalFeedRight = buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
 
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
@@ -201,7 +204,9 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
     // Initialize autonomous commands
     autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
@@ -315,68 +320,204 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    // Default command, normal field-relative drive
+    // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
-    // Lock to 0° when A button is held
+    // --- DRIVER BINDINGS ---
+
+    // A: normal = lock to 0° | pit = snap robot to 0°
     driver
         .a()
         .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> Rotation2d.kZero));
+            Commands.either(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> Rotation2d.fromDegrees(0.0)),
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> Rotation2d.kZero),
+                () -> Constants.inPit));
 
-    // Switch to X pattern when X button is pressed
-    driver
-        .x()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
-
-    // Reset gyro to 0° when B button is pressed
+    // B: normal = zero gyro | pit = snap robot to 90°
     driver
         .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+        .whileTrue(
+            Commands.either(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> Rotation2d.fromDegrees(90.0)),
+                Commands.runOnce(
+                    () -> drive.setPose(
+                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
-                .ignoringDisable(true));
+                    .ignoringDisable(true),
+                () -> Constants.inPit));
 
-    // Zero gyro with Start button (same as B, easier to reach mid-match)
+    // X: normal = set pose to Red Hub | pit = snap robot to 180°
+    driver
+        .x()
+        .whileTrue(
+            Commands.either(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> Rotation2d.fromDegrees(180.0)),
+                Commands.runOnce(
+                    () -> drive.setPose(
+                        new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
+                    drive)
+                    .ignoringDisable(true),
+                () -> Constants.inPit));
+
+    // Y: pit = snap robot to 270°
+    driver
+        .y()
+        .whileTrue(
+            Commands.either(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> Rotation2d.fromDegrees(270.0)),
+                Commands.none(),
+                () -> Constants.inPit));
+
+    // Start: normal = zero gyro (both modes)
     driver
         .start()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
+    // Driver pit controls: right bumper = intake, left bumper = outtake
+    driver
+        .rightBumper()
+        .toggleOnTrue(
+            Commands.either(intakeRollers.intakeCommand(), Commands.none(), () -> Constants.inPit));
+    driver
+        .leftBumper()
+        .toggleOnTrue(
+            Commands.either(
+                intakeRollers.outtakeCommand(), Commands.none(), () -> Constants.inPit));
+
+    // Driver pit controls: right trigger = shoot (both vertical feeders)
+    driver
+        .rightTrigger()
+        .toggleOnTrue(
+            Commands.either(
+                Commands.parallel(
+                    verticalFeedLeft.verticalFeedIntakeCommand(),
+                    verticalFeedRight.verticalFeedIntakeCommand()),
+                Commands.none(),
+                () -> Constants.inPit));
+
+    // --- OPERATOR BINDINGS ---
+
+        if (turretLeft != null) {
+
+      // Pit: left joystick angle maps directly to left turret angle (±220°).
+      // Only updates when stick is pushed past deadband magnitude.
+      turretLeft.setDefaultCommand(
+          turretLeft.dutyCycleCommand(
+              () -> {
+                if (!Constants.inPit)
+                  return 0.0;
+                double x = operator.getLeftX();
+                double y = operator.getLeftY();
+                if (Math.sqrt(x * x + y * y) < 0.5)
+                  return 0.0;
+                double angleDeg = Math.toDegrees(Math.atan2(x, -y)); // 0° = stick up, +CW
+                double clamped = Math.max(
+                    Constants.ScorerConstants.kTurretMinPositionUnits,
+                    Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
+                turretLeft.setDegreesCommand(clamped).schedule();
+                return 0.0;
+              }));
+    }
+
+    if (turretRight != null) {
+      // Pit: right joystick angle maps directly to right turret angle (±220°).
+      turretRight.setDefaultCommand(
+          turretRight.dutyCycleCommand(
+              () -> {
+                if (!Constants.inPit)
+                  return 0.0;
+                double x = operator.getRightX();
+                double y = operator.getRightY();
+                if (Math.sqrt(x * x + y * y) < 0.5)
+                  return 0.0;
+                double angleDeg = Math.toDegrees(Math.atan2(x, -y));
+                double clamped = Math.max(
+                    Constants.ScorerConstants.kTurretMinPositionUnits,
+                    Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
+                turretRight.setDegreesCommand(clamped).schedule();
+                return 0.0;
+              }));
+    }
+
+
     if (agitatorRight != null && agitatorLeft != null) {
-      // Y button = toggle agitator rollers on/off (closed loop PID)
+      // Y = pit: shooter rollers on | normal: snowblow state
       operator
           .y()
           .toggleOnTrue(
-              Commands.parallel(agitatorRight.snowblowCommand(), agitatorLeft.snowblowCommand()));
+              Commands.either(
+                  Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()),
+                  new InstantCommand(() -> Constants.currentState = Constants.BotState.SNOWBLOW),
+                  () -> Constants.inPit));
     }
 
-    if (verticalFeedRight != null && verticalFeedLeft != null) {
+    //X = pit: shooter rollers off | normal: defence state
+    operator
+        .x()
+        .toggleOnTrue(
+          Commands.either(
+            Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
+            new InstantCommand(() -> Constants.currentState = Constants.BotState.DEFENCE),
+            () -> Constants.inPit));
 
-      // Left Trigger = toggle vertical feed roller on/off (closed loop PID)
+    // B = pit: floors on | normal: defence state
+    operator
+        .b()
+        .toggleOnTrue(
+            Commands.either(
+                Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
+                new InstantCommand(()-> Constants.currentState = Constants.BotState.DEFENCE),
+                () -> Constants.inPit));
+
+    // A = pit: floors off | normal: collect state
+    operator
+        .a()
+        .toggleOnTrue(
+          Commands.either(
+            Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
+            new InstantCommand(() -> Constants.currentState = Constants.BotState.COLLECT),
+            () -> Constants.inPit));
+
+    
+
+    if (verticalFeedRight != null && verticalFeedLeft != null) {
+      // Left Trigger = pit: 
       operator
           .leftTrigger()
           .toggleOnTrue(
@@ -385,77 +526,105 @@ public class RobotContainer {
                   verticalFeedRight.verticalFeedIntakeCommand()));
     }
 
+    // Right Trigger = normal: cycle override state | pit: intake rollers
     operator
         .rightTrigger()
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  switch (Constants.overrideState) {
-                    case OFF:
-                      Constants.overrideState = Constants.Override.ON;
-                      break;
-                    case ON:
-                      Constants.overrideState = Constants.Override.COLLECT;
-                      break;
-                    case COLLECT:
-                      Constants.overrideState = Constants.Override.DEFENCE;
-                      break;
-                    case DEFENCE:
-                      Constants.overrideState = Constants.Override.ON;
-                      break;
-                    default:
-                      Constants.overrideState = Constants.Override.OFF;
-                      break;
-                  }
-                }));
+            Commands.either(
+                // Pit mode: intake rollers
+                intakeRollers.intakeCommand(),
+                // Normal mode: cycle override state
+                Commands.runOnce(
+                    () -> {
+                      switch (Constants.overrideState) {
+                        case OFF:
+                          Constants.overrideState = Constants.Override.ON;
+                          break;
+                        case ON:
+                          Constants.overrideState = Constants.Override.COLLECT;
+                          break;
+                        case COLLECT:
+                          Constants.overrideState = Constants.Override.DEFENCE;
+                          break;
+                        case DEFENCE:
+                          Constants.overrideState = Constants.Override.ON;
+                          break;
+                        default:
+                          Constants.overrideState = Constants.Override.OFF;
+                          break;
+                      }
+                    }),
+                () -> Constants.inPit));
 
-    // Right bumper = deploy intake
+    // Right bumper = both: deploy intake
     operator
         .rightBumper()
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  // Constants.currentState = BotState.DEPLOY;
-                  // Constants.deploying = true;
-                }));
-    // Left bumper = retract intake
+          intakePivot.deployCommand()
+        );
+
+    // Left bumper = pit: retract intake | normal: auto-aim 
     operator
         .leftBumper()
         .onTrue(
-            Commands.parallel(
-                hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
-                hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
-                turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
-                turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())));
-
-    // if (intakePivot != null) {
-    // operator.povUp().onTrue(intakePivot.setDegreesCommand(0.0));
-    // operator.povDown().onTrue(intakePivot.setDegreesCommand(145.0));
-    // }
-
-    // if (hoodLeft != null) {
-    // operator.povUp().onTrue(hoodLeft.setDegreesCommand(35.0));
-    // operator.povDown().onTrue(hoodLeft.setDegreesCommand(10.0));
-    // }
-
-    if (turretLeft != null) {
-      operator.povRight().onTrue(turretLeft.setDegreesCommand(-45.0));
-      operator.povLeft().onTrue(turretLeft.setDegreesCommand(0.0));
-    }
+            Commands.either(
+                // Pit: retract intake
+                intakePivot.retractCommand(),
+                // Normal: auto-aim turrets and hoods
+                Commands.parallel(
+                    hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
+                    hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
+                    turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
+                    turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())),
+                () -> Constants.inPit));
 
     if (flywheelLeft != null && hoodLeft != null) {
+      // D-Pad Up/Down: normal = flywheel + hood | pit = move both hoods to preset
+      // degrees
       operator
           .povUp()
           .onTrue(
-              Commands.parallel(
-                  flywheelLeft.shootCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)));
+              Commands.either(
+                  // Pit: hoods to 35 deg
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees),
+                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)),
+                  // Normal: flywheel on + hood up
+                  Commands.parallel(
+                      flywheelLeft.shootCommand(),
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)),
+                  () -> Constants.inPit));
       operator
           .povDown()
           .onTrue(
-              Commands.parallel(
-                  flywheelLeft.offCommand(),
-                  hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
+              Commands.either(
+                  // Pit: hoods to 10 deg (stowed)
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                  // Normal: flywheel off + hood stow
+                  Commands.parallel(
+                      flywheelLeft.offCommand(),
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                  () -> Constants.inPit));
+      // Pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
+      operator
+          .povRight()
+          .onTrue(
+              Commands.either(
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(25.0), hoodRight.setDegreesCommand(25.0)),
+                  Commands.none(),
+                  () -> Constants.inPit));
+      operator
+          .povLeft()
+          .onTrue(
+              Commands.either(
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(20.0), hoodRight.setDegreesCommand(20.0)),
+                  Commands.none(),
+                  () -> Constants.inPit));
     }
   }
 
