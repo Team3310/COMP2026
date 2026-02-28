@@ -31,7 +31,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
-  private FieldConstants.Zone previousZone = null;
 
   public Robot() {
     // Record metadata
@@ -97,27 +96,6 @@ public class Robot extends LoggedRobot {
         robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
     updateZone();
-
-    // When entering a trench zone, stow both hoods so the robot can pass under the gate.
-    // Only runs once on zone change to avoid fighting the auto-aim system.
-    boolean inTrench =
-        Constants.currentZone == Zone.BLUETRENCH || Constants.currentZone == Zone.REDTRENCH;
-    boolean wasInTrench = previousZone == Zone.BLUETRENCH || previousZone == Zone.REDTRENCH;
-    if (inTrench && !wasInTrench) {
-      Commands.runOnce(
-              () -> {
-                robotContainer
-                    .getHoodLeft()
-                    .setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)
-                    .schedule();
-                robotContainer
-                    .getHoodRight()
-                    .setDegreesCommand(Constants.ScorerConstants.kHoodStowedPosition)
-                    .schedule();
-              })
-          .schedule();
-    }
-    previousZone = Constants.currentZone;
 
     // Update Constants.activeHub based on match time / override flag
     updateHub();
@@ -238,12 +216,8 @@ public class Robot extends LoggedRobot {
 
     if (robotX < FieldConstants.Zone.BLUE.getX()) {
       Constants.currentZone = Zone.BLUE;
-    } else if (robotX < FieldConstants.Zone.BLUETRENCH.getX()) {
-      Constants.currentZone = Zone.BLUETRENCH;
     } else if (robotX < FieldConstants.Zone.MID.getX()) {
       Constants.currentZone = Zone.MID;
-    } else if (robotX < FieldConstants.Zone.REDTRENCH.getX()) {
-      Constants.currentZone = Zone.REDTRENCH;
     } else { // Red
       Constants.currentZone = Zone.RED;
     }
