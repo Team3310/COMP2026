@@ -35,7 +35,7 @@ public final class Constants {
   public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
   // Set this to select which robot's tuner constants to use
-  public static final Bot currentBot = Bot.PRACTICE;
+  public static final Bot currentBot = Bot.BRAVO;
 
   public static boolean inPit = false;
 

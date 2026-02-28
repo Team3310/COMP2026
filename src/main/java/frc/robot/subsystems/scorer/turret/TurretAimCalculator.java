@@ -220,9 +220,8 @@ public final class TurretAimCalculator {
       feederRPM = Constants.ScorerConstants.kFeederStowRPM;
     } else {
       // Pick the correct lookup table
-      double[][] table = home
-          ? Constants.ScorerConstants.kHubTable
-          : Constants.ScorerConstants.kPassTable;
+      double[][] table =
+          home ? Constants.ScorerConstants.kHubTable : Constants.ScorerConstants.kPassTable;
 
       hoodDeg = interpolateTable(table, horizontalDist, 1); // column 1 = hood
       feederRPM = interpolateTable(table, horizontalDist, 2); // column 2 = feeder
@@ -247,7 +246,8 @@ public final class TurretAimCalculator {
    *
    * @param table 2-D array where each row is {distance, ...values...}.
    * @param distance The horizontal distance to look up.
-   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 = feeder).
+   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 =
+   *     feeder).
    * @return The interpolated value.
    */
   private static double interpolateTable(double[][] table, double distance, int valueColumn) {

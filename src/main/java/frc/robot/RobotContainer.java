@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
-import frc.robot.Constants.BotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.agitator.Agitator;
@@ -33,12 +32,9 @@ import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since
- * Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in
- * the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of
- * the robot (including
+ * This class is where the bulk of the robot should be declared. Since Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -118,7 +114,8 @@ public class RobotContainer {
 
   private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
   private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
-  private final Agitator verticalFeedRight = buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
+  private final Agitator verticalFeedRight =
+      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
   private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
 
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
@@ -204,9 +201,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Initialize autonomous commands
     autonCommands = new frc.robot.Auton.AutonCommandBase(drive);
@@ -320,11 +315,9 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be
-   * created by
+   * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
-   * it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -333,11 +326,12 @@ public class RobotContainer {
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
-    // --- DRIVER BINDINGS ---
+    // #region Driver Controls
+    // --- DRIVER BINDINGS -----------------------------------------------------------------------
 
-    // A: normal = lock to 0° | pit = snap robot to 0°
+    // A = pit: snap robot to 0° | normal = lock to 0°
     driver
-        .a()
+        .y()
         .whileTrue(
             Commands.either(
                 DriveCommands.joystickDriveAtAngle(
@@ -352,24 +346,7 @@ public class RobotContainer {
                     () -> Rotation2d.kZero),
                 () -> Constants.inPit));
 
-    // B: normal = zero gyro | pit = snap robot to 90°
-    driver
-        .b()
-        .whileTrue(
-            Commands.either(
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.fromDegrees(90.0)),
-                Commands.runOnce(
-                    () -> drive.setPose(
-                        new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                    .ignoringDisable(true),
-                () -> Constants.inPit));
-
-    // X: normal = set pose to Red Hub | pit = snap robot to 180°
+    // B: pit = snap robot to 90° | normal = zero gyro
     driver
         .x()
         .whileTrue(
@@ -378,17 +355,36 @@ public class RobotContainer {
                     drive,
                     () -> -driver.getLeftY(),
                     () -> -driver.getLeftX(),
+                    () -> Rotation2d.fromDegrees(90.0)),
+                Commands.runOnce(
+                        () ->
+                            drive.setPose(
+                                new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                        drive)
+                    .ignoringDisable(true),
+                () -> Constants.inPit));
+
+    // X: = pit: snap robot to 180° | normal: set pose to Red Hub
+    driver
+        .a()
+        .whileTrue(
+            Commands.either(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
                     () -> Rotation2d.fromDegrees(180.0)),
                 Commands.runOnce(
-                    () -> drive.setPose(
-                        new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
-                    drive)
+                        () ->
+                            drive.setPose(
+                                new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
+                        drive)
                     .ignoringDisable(true),
                 () -> Constants.inPit));
 
     // Y: pit = snap robot to 270°
     driver
-        .y()
+        .b()
         .whileTrue(
             Commands.either(
                 DriveCommands.joystickDriveAtAngle(
@@ -404,16 +400,19 @@ public class RobotContainer {
         .start()
         .onTrue(
             Commands.runOnce(
-                () -> drive.setPose(
-                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                drive)
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
                 .ignoringDisable(true));
 
-    // Driver pit controls: right bumper = intake, left bumper = outtake
+    // right bumper = pit: intake | normal: none
     driver
         .rightBumper()
         .toggleOnTrue(
             Commands.either(intakeRollers.intakeCommand(), Commands.none(), () -> Constants.inPit));
+
+    // left bumper = pit: outtake | normal: none
     driver
         .leftBumper()
         .toggleOnTrue(
@@ -431,25 +430,34 @@ public class RobotContainer {
                 Commands.none(),
                 () -> Constants.inPit));
 
-    // --- OPERATOR BINDINGS ---
+    driver
+        .leftTrigger()
+        .toggleOnTrue(
+            Commands.either(
+                Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()),
+                Commands.none(),
+                () -> Constants.inPit));
+    // #endregion
 
-        if (turretLeft != null) {
+    // #region Operator Controls
+    // ----------------------------------------------------------------------------------------------------
+
+    if (turretLeft != null) {
 
       // Pit: left joystick angle maps directly to left turret angle (±220°).
       // Only updates when stick is pushed past deadband magnitude.
       turretLeft.setDefaultCommand(
           turretLeft.dutyCycleCommand(
               () -> {
-                if (!Constants.inPit)
-                  return 0.0;
+                if (!Constants.inPit) return 0.0;
                 double x = operator.getLeftX();
                 double y = operator.getLeftY();
-                if (Math.sqrt(x * x + y * y) < 0.5)
-                  return 0.0;
+                if (Math.sqrt(x * x + y * y) < 0.5) return 0.0;
                 double angleDeg = Math.toDegrees(Math.atan2(x, -y)); // 0° = stick up, +CW
-                double clamped = Math.max(
-                    Constants.ScorerConstants.kTurretMinPositionUnits,
-                    Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
+                double clamped =
+                    Math.max(
+                        Constants.ScorerConstants.kTurretMinPositionUnits,
+                        Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
                 turretLeft.setDegreesCommand(clamped).schedule();
                 return 0.0;
               }));
@@ -460,21 +468,19 @@ public class RobotContainer {
       turretRight.setDefaultCommand(
           turretRight.dutyCycleCommand(
               () -> {
-                if (!Constants.inPit)
-                  return 0.0;
+                if (!Constants.inPit) return 0.0;
                 double x = operator.getRightX();
                 double y = operator.getRightY();
-                if (Math.sqrt(x * x + y * y) < 0.5)
-                  return 0.0;
+                if (Math.sqrt(x * x + y * y) < 0.5) return 0.0;
                 double angleDeg = Math.toDegrees(Math.atan2(x, -y));
-                double clamped = Math.max(
-                    Constants.ScorerConstants.kTurretMinPositionUnits,
-                    Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
+                double clamped =
+                    Math.max(
+                        Constants.ScorerConstants.kTurretMinPositionUnits,
+                        Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
                 turretRight.setDegreesCommand(clamped).schedule();
                 return 0.0;
               }));
     }
-
 
     if (agitatorRight != null && agitatorLeft != null) {
       // Y = pit: shooter rollers on | normal: snowblow state
@@ -487,14 +493,14 @@ public class RobotContainer {
                   () -> Constants.inPit));
     }
 
-    //X = pit: shooter rollers off | normal: defence state
+    // X = pit: shooter rollers off | normal: defence state
     operator
         .x()
         .toggleOnTrue(
-          Commands.either(
-            Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
-            new InstantCommand(() -> Constants.currentState = Constants.BotState.DEFENCE),
-            () -> Constants.inPit));
+            Commands.either(
+                Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
+                new InstantCommand(() -> Constants.currentState = Constants.BotState.DEFENCE),
+                () -> Constants.inPit));
 
     // B = pit: floors on | normal: defence state
     operator
@@ -502,37 +508,27 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
-                new InstantCommand(()-> Constants.currentState = Constants.BotState.DEFENCE),
+                new InstantCommand(() -> Constants.currentState = Constants.BotState.DEFENCE),
                 () -> Constants.inPit));
 
     // A = pit: floors off | normal: collect state
     operator
         .a()
         .toggleOnTrue(
-          Commands.either(
-            Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
-            new InstantCommand(() -> Constants.currentState = Constants.BotState.COLLECT),
-            () -> Constants.inPit));
+            Commands.either(
+                Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
+                new InstantCommand(() -> Constants.currentState = Constants.BotState.COLLECT),
+                () -> Constants.inPit));
 
-    
-
-    if (verticalFeedRight != null && verticalFeedLeft != null) {
-      // Left Trigger = pit: 
-      operator
-          .leftTrigger()
-          .toggleOnTrue(
-              Commands.parallel(
-                  verticalFeedLeft.verticalFeedIntakeCommand(),
-                  verticalFeedRight.verticalFeedIntakeCommand()));
-    }
-
-    // Right Trigger = normal: cycle override state | pit: intake rollers
+    // Right Trigger = normal: cycle override state | pit: vertical rollers on
     operator
         .rightTrigger()
         .onTrue(
             Commands.either(
-                // Pit mode: intake rollers
-                intakeRollers.intakeCommand(),
+                // Pit mode: vertical on
+                Commands.parallel(
+                    verticalFeedLeft.verticalFeedIntakeCommand(),
+                    verticalFeedRight.verticalFeedIntakeCommand()),
                 // Normal mode: cycle override state
                 Commands.runOnce(
                     () -> {
@@ -556,14 +552,21 @@ public class RobotContainer {
                     }),
                 () -> Constants.inPit));
 
-    // Right bumper = both: deploy intake
-    operator
-        .rightBumper()
-        .onTrue(
-          intakePivot.deployCommand()
-        );
+    // Left Trigger = pit: vertical rollers on | normal: none
+    if (verticalFeedRight != null && verticalFeedLeft != null) {
+      operator
+          .leftTrigger()
+          .toggleOnTrue(
+              Commands.either(
+                  Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()),
+                  Commands.none(),
+                  () -> Constants.inPit));
+    }
 
-    // Left bumper = pit: retract intake | normal: auto-aim 
+    // Right bumper = both: deploy intake
+    operator.rightBumper().onTrue(intakePivot.deployCommand());
+
+    // Left bumper = pit: retract intake | normal: auto-aim
     operator
         .leftBumper()
         .onTrue(
@@ -626,6 +629,7 @@ public class RobotContainer {
                   Commands.none(),
                   () -> Constants.inPit));
     }
+    // #endregion
   }
 
   /**
