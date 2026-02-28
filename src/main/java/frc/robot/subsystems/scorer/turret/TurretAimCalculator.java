@@ -55,6 +55,9 @@ public final class TurretAimCalculator {
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
 
+    /** True when in own-alliance zone (aim at hub); false for pass/lob/stow. */
+    public final boolean home;
+
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
@@ -62,7 +65,8 @@ public final class TurretAimCalculator {
         double rightTurretDeg,
         double rightHoodDeg,
         double rightFeederRPM,
-        Translation2d target) {
+        Translation2d target,
+        boolean home) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.leftFeederRPM = leftFeederRPM;
@@ -70,11 +74,19 @@ public final class TurretAimCalculator {
       this.rightHoodDeg = rightHoodDeg;
       this.rightFeederRPM = rightFeederRPM;
       this.target = target;
+      this.home = home;
     }
   }
 
   // Hood limits — read from Constants so they stay tunable in one place.
   // (No circular dependency: Constants is a leaf class with only static finals.)
+
+  // ---- Turret wrap-around hysteresis state ----
+  // Remembers the last turret output so that the normalization picks the
+  // closest equivalent angle each cycle.  The turret only "flips" when the
+  // target genuinely crosses past ±220° — not because of a stateless modulo
+  // that doesn't know which side we're on.
+  private static double lastTurretDeg = 0.0;
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -140,7 +152,8 @@ public final class TurretAimCalculator {
     double feederRPM = result[2];
 
     // Same values for both sides (parallel turrets)
-    return new AimResult(turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget);
+    return new AimResult(
+        turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget, home);
   }
 
   // ====================================================================
@@ -148,9 +161,26 @@ public final class TurretAimCalculator {
   // ====================================================================
 
   /**
+   * Estimate the ball's time-of-flight in seconds for a hub shot at the given distance.
+   *
+   * <p>Interpolates from the TOF column (column 3) of {@link Constants.ScorerConstants#kHubTable}.
+   * Returns 0 if not in hub-scoring mode (pass/lob shots don't use aim-ahead lead).
+   *
+   * @param distance Horizontal distance in meters from shooter to target.
+   * @param home true when in own-alliance zone (hub scoring); false for pass mode.
+   * @return Estimated flight time in seconds, or 0 if not in hub mode.
+   */
+  public static double estimateTimeOfFlight(double distance, boolean home) {
+    if (!home) {
+      return 0.0; // No lead for pass/lob shots
+    }
+    return interpolateTable(Constants.ScorerConstants.kHubTable, distance, 3);
+  }
+
+  /**
    * Convert a robot-relative offset to a field-space Translation2d using the robot's current pose.
    */
-  private static Translation2d robotToField(Pose2d robotPose, double robotRelX, double robotRelY) {
+  public static Translation2d robotToField(Pose2d robotPose, double robotRelX, double robotRelY) {
     // Rotate the offset by the robot heading, then translate to the robot's
     // field position.
     double cos = robotPose.getRotation().getCos();
@@ -188,26 +218,57 @@ public final class TurretAimCalculator {
     // This gives the angle in the robot's reference frame.
     double turretRad = fieldBearing - robotHeading.getRadians();
 
-    // Normalize to [-220°, +220°] to match the physical turret range.
+    // ---- Wrap-around with hysteresis ----
+    // The turret can physically travel ±220° from forward (440° total range).
+    // The 40° overlap (±180° to ±220°) on each side gives us hysteresis:
+    //   - We prefer to stay on the current wrap (closest to lastTurretDeg)
+    //   - If that wrap exceeds ±220°, we try the OTHER wrap (±360°)
+    //   - If the other wrap is in range, we flip (go the long way around)
+    //   - If neither wrap is in range (dead-band behind robot), clamp to nearest limit
     double turretDeg = Math.toDegrees(turretRad);
     double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
     double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Normalize into (-360, 360) first, then shift into [turretMin, turretMax]
-    turretDeg = turretDeg % 360.0;
-    if (turretDeg > turretMax) {
-      turretDeg -= 360.0;
-    } else if (turretDeg < turretMin) {
-      turretDeg += 360.0;
+    // Step 1: Pick the wrap closest to where we were last cycle.
+    double delta = turretDeg - lastTurretDeg;
+    delta = delta % 360.0;
+    if (delta > 180.0) {
+      delta -= 360.0;
+    } else if (delta <= -180.0) {
+      delta += 360.0;
+    }
+    double preferred = lastTurretDeg + delta;
+
+    // Step 2: If preferred wrap is in range, use it.  Otherwise try the
+    // other wrap (±360°).  If that's in range, flip to it.  If neither is
+    // in range the target is in the ~280° dead-band behind the hard-stops,
+    // so clamp to whichever limit is closer.
+    if (preferred >= turretMin && preferred <= turretMax) {
+      turretDeg = preferred;
+    } else {
+      // Try the other 360° wrap
+      double alternate = (preferred > turretMax) ? preferred - 360.0 : preferred + 360.0;
+      if (alternate >= turretMin && alternate <= turretMax) {
+        // Other wrap is reachable — flip the long way around
+        turretDeg = alternate;
+      } else {
+        // Neither wrap fits — clamp to the closer limit
+        double distPrefMin = Math.abs(preferred - turretMin);
+        double distPrefMax = Math.abs(preferred - turretMax);
+        double distAltMin = Math.abs(alternate - turretMin);
+        double distAltMax = Math.abs(alternate - turretMax);
+        double minDist =
+            Math.min(Math.min(distPrefMin, distPrefMax), Math.min(distAltMin, distAltMax));
+        if (minDist == distPrefMin || minDist == distAltMin) {
+          turretDeg = turretMin;
+        } else {
+          turretDeg = turretMax;
+        }
+      }
     }
 
-    // If still out of range (target in the ±(220–360) dead-band), pick the
-    // closer physical limit.
-    if (turretDeg > turretMax) {
-      turretDeg = turretMax;
-    } else if (turretDeg < turretMin) {
-      turretDeg = turretMin;
-    }
+    // Remember this output for next cycle's hysteresis
+    lastTurretDeg = turretDeg;
 
     // --- Vertical (hood) angle and feeder speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
@@ -246,11 +307,11 @@ public final class TurretAimCalculator {
    *
    * @param table 2-D array where each row is {distance, ...values...}.
    * @param distance The horizontal distance to look up.
-   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 =
-   *     feeder).
+   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 = feeder,
+   *     3 = TOF).
    * @return The interpolated value.
    */
-  private static double interpolateTable(double[][] table, double distance, int valueColumn) {
+  public static double interpolateTable(double[][] table, double distance, int valueColumn) {
     // Below first row — clamp
     if (distance <= table[0][0]) {
       return table[0][valueColumn];
