@@ -29,7 +29,10 @@ import frc.robot.Constants;
  *   <li>Field origin at blue-alliance corner (0, 0). X runs toward red wall.
  *   <li>Robot heading 0° = facing red wall (+X).
  *   <li>Turret 0° = facing robot-forward. Positive = CCW (left when viewed from above).
- *   <li>Hood angle = elevation above horizontal (10°–35° limits from ScorerConstants).
+ *   <li>Hood angle = degrees from vertical (0° = straight up, 35° = 55° from horizontal). The ball
+ *       exits perpendicular to the hood face, so the actual launch elevation from horizontal is
+ *       {@code 90 − hoodDeg}. Lower hood values produce steeper (more vertical) trajectories;
+ *       higher values produce flatter trajectories.
  * </ul>
  */
 public final class TurretAimCalculator {
@@ -38,11 +41,11 @@ public final class TurretAimCalculator {
   public static class AimResult {
     /** Left turret lateral angle in degrees (0 = forward, + = left). */
     public final double leftTurretDeg;
-    /** Left hood vertical angle in degrees (elevation above horizontal). */
+    /** Left hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double leftHoodDeg;
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
-    /** Right hood vertical angle in degrees (elevation above horizontal). */
+    /** Right hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double rightHoodDeg;
 
     /** The field-space target both scorers are aiming at (for logging). */
@@ -62,9 +65,8 @@ public final class TurretAimCalculator {
     }
   }
 
-  // Hood limits from ScorerConstants (duplicated here to avoid circular dep)
-  private static final double HOOD_MIN_DEG = 10.0;
-  private static final double HOOD_MAX_DEG = 35.0;
+  // Hood limits — read from Constants so they stay tunable in one place.
+  // (No circular dependency: Constants is a leaf class with only static finals.)
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -82,7 +84,6 @@ public final class TurretAimCalculator {
     FieldConstants.Zone zone = Constants.currentZone;
     // ---- Pick field-space target ----
     Translation2d fieldTarget;
-    double targetZ; // height of the target above the floor (meters)
 
     boolean home = false;
     if (isBlue && zone == FieldConstants.Zone.BLUE) {
@@ -96,21 +97,15 @@ public final class TurretAimCalculator {
       if (isBlue) {
         fieldTarget =
             new Translation2d(FieldConstants.Hub.BLUE.getX(), FieldConstants.Hub.BLUE.getY());
-        targetZ = FieldConstants.Hub.BLUE.getZ();
       } else {
         fieldTarget =
             new Translation2d(FieldConstants.Hub.RED.getX(), FieldConstants.Hub.RED.getY());
-        targetZ = FieldConstants.Hub.RED.getZ();
       }
     } else { // Midfield or Opponents
-
       // Pass mode — aim at the landing zone on OUR side.
       // Choose whichever landing zone (outpost vs depot) is closer to the
       // robot's current Y to minimize turret travel.
       fieldTarget = pickLandingTarget(robotPose.getY(), isBlue);
-      // Landing zones are on the floor — target Z = 0 (lob arc, not a line
-      // drive). We'll set a fixed hood angle for passing.
-      targetZ = 0.0;
     }
 
     // ---- Compute aim from midpoint of the two shooter exits ----
@@ -128,7 +123,7 @@ public final class TurretAimCalculator {
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
-    double[] angles = computeAngles(midShooterField, fieldTarget, targetZ, heading);
+    double[] angles = computeAngles(midShooterField, fieldTarget, heading, home);
 
     double turretDeg = angles[0];
     double hoodDeg = angles[1];
@@ -159,15 +154,15 @@ public final class TurretAimCalculator {
    *
    * @param shooterField Field-space XY of the shooter exit.
    * @param targetField Field-space XY of the target.
-   * @param targetZ Target height above floor (m).
    * @param robotHeading Current robot heading on the field.
+   * @param home true when in own alliance zone (aim at hub); false for pass/lob mode.
    * @return double[2]: [turretDeg, hoodDeg].
    */
   private static double[] computeAngles(
       Translation2d shooterField,
       Translation2d targetField,
-      double targetZ,
-      Rotation2d robotHeading) {
+      Rotation2d robotHeading,
+      boolean home) {
     // --- Lateral (turret) angle ---
     // Vector from shooter to target in field frame
     double dx = targetField.getX() - shooterField.getX();
@@ -180,29 +175,61 @@ public final class TurretAimCalculator {
     // This gives the angle in the robot's reference frame.
     double turretRad = fieldBearing - robotHeading.getRadians();
 
-    // Normalize to [−π, π]
-    turretRad = Math.atan2(Math.sin(turretRad), Math.cos(turretRad));
+    // Normalize to [-220°, +220°] to match the physical turret range.
+    // Using [-180, 180] would cause the turret to snap/whip when the target
+    // is just past 180° behind the robot.  With ±220° the turret can track
+    // targets behind the robot up to 220° before needing to reverse.
     double turretDeg = Math.toDegrees(turretRad);
+    double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
+    double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Clamp turret to physical limits
-    if (turretDeg > Constants.ScorerConstants.kTurretMaxPositionUnits) {
-      turretDeg = 360.0 - turretDeg; // wrap around to negative angles
-    } else if (turretDeg < Constants.ScorerConstants.kTurretMinPositionUnits) {
-      turretDeg = 360.0 + turretDeg; // wrap around to positive angles
+    // Normalize into (-360, 360) first, then shift into [turretMin, turretMax]
+    turretDeg = turretDeg % 360.0;
+    if (turretDeg > turretMax) {
+      turretDeg -= 360.0;
+    } else if (turretDeg < turretMin) {
+      turretDeg += 360.0;
     }
 
-    // --- Vertical (hood) angle ---
-    double horizontalDist = Math.hypot(dx, dy);
-    double dz = targetZ - Constants.ScorerConstants.kShooterExitZMeters;
-    double hoodDeg =
-        Math.toDegrees(
-            Math.atan2(
-                dz,
-                horizontalDist)); // TODO tune this formula for a better arc (currently just a line
-    // drive)
+    // If still out of range (target in the ±(220–360) dead-band), pick the
+    // closer physical limit so the turret takes the shortest path to an
+    // achievable angle.
+    if (turretDeg > turretMax) {
+      turretDeg = turretMax;
+    } else if (turretDeg < turretMin) {
+      turretDeg = turretMin;
+    }
 
-    // Clamp hood to physical limits
-    hoodDeg = clamp(hoodDeg, HOOD_MIN_DEG, HOOD_MAX_DEG);
+    // --- Vertical (hood) angle via tunable polynomial curves ---
+    // Hood angle = degrees from vertical.  The ball exits perpendicular to the
+    // hood face, so launch elevation from horizontal = 90° − hoodDeg.
+    //   10° hood → 80° elevation (nearly straight up, steep arc)
+    //   35° hood → 55° elevation (flatter, faster line)
+    //
+    // θ = a·d² + b·d + c  where d = horizontal distance to target (meters).
+    // For both Hub and Pass the hood value *increases* with distance (farther
+    // shots need a flatter trajectory to cover the range).
+    // Hub curve (scoring) and Pass curve (lobbing) have independent coefficients
+    // in Constants.ScorerConstants so each robot can be tuned at practice.
+    double horizontalDist = Math.hypot(dx, dy);
+    double a, b, c;
+    if (home) {
+      a = Constants.ScorerConstants.kHubHoodA;
+      b = Constants.ScorerConstants.kHubHoodB;
+      c = Constants.ScorerConstants.kHubHoodC;
+    } else {
+      a = Constants.ScorerConstants.kPassHoodA;
+      b = Constants.ScorerConstants.kPassHoodB;
+      c = Constants.ScorerConstants.kPassHoodC;
+    }
+    double hoodDeg = a * horizontalDist * horizontalDist + b * horizontalDist + c;
+
+    // Clamp hood to physical limits (tunable from Constants)
+    hoodDeg =
+        clamp(
+            hoodDeg,
+            Constants.ScorerConstants.kHoodMinDegrees,
+            Constants.ScorerConstants.kHoodMaxDegrees);
 
     return new double[] {turretDeg, hoodDeg};
   }

@@ -242,6 +242,16 @@ public final class Constants {
     // ---- Simulated gyro noise (degrees per second, 1σ) ----
     // Adds a small random walk to the sim gyro to mimic real sensor noise.
     public static double kGyroNoiseDegPerSec = 0.05;
+
+    // ---- Turret rotational inertia (simulation only) ----
+    // First-order lag time constant for the turret mechanism.
+    // Higher = heavier/slower turret.  ~0.20 s for a geared turret with
+    // a ~2 kg·m² MOI driven by a single Kraken/Falcon.
+    public static double kTurretSimTauSeconds = 0.20;
+
+    // Maximum turret angular velocity in degrees per second.
+    // Prevents the simulated turret from slewing unrealistically fast.
+    public static double kTurretSimMaxVelocityDegPerSec = 360.0;
   }
   // #endregion
 
@@ -250,12 +260,19 @@ public final class Constants {
     public static final double kShootRPM = 5700.0;
     public static final double kReverseShootRPM = -5700.0;
 
-    public static final double kHoodStowedDegrees = 10.0; // degrees
-    public static final double kHoodMaxDegrees = 35.0; // degrees
-    public static final double kHoodMinDegrees = 10.0; // degrees
+    public static final double kHoodStowedDegrees = 0.0; // degrees from vertical
+    public static final double kHoodMaxDegrees =
+        35.0; // degrees from vertical (flattest shot, 55° elevation)
+    public static final double kHoodMinDegrees =
+        10.0; // degrees from vertical (steepest shot, 80° elevation)
     public static final double kHoodUnitToRotorRatio =
         (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
+
+    // Distance (meters) within which the robot is considered "near" a landing /
+    // intake zone.  When inside this radius the hood stows to kHoodMinDegrees so
+    // the intake can receive balls unobstructed.
+    public static final double kHoodStowDistanceMeters = 1.5; // meters
 
     public static final double kTurretStowedPosition = 0.0; // degrees
     public static final double kTurretMaxPositionUnits = 220.0; // degrees
@@ -270,6 +287,31 @@ public final class Constants {
     public static final double kRightShooterXOffsetMeters = Units.inchesToMeters(-6.4);
     public static final double kRightShooterYOffsetMeters = Units.inchesToMeters(-6.831);
     public static final double kShooterExitZMeters = Units.inchesToMeters(20.5);
+
+    // ---- Hood angle-vs-distance curves ----
+    // Hood angle = degrees from vertical (ball exits perpendicular to hood face).
+    //   Actual launch elevation from horizontal = 90° − hoodDeg.
+    //   10° hood → 80° elevation (nearly straight up, steep arc)
+    //   35° hood → 55° elevation (flatter, faster trajectory)
+    //
+    // Hood angle is computed as a polynomial:  θ = a·d² + b·d + c
+    // where d = horizontal distance to target (meters), θ = hood angle (degrees from vertical).
+    // Hood value INCREASES with distance (farther = flatter trajectory needed).
+    // Tune these per-robot during practice by shooting at known distances.
+    //
+    // Hub (scoring) curve — aim at hub (elevated target at ~2m height).
+    // Close range needs steep arc (low hood), far range needs flatter shot (high hood).
+    // Starting defaults: ~12° at 2m, ~25° at 7m, ~33° at 12m.
+    public static final double kHubHoodA = -0.10; // quadratic coeff (deg/m²)
+    public static final double kHubHoodB = 3.5; // linear coeff (deg/m)
+    public static final double kHubHoodC = 7.0; // constant (deg from vertical) — angle at d=0
+
+    // Pass (lob) curve — lob to landing zone (ground-level target, need high arc).
+    // Stays closer to vertical (lower hood values) for hang time / height.
+    // Starting defaults: ~13° at 3m, ~18° at 7m, ~22° at 12m.
+    public static final double kPassHoodA = -0.05; // quadratic coeff (deg/m²)
+    public static final double kPassHoodB = 1.5; // linear coeff (deg/m)
+    public static final double kPassHoodC = 9.0; // constant (deg from vertical) — angle at d=0
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

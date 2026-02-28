@@ -13,8 +13,11 @@ public interface TurretAimIO {
   public static class TurretAimIOInputs {
     // ---- Computed aim angles (degrees) ----
     public double leftTurretAngleDeg = 0.0;
+    /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double leftHoodAngleDeg = 10.0;
+
     public double rightTurretAngleDeg = 0.0;
+    /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double rightHoodAngleDeg = 10.0;
 
     // ---- Debug / diagnostics ----
