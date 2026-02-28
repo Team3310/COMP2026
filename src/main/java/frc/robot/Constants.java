@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
-import frc.lib.util.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -36,17 +35,6 @@ public final class Constants {
 
   // Set this to select which robot's tuner constants to use
   public static final Bot currentBot = Bot.BRAVO;
-
-  public static boolean inPit = false;
-
-  public static BotState currentState = BotState.PIT;
-  public static Override overrideState = Override.OFF;
-  public static boolean deploying = false;
-  public static boolean retracting = false;
-  public static boolean activeHub = true;
-  public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
-  public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-  public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
 
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
@@ -74,23 +62,6 @@ public final class Constants {
     // Add more robot variants here as needed, e.g.:
     // COMPETITION,
     PRACTICE
-  }
-
-  public static enum BotState {
-    SNOWBLOW,
-    COLLECT,
-    DEFENCE,
-    DEPLOY,
-    RETRACT,
-    TRENCH,
-    PIT
-  }
-
-  public static enum Override {
-    OFF,
-    ON,
-    COLLECT,
-    DEFENCE
   }
 
   public static final ClosedLoopRampsConfigs makeDefaultClosedLoopRampConfig() {

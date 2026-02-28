@@ -29,8 +29,40 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  * project.
  */
 public class Robot extends LoggedRobot {
+
+  // enums
+  public static enum BotState {
+    SNOWBLOW,
+    COLLECT,
+    DEFENCE,
+    DEPLOY,
+    RETRACT,
+    TRENCH,
+    PIT
+  }
+
+  public static enum OverrideState {
+    OFF,
+    ON,
+    COLLECT,
+    DEFENCE
+  }
+
+  // Variables
+
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+
+  public static boolean inPit = false;
+
+  public static BotState currentState = BotState.PIT;
+  public static OverrideState overrideState = OverrideState.OFF;
+  public static boolean deploying = false;
+  public static boolean retracting = false;
+  public static boolean activeHub = true;
+  public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
+  public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+  public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
 
   public Robot() {
     // Record metadata
@@ -78,7 +110,7 @@ public class Robot extends LoggedRobot {
   }
 
   /** This function is called periodically during all modes. */
-  @Override
+  @java.lang.Override
   public void robotPeriodic() {
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
@@ -97,42 +129,38 @@ public class Robot extends LoggedRobot {
 
     updateZone();
 
-    // Update Constants.activeHub based on match time / override flag
+    // Update activeHub based on match time / override flag
     updateHub();
 
     // This basically says if we are not deploying or retracting, then we can change states.
     // If we are deploying or retracting, we want to stay in deploy or retract until we are done.
-    if (!Constants.deploying && !Constants.retracting && !Constants.inPit) {
-      switch (Constants.overrideState) {
+    if (!deploying && !retracting && !inPit) {
+      switch (overrideState) {
         case OFF: // nothing runs
-          Constants.currentState = Constants.BotState.PIT;
+          currentState = BotState.PIT;
           break;
         case COLLECT:
-          Constants.currentState = Constants.BotState.COLLECT;
+          currentState = BotState.COLLECT;
           break;
         case DEFENCE:
-          Constants.currentState = Constants.BotState.DEFENCE;
+          currentState = BotState.DEFENCE;
           break;
         case ON:
         default:
           // Automated State Machine
-          if (currentZone == Zone.BLUE
-              && Constants.alliance == Alliance.Blue
-              && !(Constants.activeHub)) {
-            Constants.currentState = Constants.BotState.COLLECT;
-          } else if (currentZone == Zone.RED
-              && Constants.alliance == Alliance.Red
-              && !(Constants.activeHub)) {
-            Constants.currentState = Constants.BotState.COLLECT;
+          if (currentZone == Zone.BLUE && currentAlliance == Alliance.Blue && !(activeHub)) {
+            currentState = BotState.COLLECT;
+          } else if (currentZone == Zone.RED && currentAlliance == Alliance.Red && !(activeHub)) {
+            currentState = BotState.COLLECT;
           } else if (isInTrenchZone()) {
-            Constants.currentState = Constants.BotState.TRENCH;
+            currentState = BotState.TRENCH;
           } else {
-            Constants.currentState = Constants.BotState.SNOWBLOW;
+            currentState = BotState.SNOWBLOW;
           }
       }
     }
 
-    switch (Constants.currentState) {
+    switch (currentState) {
       case SNOWBLOW:
         snowblow();
         break;
@@ -156,13 +184,13 @@ public class Robot extends LoggedRobot {
         break;
     }
     // logging
-    SmartDashboard.putBoolean("inPit", Constants.inPit);
-    SmartDashboard.putString("currentState", "" + Constants.currentState);
-    SmartDashboard.putString("overrideState", "" + Constants.overrideState);
+    SmartDashboard.putBoolean("inPit", inPit);
+    SmartDashboard.putString("currentState", "" + currentState);
+    SmartDashboard.putString("overrideState", "" + overrideState);
     SmartDashboard.putString("robotX", "" + robotX);
     SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", Constants.activeHub);
-    SmartDashboard.putBoolean("hubOverride", Constants.hubOverride);
+    SmartDashboard.putBoolean("activeHub", activeHub);
+    SmartDashboard.putBoolean("hubOverride", hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
     // Return to non-RT thread priority (do not modify the first argument)
@@ -227,32 +255,33 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {}
 
+  // #region util methods
   public void updateZone() {
     double robotX = robotContainer.getDrive().getPose().getX();
 
     if (robotX < FieldConstants.Zone.BLUE.getX()) {
-      Constants.currentZone = Zone.BLUE;
+      currentZone = Zone.BLUE;
     } else if (robotX < FieldConstants.Zone.BLUETRENCH.getX()) {
-      Constants.currentZone = Zone.BLUETRENCH;
+      currentZone = Zone.BLUETRENCH;
     } else if (robotX < FieldConstants.Zone.MID.getX()) {
-      Constants.currentZone = Zone.MID;
+      currentZone = Zone.MID;
     } else if (robotX < FieldConstants.Zone.REDTRENCH.getX()) {
-      Constants.currentZone = Zone.REDTRENCH;
+      currentZone = Zone.REDTRENCH;
     } else {
-      Constants.currentZone = Zone.RED;
+      currentZone = Zone.RED;
     }
   }
 
   public void updateHub() {
     // If manually overridden OFF via SmartDashboard button, skip automatic calculation
-    if (Constants.hubOverride) {
-      Constants.activeHub = false;
+    if (hubOverride) {
+      activeHub = false;
       return;
     }
 
     // Hub is always enabled in autonomous.
     if (DriverStation.isAutonomousEnabled()) {
-      Constants.activeHub = true;
+      activeHub = true;
       return;
     }
     // At this point, if we're not teleop enabled, there is no hub.
@@ -266,7 +295,7 @@ public class Robot extends LoggedRobot {
     // If we have no game data, we cannot compute, assume hub is active, as its likely early in
     // teleop.
     if (matchTime < 0 && (gameData == null || gameData.isEmpty())) {
-      Constants.activeHub = true;
+      activeHub = true;
       return;
     }
     boolean redInactiveFirst = false;
@@ -275,51 +304,54 @@ public class Robot extends LoggedRobot {
       case 'B' -> redInactiveFirst = false;
       default -> {
         // If we have invalid game data, assume hub is active.
-        Constants.activeHub = true;
+        activeHub = true;
         return;
       }
     }
 
     // Shift was is active for blue if red won auto, or red if blue won auto.
     boolean shift1Active =
-        switch (Constants.currentAlliance) {
+        switch (currentAlliance) {
           case Red -> !redInactiveFirst;
           case Blue -> redInactiveFirst;
         };
 
     if (matchTime > 130) {
       // Transition shift, hub is active.
-      Constants.activeHub = true;
+      activeHub = true;
       return;
     } else if (matchTime > 105) {
       // Shift 1
-      Constants.activeHub = shift1Active;
+      activeHub = shift1Active;
       return;
     } else if (matchTime > 80) {
       // Shift 2
-      Constants.activeHub = !shift1Active;
+      activeHub = !shift1Active;
       return;
     } else if (matchTime > 55) {
       // Shift 3
-      Constants.activeHub = shift1Active;
+      activeHub = shift1Active;
       return;
     } else if (matchTime > 30) {
       // Shift 4
-      Constants.activeHub = !shift1Active;
+      activeHub = !shift1Active;
       return;
     } else {
       // End game, hub always active.
-      Constants.activeHub = true;
+      activeHub = true;
       return;
     }
   }
 
   private boolean isInTrenchZone() {
-    if (Constants.currentZone == Zone.BLUETRENCH || Constants.currentZone == Zone.REDTRENCH) {
+    if (currentZone == Zone.BLUETRENCH || currentZone == Zone.REDTRENCH) {
       return true;
     }
     return false;
   }
+  // #endregion
+
+  // #region state methods
 
   private void snowblow() {
 
@@ -380,7 +412,7 @@ public class Robot extends LoggedRobot {
           .schedule();
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() > 130.0) {
-      Commands.runOnce(() -> Constants.deploying = false).schedule();
+      Commands.runOnce(() -> deploying = false).schedule();
     }
   }
 
@@ -396,7 +428,7 @@ public class Robot extends LoggedRobot {
           .schedule();
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      Commands.runOnce(() -> Constants.retracting = false).schedule();
+      Commands.runOnce(() -> retracting = false).schedule();
     }
   }
 
@@ -412,4 +444,6 @@ public class Robot extends LoggedRobot {
             })
         .schedule();
   }
+
+  // #endregion
 }

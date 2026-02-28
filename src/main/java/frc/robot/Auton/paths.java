@@ -5,26 +5,40 @@
 package frc.robot.Auton;
 
 import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * Container class for all PathPlanner paths and autonomous routines. Paths are loaded from
  * deploy/pathplanner/paths and autos from deploy/pathplanner/autos.
  */
-public class paths {
+public class Paths {
   // Individual paths (loaded from .path files)
-  public PathPlannerPath forward2m;
+  public static PathPlannerPath forward2m;
 
-  /** Creates a new Paths container. */
-  public paths() {
-    loadPaths();
+  public static boolean loaded;
+
+  public static void loadPaths(Alliance alliance) {
+    loaded = false;
+    if (alliance == Alliance.Blue) {
+
+      forward2m = loadPath("forward2m");
+
+      loaded = true;
+    } else {
+
+      forward2m = loadPath("forward2m"); // dont flip for this one
+
+      loaded = true;
+    }
   }
 
   /** Load all paths from PathPlanner. */
-  private void loadPaths() {
+  private static PathPlannerPath loadPath(String name) {
     try {
-      forward2m = PathPlannerPath.fromPathFile("forward2m");
+      return PathPlannerPath.fromPathFile(name);
     } catch (Exception e) {
-      System.err.println("Failed to load path 'forward2m': " + e.getMessage());
+      System.err.println("Failed to load path '" + name + "': " + e.getMessage());
     }
+    return null;
   }
 }

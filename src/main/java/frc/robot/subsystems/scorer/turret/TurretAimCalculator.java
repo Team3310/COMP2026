@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.lib.util.FieldConstants;
 import frc.robot.Constants;
+import frc.robot.Robot;
 
 /**
  * Pure-math utility that computes the desired turret (lateral) and hood (vertical) angles for the
@@ -88,7 +89,7 @@ public final class TurretAimCalculator {
   public static AimResult calculate(Pose2d robotPose) {
     boolean isBlue = (Constants.alliance == Alliance.Blue);
 
-    FieldConstants.Zone zone = Constants.currentZone;
+    FieldConstants.Zone zone = Robot.currentZone;
 
     // ---- Trench zone: stow hood to lowest angle, zero feeder ----
     boolean inTrench =
