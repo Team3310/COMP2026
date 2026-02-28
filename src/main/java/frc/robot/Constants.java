@@ -288,30 +288,47 @@ public final class Constants {
     public static final double kRightShooterYOffsetMeters = Units.inchesToMeters(-6.831);
     public static final double kShooterExitZMeters = Units.inchesToMeters(20.5);
 
-    // ---- Hood angle-vs-distance curves ----
+    // ---- Ballistics lookup tables ----
+    // Each row: { distance (m), hood angle (deg from vertical), feeder speed (RPM) }
+    //
     // Hood angle = degrees from vertical (ball exits perpendicular to hood face).
     //   Actual launch elevation from horizontal = 90° − hoodDeg.
     //   10° hood → 80° elevation (nearly straight up, steep arc)
     //   35° hood → 55° elevation (flatter, faster trajectory)
     //
-    // Hood angle is computed as a polynomial:  θ = a·d² + b·d + c
-    // where d = horizontal distance to target (meters), θ = hood angle (degrees from vertical).
-    // Hood value INCREASES with distance (farther = flatter trajectory needed).
-    // Tune these per-robot during practice by shooting at known distances.
+    // The calculator linearly interpolates between rows.  Values beyond the
+    // first / last row are clamped to that row's values.
     //
-    // Hub (scoring) curve — aim at hub (elevated target at ~2m height).
-    // Close range needs steep arc (low hood), far range needs flatter shot (high hood).
-    // Starting defaults: ~12° at 2m, ~25° at 7m, ~33° at 12m.
-    public static final double kHubHoodA = -0.10; // quadratic coeff (deg/m²)
-    public static final double kHubHoodB = 3.5; // linear coeff (deg/m)
-    public static final double kHubHoodC = 7.0; // constant (deg from vertical) — angle at d=0
+    // Tune these per-robot during practice by shooting at known distances.
+    // Add or remove rows as needed — just keep them sorted by distance.
 
-    // Pass (lob) curve — lob to landing zone (ground-level target, need high arc).
+    // Hub (scoring) — aim at the elevated hub target.
+    // Close range = steep arc (low hood), far range = flatter shot (high hood).
+    // Feeder speed ramps up with distance to maintain ball energy.
+    public static final double[][] kHubTable = {
+      // { distance_m, hoodDeg, feederRPM }
+      {2.0, 12.0, 2000.0},
+      {4.0, 18.0, 2800.0},
+      {6.0, 24.0, 3400.0},
+      {8.0, 29.0, 3800.0},
+      {10.0, 32.0, 4200.0},
+      {12.0, 34.0, 4500.0},
+    };
+
+    // Pass (lob) — lob to a landing zone on our side of the field.
     // Stays closer to vertical (lower hood values) for hang time / height.
-    // Starting defaults: ~13° at 3m, ~18° at 7m, ~22° at 12m.
-    public static final double kPassHoodA = -0.05; // quadratic coeff (deg/m²)
-    public static final double kPassHoodB = 1.5; // linear coeff (deg/m)
-    public static final double kPassHoodC = 9.0; // constant (deg from vertical) — angle at d=0
+    // Feeder speed is lower — we just need the ball to arc over, not blast.
+    public static final double[][] kPassTable = {
+      // { distance_m, hoodDeg, feederRPM }
+      {3.0, 13.0, 1800.0},
+      {5.0, 16.0, 2200.0},
+      {7.0, 19.0, 2600.0},
+      {9.0, 21.0, 2800.0},
+      {12.0, 23.0, 3000.0},
+    };
+
+    // Default feeder speed when stowing (turret idle / trench zone).
+    public static final double kFeederStowRPM = 0.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

@@ -83,8 +83,10 @@ public class TurretAimManager extends SubsystemBase {
     // Pack into IO inputs struct (auto-logged by AdvantageKit)
     inputs.leftTurretAngleDeg = result.leftTurretDeg;
     inputs.leftHoodAngleDeg = result.leftHoodDeg;
+    inputs.leftFeederRPM = result.leftFeederRPM;
     inputs.rightTurretAngleDeg = result.rightTurretDeg;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
+    inputs.rightFeederRPM = result.rightFeederRPM;
 
     inputs.allianceColor = String.valueOf(alliance);
 
@@ -100,11 +102,13 @@ public class TurretAimManager extends SubsystemBase {
     // Log with AdvantageKit so values appear in AdvantageScope under "TurretAim/"
     Logger.processInputs("TurretAim", inputs);
 
-    // Also log the four key values at the top level for quick graphing
+    // Also log the six key values at the top level for quick graphing
     Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
     Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
+    Logger.recordOutput("TurretAim/LeftFeederRPM", result.leftFeederRPM);
     Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
     Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
+    Logger.recordOutput("TurretAim/RightFeederRPM", result.rightFeederRPM);
     Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
 
     // ---- Instant aim line (where calculator WANTS to aim) ----
@@ -155,6 +159,14 @@ public class TurretAimManager extends SubsystemBase {
 
   public double getRightHoodAngleDeg() {
     return inputs.rightHoodAngleDeg;
+  }
+
+  public double getLeftFeederRPM() {
+    return inputs.leftFeederRPM;
+  }
+
+  public double getRightFeederRPM() {
+    return inputs.rightFeederRPM;
   }
 
   /** Returns the simulated (lagged) turret angle in degrees, for visualization. */
