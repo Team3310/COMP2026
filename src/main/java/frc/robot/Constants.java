@@ -387,7 +387,7 @@ public final class Constants {
     kLeftHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftTurretConfig = new ServoMotorSubsystemConfig();
@@ -464,7 +464,7 @@ public final class Constants {
     kRightHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 5.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightTurretConfig =

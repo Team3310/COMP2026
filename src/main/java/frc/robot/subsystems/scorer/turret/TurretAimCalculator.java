@@ -81,12 +81,11 @@ public final class TurretAimCalculator {
   // Hood limits — read from Constants so they stay tunable in one place.
   // (No circular dependency: Constants is a leaf class with only static finals.)
 
-  // ---- Turret wrap-around hysteresis state ----
-  // Remembers the last turret output so that the normalization picks the
-  // closest equivalent angle each cycle.  The turret only "flips" when the
-  // target genuinely crosses past ±220° — not because of a stateless modulo
-  // that doesn't know which side we're on.
-  private static double lastTurretDeg = 0.0;
+  // ---- Turret wrap-around state ----
+  // Tracks which 360° wrap the turret is on (0 or ±360).
+  // Added to the normalized [-180,+180] angle so the turret doesn't jump at ±180°.
+  // Flips only when the result actually hits ±220°.
+  private static double wrapOffset = 0.0;
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -218,57 +217,37 @@ public final class TurretAimCalculator {
     // This gives the angle in the robot's reference frame.
     double turretRad = fieldBearing - robotHeading.getRadians();
 
-    // ---- Wrap-around with hysteresis ----
-    // The turret can physically travel ±220° from forward (440° total range).
-    // The 40° overlap (±180° to ±220°) on each side gives us hysteresis:
-    //   - We prefer to stay on the current wrap (closest to lastTurretDeg)
-    //   - If that wrap exceeds ±220°, we try the OTHER wrap (±360°)
-    //   - If the other wrap is in range, we flip (go the long way around)
-    //   - If neither wrap is in range (dead-band behind robot), clamp to nearest limit
+    // ---- Wrap-around ----
+    // The turret can physically travel ±220° from forward (440° total).
+    // atan2 gives [-180, +180] which always fits in [-220, +220].
+    // We track a wrapOffset (0 or ±360) so the turret doesn't jump at ±180°.
+    // When the tracked angle hits +220 we subtract 360 (→ ~-140).
+    // When the tracked angle hits -220 we add 360 (→ ~+140).
+
     double turretDeg = Math.toDegrees(turretRad);
     double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
     double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Step 1: Pick the wrap closest to where we were last cycle.
-    double delta = turretDeg - lastTurretDeg;
-    delta = delta % 360.0;
-    if (delta > 180.0) {
-      delta -= 360.0;
-    } else if (delta <= -180.0) {
-      delta += 360.0;
-    }
-    double preferred = lastTurretDeg + delta;
-
-    // Step 2: If preferred wrap is in range, use it.  Otherwise try the
-    // other wrap (±360°).  If that's in range, flip to it.  If neither is
-    // in range the target is in the ~280° dead-band behind the hard-stops,
-    // so clamp to whichever limit is closer.
-    if (preferred >= turretMin && preferred <= turretMax) {
-      turretDeg = preferred;
-    } else {
-      // Try the other 360° wrap
-      double alternate = (preferred > turretMax) ? preferred - 360.0 : preferred + 360.0;
-      if (alternate >= turretMin && alternate <= turretMax) {
-        // Other wrap is reachable — flip the long way around
-        turretDeg = alternate;
-      } else {
-        // Neither wrap fits — clamp to the closer limit
-        double distPrefMin = Math.abs(preferred - turretMin);
-        double distPrefMax = Math.abs(preferred - turretMax);
-        double distAltMin = Math.abs(alternate - turretMin);
-        double distAltMax = Math.abs(alternate - turretMax);
-        double minDist =
-            Math.min(Math.min(distPrefMin, distPrefMax), Math.min(distAltMin, distAltMax));
-        if (minDist == distPrefMin || minDist == distAltMin) {
-          turretDeg = turretMin;
-        } else {
-          turretDeg = turretMax;
-        }
-      }
+    // Normalize to [-180, +180]
+    turretDeg = turretDeg % 360.0;
+    if (turretDeg > 180.0) {
+      turretDeg -= 360.0;
+    } else if (turretDeg <= -180.0) {
+      turretDeg += 360.0;
     }
 
-    // Remember this output for next cycle's hysteresis
-    lastTurretDeg = turretDeg;
+    // Apply current wrap offset and flip if we hit a limit
+    turretDeg += wrapOffset;
+    if (turretDeg > turretMax) {
+      wrapOffset -= 360.0;
+      turretDeg -= 360.0;
+    } else if (turretDeg < turretMin) {
+      wrapOffset += 360.0;
+      turretDeg += 360.0;
+    }
+
+    // Final safety clamp (dead-band behind robot where neither wrap fits)
+    turretDeg = Math.max(turretMin, Math.min(turretMax, turretDeg));
 
     // --- Vertical (hood) angle and feeder speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
