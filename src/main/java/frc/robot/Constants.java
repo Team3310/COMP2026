@@ -34,7 +34,7 @@ public final class Constants {
   public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
   // Set this to select which robot's tuner constants to use
-  public static final Bot currentBot = Bot.BRAVO;
+  public static final Bot currentBot = Bot.PRACTICE;
 
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
@@ -228,8 +228,9 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kShootRPM = 5700.0;
-    public static final double kReverseShootRPM = -5700.0;
+    // NOTE: non-final so SmartDashboard can override at runtime
+    public static double kShootRPM = 5700.0;
+    public static double kReverseShootRPM = -5700.0;
 
     public static final double kHoodStowedDegrees = 0.0; // degrees from vertical
     public static final double kHoodMaxDegrees =
@@ -402,7 +403,7 @@ public final class Constants {
 
     kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.02;
-    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.1;
+    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.12;
 
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -478,7 +479,7 @@ public final class Constants {
 
     kRightFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kRightFlywheelConfig.fxConfig.Slot0.kS = 0.02;
-    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.1;
+    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.12;
 
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -499,8 +500,9 @@ public final class Constants {
 
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
-    public static final double kIntakeVelocityRPM = 2109.0;
-    public static final double kOuttakeVelocityRPM = -2109.0;
+    // NOTE: non-final so SmartDashboard can override at runtime
+    public static double kIntakeVelocityRPM = 2109.0;
+    public static double kOuttakeVelocityRPM = -2109.0;
 
     public static final double kDeployVelocityRPM = -1375.0;
 
@@ -587,22 +589,24 @@ public final class Constants {
     // Floor Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
-    public static final double kFloorRollerSnowblowRPM =
-        4500.0; // RPM at output (increased for testing)
-    public static final double kFloorRollerCollectRPM =
+    // NOTE: non-final so SmartDashboard can override at runtime
+    public static double kFloorRollerSnowblowRPM = 4500.0; // RPM at output (increased for testing)
+    public static double kFloorRollerCollectRPM =
         500.0; // RPM while intaking (Decreased for Collect mode)
-    public static final double kFloorRollerSnowblowRPS =
+    public static double kFloorRollerReverseRPM =
+        -4500.0; // RPM while reversing (negative = opposite direction, matches snowblow speed)
+    public static double kFloorRollerSnowblowRPS =
         kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
-    public static final double kFloorRollerCollectRPS =
+    public static double kFloorRollerCollectRPS =
         kFloorRollerCollectRPM / 60.0; // RPS at output = 6.67 RPS
+    public static double kFloorRollerReverseRPS =
+        kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static final double kVerticalFeedIntakeRPM = 5000.0; // RPM at output
-    public static final double kVerticalFeedOuttakeRPM = -5000.0; // RPM at output
-    public static final double kVerticalFeedIntakeRPS =
-        kVerticalFeedIntakeRPM / 60.0; // RPS at output
-    public static final double kVerticalFeedOuttakeRPS =
-        kVerticalFeedOuttakeRPM / 60.0; // RPS at output
+    public static double kVerticalFeedIntakeRPM = 5000.0; // RPM at output
+    public static double kVerticalFeedOuttakeRPM = -5000.0; // RPM at output (reverse)
+    public static double kVerticalFeedIntakeRPS = kVerticalFeedIntakeRPM / 60.0; // RPS at output
+    public static double kVerticalFeedOuttakeRPS = kVerticalFeedOuttakeRPM / 60.0; // RPS at output
   }
 
   // ---- Right Floor Roller (CAN 25, CANivore #2) ----

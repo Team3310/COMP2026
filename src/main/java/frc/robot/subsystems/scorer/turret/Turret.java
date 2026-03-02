@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 
 /** The {@code Turret} controls the pivoting mechanism of the robot's launcher turret. */
 public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
@@ -39,6 +40,10 @@ public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> 
    */
   public Command setDegreesCommand(double position) {
     return motionMagicSetpointCommand(() -> (position)).withName("Turret Maintain Setpoint");
+  }
+
+  public Command setDegreesCommand(DoubleSupplier position) {
+    return motionMagicSetpointCommand(position).withName("Turret Aim Tracking");
   }
 
   @Override

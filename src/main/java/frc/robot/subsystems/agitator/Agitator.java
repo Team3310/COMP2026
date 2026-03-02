@@ -146,6 +146,16 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   }
 
   /**
+   * Command to run floor roller in reverse direction (negative RPM).
+   *
+   * @return Command that runs floor roller in reverse
+   */
+  public Command reverseCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerReverseRPM)
+        .withName(getName() + " Reverse");
+  }
+
+  /**
    * Command to run roller at the vertical feed intake speed.
    *
    * @return Command that runs vertical feed in intake direction

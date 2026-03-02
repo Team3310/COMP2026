@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystems.*;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 
 /** The {@code Hood} controls the pivoting mechanism of the robot's launcher hood. */
 public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
@@ -39,6 +40,10 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
    */
   public Command setDegreesCommand(double position) {
     return motionMagicSetpointCommand(() -> (position)).withName("Hood Maintain Setpoint");
+  }
+
+  public Command setDegreesCommand(DoubleSupplier position) {
+    return motionMagicSetpointCommand(position).withName("Hood Aim Tracking");
   }
 
   public Command setDegreesCommandRunEnd(double positionRun, double positionEnd) {

@@ -449,4 +449,23 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
+
+  /** Returns the drive motor current for a specific module (0=FL,1=FR,2=BL,3=BR). */
+  public double getModuleDriveCurrentAmps(int index) {
+    return modules[index].getDriveCurrentAmps();
+  }
+
+  /** Returns the turn motor current for a specific module (0=FL,1=FR,2=BL,3=BR). */
+  public double getModuleTurnCurrentAmps(int index) {
+    return modules[index].getTurnCurrentAmps();
+  }
+
+  /** Returns the total supply current of all 8 drivetrain motors (4 drive + 4 turn). */
+  public double getTotalDriveTrainCurrentAmps() {
+    double total = 0.0;
+    for (int i = 0; i < 4; i++) {
+      total += modules[i].getDriveCurrentAmps() + modules[i].getTurnCurrentAmps();
+    }
+    return total;
+  }
 }

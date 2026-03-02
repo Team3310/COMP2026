@@ -120,6 +120,14 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     return inputs.velocityUnitsPerSecond;
   }
 
+  public double getSupplyCurrentAmps() {
+    return inputs.currentSupplyAmps;
+  }
+
+  public double getStatorCurrentAmps() {
+    return inputs.currentStatorAmps;
+  }
+
   public double getPositionSetpointUnits() {
     return positionSetpointUnits;
   }

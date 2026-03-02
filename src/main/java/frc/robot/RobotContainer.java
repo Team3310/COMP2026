@@ -281,7 +281,21 @@ public class RobotContainer {
         "floors on",
         Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()));
     SmartDashboard.putData(
-        "floors off", Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()));
+        "spit balls",
+        Commands.parallel(
+            agitatorLeft.reverseCommand(),
+            agitatorRight.reverseCommand(),
+            intakeRollers.outtakeCommand()));
+    SmartDashboard.putData(
+        "vertical feed on",
+        Commands.parallel(
+            verticalFeedLeft.verticalFeedIntakeCommand(),
+            verticalFeedRight.verticalFeedIntakeCommand()));
+    SmartDashboard.putData(
+        "vertical feed reverse",
+        Commands.parallel(
+            verticalFeedLeft.verticalFeedOuttakeCommand(),
+            verticalFeedRight.verticalFeedOuttakeCommand()));
     SmartDashboard.putData(
         "flywheel on",
         Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
@@ -295,6 +309,24 @@ public class RobotContainer {
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
+
+    // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable number widgets.
+    // Robot.robotPeriodic() reads these back into the Constants each loop.
+    SmartDashboard.putNumber(
+        "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/FloorReverseRPM", Constants.AgitatorConstants.kFloorRollerReverseRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/IntakeForwardRPM", Constants.IntakeConstants.kIntakeVelocityRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/IntakeReverseRPM", Constants.IntakeConstants.kOuttakeVelocityRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/VertFeedForwardRPM", Constants.AgitatorConstants.kVerticalFeedIntakeRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/VertFeedReverseRPM", Constants.AgitatorConstants.kVerticalFeedOuttakeRPM);
+    SmartDashboard.putNumber("SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
     // #endregion
 
     // Configure the button bindings
@@ -561,10 +593,10 @@ public class RobotContainer {
                 intakePivot.retractCommand(),
                 // Normal: auto-aim turrets and hoods
                 Commands.parallel(
-                    hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
-                    hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg()),
-                    turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
-                    turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg())),
+                    hoodLeft.setDegreesCommand(turretAimManager::getLeftHoodAngleDeg),
+                    hoodRight.setDegreesCommand(turretAimManager::getRightHoodAngleDeg),
+                    turretLeft.setDegreesCommand(turretAimManager::getLeftTurretAngleDeg),
+                    turretRight.setDegreesCommand(turretAimManager::getRightTurretAngleDeg)),
                 () -> Robot.inPit));
 
     if (flywheelLeft != null && hoodLeft != null) {
