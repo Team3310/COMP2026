@@ -27,6 +27,7 @@ import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
+import frc.robot.subsystems.Lights;
 import frc.robot.util.choosers.AutonomousChooser;
 
 /**
@@ -328,6 +329,9 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
     // #endregion
+
+    // Initialize LED display mode to show bot state colors
+    Lights.getInstance().setMode(Lights.LightMode.BOT_STATE);
 
     // Configure the button bindings
     configureButtonBindings();
