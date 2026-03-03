@@ -57,12 +57,12 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
   }
 
   public Command deployCommand() {
-    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotDeployDegrees)
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 0)
         .withName("Intake Pivot " + Constants.IntakeConstants.kIntakePivotDeployDegrees + " deg");
   }
 
   public Command retractCommand() {
-    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotStowedDegrees)
+    return motionMagicSetpointCommand(() -> Constants.IntakeConstants.kIntakePivotStowedDegrees, 1)
         .withName("Intake Pivot " + Constants.IntakeConstants.kIntakePivotStowedDegrees + " deg");
   }
 

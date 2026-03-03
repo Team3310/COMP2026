@@ -231,7 +231,7 @@ public class Drive extends SubsystemBase {
     //   - As |v| approaches softCap the alpha → 0 → no more acceleration.
     //   - The exponent n controls the rolloff shape (see SimPhysicsConstants).
     ChassisSpeeds effectiveSpeeds = speeds;
-    if (Constants.currentMode == Mode.SIM) {
+    if (Constants.currentMode == Mode.SIM && !DriverStation.isAutonomous()) {
       final double dt = 0.02; // 50 Hz loop
       final double exp = SimPhysicsConstants.kDragExponent;
 
@@ -298,6 +298,14 @@ public class Drive extends SubsystemBase {
       // Feed the simulated gyro with the inertia-filtered omega
       if (gyroIO instanceof GyroIOSim simGyro) {
         simGyro.updateFromChassisSpeeds(simActualSpeeds, dt);
+      }
+    } else if (Constants.currentMode == Mode.SIM) {
+      // In autonomous: bypass inertia model but still update the sim gyro
+      // with the raw commanded speeds so heading tracks correctly.
+      final double dt = 0.02;
+      simActualSpeeds = speeds;
+      if (gyroIO instanceof GyroIOSim simGyro) {
+        simGyro.updateFromChassisSpeeds(speeds, dt);
       }
     }
 

@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
+import frc.robot.Auton.AutonCommandBase;
+import frc.robot.Auton.Paths;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -106,7 +108,7 @@ public class Robot extends LoggedRobot {
 
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
-    robotContainer = new RobotContainer();
+    robotContainer = RobotContainer.getInstance();
   }
 
   /** This function is called periodically during all modes. */
@@ -308,7 +310,11 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    Paths.loadPaths(currentAlliance);
+
     autonomousCommand = robotContainer.getAutonomousCommand();
+
+    robotContainer.getDrive().setPose(((AutonCommandBase) autonomousCommand).getStartingPose());
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {

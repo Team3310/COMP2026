@@ -15,6 +15,8 @@ public class Paths {
   // Individual paths (loaded from .path files)
   public static PathPlannerPath forward2m;
 
+  public static PathPlannerPath depLoop;
+
   public static boolean loaded;
 
   public static void loadPaths(Alliance alliance) {
@@ -22,11 +24,13 @@ public class Paths {
     if (alliance == Alliance.Blue) {
 
       forward2m = loadPath("forward2m");
+      depLoop = loadPath("DepLoop");
 
       loaded = true;
     } else {
 
       forward2m = loadPath("forward2m"); // dont flip for this one
+      depLoop = loadPath("DepLoop").flipPath();
 
       loaded = true;
     }
