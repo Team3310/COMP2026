@@ -17,6 +17,8 @@ import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
+import frc.robot.subsystems.scorer.turret.TurretAimManager;
+
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -126,6 +128,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
 
     double robotX = robotContainer.getDrive().getPose().getX();
+    double robotY = robotContainer.getDrive().getPose().getY();
+    double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
     Zone currentZone =
         robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
@@ -190,6 +194,8 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putString("currentState", "" + currentState);
     SmartDashboard.putString("overrideState", "" + overrideState);
     SmartDashboard.putString("robotX", "" + robotX);
+    SmartDashboard.putString("robotY", "" + robotY);
+    SmartDashboard.putString("robotOrient", "" + robotOrient);
     SmartDashboard.putString("currentZone", "" + currentZone);
     SmartDashboard.putBoolean("activeHub", activeHub);
     SmartDashboard.putBoolean("hubOverride", hubOverride);
@@ -455,6 +461,11 @@ public class Robot extends LoggedRobot {
     }
     return false;
   }
+
+  private void track(){
+    CommandsTurretAimManager.getLeftTurretAngleDeg()
+  }
+
   // #endregion
 
   // #region state methods

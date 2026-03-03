@@ -303,10 +303,20 @@ public class RobotContainer {
     SmartDashboard.putData(
         "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
     SmartDashboard.putData(
-        "Move Hood 5 degrees",
+        "Move Hood 1 degree",
         Commands.parallel(
-            hoodLeft.setDegreesCommand(hoodLeft.getCurrentPosition() + 5.0),
-            hoodRight.setDegreesCommand(hoodRight.getCurrentPosition() + 5.0)));
+            hoodLeft.setDegreesCommand(hoodLeft.getCurrentPosition() + 1.0),
+            hoodRight.setDegreesCommand(hoodRight.getCurrentPosition() + 1.0)));
+    SmartDashboard.putData(
+        "Reset Hood",
+        Commands.parallel(
+            hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
+    SmartDashboard.putData(
+        "rotate turret 1 degree",
+        Commands.parallel(
+            turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 1.0),
+            turretRight.setDegreesCommand(turretRight.getCurrentPosition() + 1.0)));
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
