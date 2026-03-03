@@ -15,6 +15,7 @@ import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Lights;
 import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -27,7 +28,6 @@ import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
-import frc.robot.subsystems.Lights;
 import frc.robot.util.choosers.AutonomousChooser;
 
 /**
