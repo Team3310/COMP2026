@@ -480,7 +480,8 @@ public class RobotContainer {
                     Math.max(
                         Constants.ScorerConstants.kTurretMinPositionUnits,
                         Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
-                turretLeft.setDegreesCommand(clamped).schedule();
+                edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                    .schedule(turretLeft.setDegreesCommand(clamped));
                 return 0.0;
               }));
     }
@@ -499,7 +500,8 @@ public class RobotContainer {
                     Math.max(
                         Constants.ScorerConstants.kTurretMinPositionUnits,
                         Math.min(Constants.ScorerConstants.kTurretMaxPositionUnits, angleDeg));
-                turretRight.setDegreesCommand(clamped).schedule();
+                edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                    .schedule(turretRight.setDegreesCommand(clamped));
                 return 0.0;
               }));
     }
@@ -521,7 +523,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCE),
+                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCEOUT),
                 () -> Robot.inPit));
 
     // B = pit: floors on | normal: defence state
@@ -530,77 +532,67 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCE),
+                new InstantCommand(() -> Robot.currentState = Robot.BotState.COLLECT),
                 () -> Robot.inPit));
 
-    // A = pit: floors off | normal: collect state
+    // A = pit: floors off | normal: defence state
     operator
         .a()
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.COLLECT),
+                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCEIN),
                 () -> Robot.inPit));
 
-    // Right Trigger = normal: cycle override state | pit: vertical rollers on
+    // Right Trigger = pit: 
     operator
         .rightTrigger()
         .onTrue(
             Commands.either(
-                // Pit mode: vertical on
-                Commands.parallel(
-                    verticalFeedLeft.verticalFeedIntakeCommand(),
-                    verticalFeedRight.verticalFeedIntakeCommand()),
-                // Normal mode: cycle override state
-                Commands.runOnce(
-                    () -> {
-                      switch (Robot.overrideState) {
-                        case OFF:
-                          Robot.overrideState = Robot.OverrideState.ON;
-                          break;
-                        case ON:
-                          Robot.overrideState = Robot.OverrideState.COLLECT;
-                          break;
-                        case COLLECT:
-                          Robot.overrideState = Robot.OverrideState.DEFENCE;
-                          break;
-                        case DEFENCE:
-                          Robot.overrideState = Robot.OverrideState.ON;
-                          break;
-                        default:
-                          Robot.overrideState = Robot.OverrideState.OFF;
-                          break;
-                      }
-                    }),
+                // Pit: retract intake
+                Commands.parallel(agitatorLeft.verticalFeedIntakeCommand(), agitatorRight.verticalFeedIntakeCommand()),
+                // Normal: outtake
+                Commands.either(
+                    Commands.parallel(agitatorLeft.verticalFeedIntakeCommand(), agitatorRight.verticalFeedIntakeCommand()),
+                    Commands.none(),
+                    () -> Robot.currentState == Robot.BotState.DEFENCEOUT),
                 () -> Robot.inPit));
 
-    // Left Trigger = pit: vertical rollers on | normal: none
+    // Left Trigger:
+    //   Pit mode   → toggleOnTrue: vertical rollers off
+    //   Normal     → onTrue: intake on only when in DEFENCEOUT state
     if (verticalFeedRight != null && verticalFeedLeft != null) {
       operator
           .leftTrigger()
+          .and(() -> Robot.inPit)
           .toggleOnTrue(
+              Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()));
+
+      operator
+          .leftTrigger()
+          .and(() -> !Robot.inPit)
+          .onTrue(
               Commands.either(
-                  Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()),
+                  intakeRollers.intakeCommand(),
                   Commands.none(),
-                  () -> Robot.inPit));
+                  () -> Robot.currentState == Robot.BotState.DEFENCEOUT));
     }
 
     // Right bumper = both: deploy intake
     operator.rightBumper().onTrue(intakePivot.deployCommand());
 
-    // Left bumper = pit: retract intake | normal: auto-aim
+    // Left bumper = pit: retract intake | normal: outtake in defenseout
     operator
         .leftBumper()
         .onTrue(
             Commands.either(
                 // Pit: retract intake
                 intakePivot.retractCommand(),
-                // Normal: auto-aim turrets and hoods
-                Commands.parallel(
-                    hoodLeft.setDegreesCommand(turretAimManager::getLeftHoodAngleDeg),
-                    hoodRight.setDegreesCommand(turretAimManager::getRightHoodAngleDeg),
-                    turretLeft.setDegreesCommand(turretAimManager::getLeftTurretAngleDeg),
-                    turretRight.setDegreesCommand(turretAimManager::getRightTurretAngleDeg)),
+                // Normal: outtake if in DEFENCEOUT state
+                Commands.either(
+                    intakeRollers.outtakeCommand(),
+                    Commands.none(),
+                    () -> Robot.currentState == Robot.BotState.DEFENCEOUT),
                 () -> Robot.inPit));
 
     if (flywheelLeft != null && hoodLeft != null) {
