@@ -74,6 +74,7 @@ public class DriveCommands {
           // Apply rotation deadband
           double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
+          // Omega is the normalized rotation command (unitless); scale later by max angular speed.
           // Square rotation value for more precise control
           omega = Math.copySign(omega * omega, omega);
 
