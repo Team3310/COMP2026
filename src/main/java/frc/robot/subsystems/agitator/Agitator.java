@@ -175,6 +175,11 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
         .withName(getName() + " VertFeed Outtake");
   }
 
+  public Command verticalFeedCollectCommand() {
+    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedCollectRPM)
+        .withName(getName() + " VertFeed Collect");
+  }
+
   public Command offCommand() {
     return neutralCommand();
   }

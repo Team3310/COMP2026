@@ -120,6 +120,8 @@ public class Robot extends LoggedRobot {
   @java.lang.Override
   public void robotPeriodic() {
 
+    //track(); TODO
+
     CommandScheduler.getInstance()
         .schedule(
             Commands.parallel(
@@ -507,6 +509,16 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getHoodRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getFlywheelLeft()
+                .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getFlywheelRight()
+                .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
   }
 
   // #endregion
@@ -535,8 +547,6 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
     // TODO turret aim
   }
 
@@ -595,7 +605,7 @@ public class Robot extends LoggedRobot {
 
     // Retract intake to prevent damage.
     if (robotContainer.getIntakePivot().getCurrentPosition() > 100.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
       CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {

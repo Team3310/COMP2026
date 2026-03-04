@@ -188,11 +188,11 @@ public class Lights extends SubsystemBase {
               bottomColor = new Color(0, 0, 255);
               break;
             case DEFENCEIN:
-              // Red for defense mode
+              // Red for defense inmode
               bottomColor = new Color(255, 0, 0);
               break;
             case DEFENCEOUT:
-              // Yellow for defense mode
+              // Yellow for defense out mode
               bottomColor = new Color(255, 255, 0);
               break;
             default:
