@@ -184,12 +184,16 @@ public class Lights extends SubsystemBase {
               bottomColor = new Color(255, 255, 255);
               break;
             case COLLECT:
-              // Yellow for collect mode
-              bottomColor = new Color(255, 255, 0);
+              // Blue for collect mode
+              bottomColor = new Color(0, 0, 255);
               break;
-            case DEFENCE:
+            case DEFENCEIN:
               // Red for defense mode
               bottomColor = new Color(255, 0, 0);
+              break;
+            case DEFENCEOUT:
+              // Yellow for defense mode
+              bottomColor = new Color(255, 255, 0);
               break;
             default:
               // Off for other states

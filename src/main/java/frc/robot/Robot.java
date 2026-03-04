@@ -12,12 +12,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
-import frc.robot.subsystems.scorer.turret.TurretAimManager;
-
 import frc.robot.subsystems.Lights;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -51,7 +50,8 @@ public class Robot extends LoggedRobot {
     ON,
     COLLECT,
     DEFENCEIN,
-    DEFENCEOUT
+    DEFENCEOUT,
+    SNOWBLOW
   }
 
   // Variables
@@ -119,6 +119,12 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
+
+    CommandScheduler.getInstance()
+        .schedule(
+            Commands.parallel(
+                robotContainer.getFlywheelLeft().shootCommand(),
+                robotContainer.getFlywheelRight().shootCommand()));
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
@@ -141,8 +147,10 @@ public class Robot extends LoggedRobot {
     // Update activeHub based on match time / override flag
     updateHub();
 
-    // This basically says if we are not deploying or retracting, then we can change states.
-    // If we are deploying or retracting, we want to stay in deploy or retract until we are done.
+    // This basically says if we are not deploying or retracting, then we can change
+    // states.
+    // If we are deploying or retracting, we want to stay in deploy or retract until
+    // we are done.
     if (!deploying && !retracting && !inPit) {
       switch (overrideState) {
         case OFF: // nothing runs
@@ -156,6 +164,9 @@ public class Robot extends LoggedRobot {
           break;
         case DEFENCEOUT:
           currentState = BotState.DEFENCEOUT;
+          break;
+        case SNOWBLOW:
+          currentState = BotState.SNOWBLOW;
           break;
         case ON:
         default:
@@ -195,7 +206,8 @@ public class Robot extends LoggedRobot {
         trench();
         break;
       case PIT:
-        // In pit mode, we want to be able to manually control the robot without the state machine
+        // In pit mode, we want to be able to manually control the robot without the
+        // state machine
         break;
     }
     // logging
@@ -210,7 +222,8 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putBoolean("hubOverride", hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
-    // Read speed tuning overrides from SmartDashboard into Constants (updated each loop)
+    // Read speed tuning overrides from SmartDashboard into Constants (updated each
+    // loop)
     Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
         SmartDashboard.getNumber(
             "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
@@ -394,7 +407,8 @@ public class Robot extends LoggedRobot {
   }
 
   public void updateHub() {
-    // If manually overridden OFF via SmartDashboard button, skip automatic calculation
+    // If manually overridden OFF via SmartDashboard button, skip automatic
+    // calculation
     if (hubOverride) {
       activeHub = false;
       return;
@@ -413,7 +427,8 @@ public class Robot extends LoggedRobot {
     // We're teleop enabled, compute.
     double matchTime = DriverStation.getMatchTime();
     String gameData = DriverStation.getGameSpecificMessage();
-    // If we have no game data, we cannot compute, assume hub is active, as its likely early in
+    // If we have no game data, we cannot compute, assume hub is active, as its
+    // likely early in
     // teleop.
     if (matchTime < 0 && (gameData == null || gameData.isEmpty())) {
       activeHub = true;
@@ -471,8 +486,27 @@ public class Robot extends LoggedRobot {
     return false;
   }
 
-  private void track(){
-    CommandsTurretAimManager.getLeftTurretAngleDeg()
+  private void track() {
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
   }
 
   // #endregion
@@ -486,10 +520,12 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand());
-    //TODO turret aim
-    
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand());
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand());
+    // TODO turret aim
+
   }
 
   private void collect() {
@@ -501,7 +537,7 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
-    //TODO turret aim
+    // TODO turret aim
   }
 
   private void defenseIn() {
@@ -513,12 +549,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
-    CommandScheduler.getInstance()
-        .schedule(robotContainer.getTurretLeft().setDegreesCommand(0.0));
-    CommandScheduler.getInstance()
-        .schedule(robotContainer.getTurretRight().setDegreesCommand(0.0));
+    CommandScheduler.getInstance().schedule(robotContainer.getTurretLeft().setDegreesCommand(0.0));
+    CommandScheduler.getInstance().schedule(robotContainer.getTurretRight().setDegreesCommand(0.0));
     CommandScheduler.getInstance()
         .schedule(
             robotContainer
@@ -535,11 +567,15 @@ public class Robot extends LoggedRobot {
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
-    //TODO turret track
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getIntakePivot()
+                .setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
+    // TODO turret track
 
-    //operator can turn on intake with right trigger and flywheels and vert agis with left trigger
-
+    // operator can turn on intake with right trigger and flywheels and vert agis
+    // with left trigger
 
   }
 
@@ -547,10 +583,8 @@ public class Robot extends LoggedRobot {
 
     // Deploy intake to collect, and run motors to intake.
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance()
-          .schedule(robotContainer.getIntakeRollers().deployCommand());
-      CommandScheduler.getInstance()
-          .schedule(robotContainer.getIntakePivot().deployCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() > 130.0) {
       deploying = false;
@@ -561,10 +595,8 @@ public class Robot extends LoggedRobot {
 
     // Retract intake to prevent damage.
     if (robotContainer.getIntakePivot().getCurrentPosition() > 100.0) {
-      CommandScheduler.getInstance()
-          .schedule(robotContainer.getIntakeRollers().offCommand());
-      CommandScheduler.getInstance()
-          .schedule(robotContainer.getIntakePivot().retractCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
       retracting = false;

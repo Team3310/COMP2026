@@ -303,20 +303,22 @@ public class RobotContainer {
     SmartDashboard.putData(
         "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
     SmartDashboard.putData(
-        "Move Hood 1 degree",
-        Commands.parallel(
-            hoodLeft.setDegreesCommand(hoodLeft.getCurrentPosition() + 1.0),
-            hoodRight.setDegreesCommand(hoodRight.getCurrentPosition() + 1.0)));
+        "Move Hood to max", Commands.parallel(hoodLeft.setMaxCommand(), hoodRight.setMaxCommand()));
     SmartDashboard.putData(
         "Reset Hood",
         Commands.parallel(
             hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
             hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     SmartDashboard.putData(
-        "rotate turret 1 degree",
+        "rotate turret to max",
+        Commands.parallel(turretLeft.maxCommand(), turretRight.maxCommand()));
+    SmartDashboard.putData(
+        "aim turrets and hoods",
         Commands.parallel(
-            turretLeft.setDegreesCommand(turretLeft.getCurrentPosition() + 1.0),
-            turretRight.setDegreesCommand(turretRight.getCurrentPosition() + 1.0)));
+            turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
+            turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg()),
+            hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
+            hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg())));
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
@@ -338,6 +340,9 @@ public class RobotContainer {
     SmartDashboard.putNumber("SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
     SmartDashboard.putNumber(
         "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
+    SmartDashboard.putNumber(
+        "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
+    SmartDashboard.putNumber("SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
     // #endregion
 
     // Initialize LED display mode to show bot state colors
@@ -397,7 +402,7 @@ public class RobotContainer {
                     .ignoringDisable(true),
                 () -> Robot.inPit));
 
-    // X: = pit: snap robot to 180° | normal: set pose to Red Hub
+    // X: = pit: snap robot to 180° | normal: set pose to behind Red Hub
     driver
         .a()
         .whileTrue(
@@ -523,7 +528,7 @@ public class RobotContainer {
           .toggleOnTrue(
               Commands.either(
                   Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()),
-                  new InstantCommand(() -> Robot.currentState = Robot.BotState.SNOWBLOW),
+                  new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW),
                   () -> Robot.inPit));
     }
 
@@ -533,7 +538,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCEOUT),
+                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
     // B = pit: floors on | normal: defence state
@@ -542,7 +547,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.COLLECT),
+                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT),
                 () -> Robot.inPit));
 
     // A = pit: floors off | normal: defence state
@@ -551,19 +556,23 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
-                new InstantCommand(() -> Robot.currentState = Robot.BotState.DEFENCEIN),
+                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEIN),
                 () -> Robot.inPit));
 
-    // Right Trigger = pit: 
+    // Right Trigger = pit:
     operator
         .rightTrigger()
         .onTrue(
             Commands.either(
                 // Pit: retract intake
-                Commands.parallel(agitatorLeft.verticalFeedIntakeCommand(), agitatorRight.verticalFeedIntakeCommand()),
+                Commands.parallel(
+                    agitatorLeft.verticalFeedIntakeCommand(),
+                    agitatorRight.verticalFeedIntakeCommand()),
                 // Normal: outtake
                 Commands.either(
-                    Commands.parallel(agitatorLeft.verticalFeedIntakeCommand(), agitatorRight.verticalFeedIntakeCommand()),
+                    Commands.parallel(
+                        agitatorLeft.verticalFeedIntakeCommand(),
+                        agitatorRight.verticalFeedIntakeCommand()),
                     Commands.none(),
                     () -> Robot.currentState == Robot.BotState.DEFENCEOUT),
                 () -> Robot.inPit));

@@ -46,6 +46,10 @@ public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> 
     return motionMagicSetpointCommand(position).withName("Turret Aim Tracking");
   }
 
+  public Command maxCommand() {
+    return motionMagicSetpointCommand(() -> Constants.ScorerConstants.kTurretMaxPositionUnits);
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Turret Position", getCurrentPosition());

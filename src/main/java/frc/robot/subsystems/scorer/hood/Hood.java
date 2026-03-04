@@ -57,6 +57,10 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
         .withName(getName() + " VelocityControl");
   }
 
+  public Command setMaxCommand() {
+    return motionMagicSetpointCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees);
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Hood Position", getCurrentPosition());
