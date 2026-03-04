@@ -44,6 +44,10 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
         .withName("Flywheel Forward");
   }
 
+  public Command setRPMCommand(double rpm) {
+    return velocitySetpointCommand(() -> rpm).withName("Flywheel Set RPM");
+  }
+
   /**
    * Command to run flywheel at target velocity for collecting game pieces.
    *

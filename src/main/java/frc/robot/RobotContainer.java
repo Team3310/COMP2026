@@ -312,13 +312,6 @@ public class RobotContainer {
     SmartDashboard.putData(
         "rotate turret to max",
         Commands.parallel(turretLeft.maxCommand(), turretRight.maxCommand()));
-    SmartDashboard.putData(
-        "aim turrets and hoods",
-        Commands.parallel(
-            turretLeft.setDegreesCommand(turretAimManager.getLeftTurretAngleDeg()),
-            turretRight.setDegreesCommand(turretAimManager.getRightTurretAngleDeg()),
-            hoodLeft.setDegreesCommand(turretAimManager.getLeftHoodAngleDeg()),
-            hoodRight.setDegreesCommand(turretAimManager.getRightHoodAngleDeg())));
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));

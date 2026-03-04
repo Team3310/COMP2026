@@ -49,14 +49,14 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
         .withName("Intake Outtake");
   }
 
-  /**
-   * Command to run intake at target velocity for collecting game pieces.
-   *
-   * @return Command that runs intake backward
-   */
   public Command deployCommand() {
     return velocitySetpointCommand(() -> Constants.IntakeConstants.kDeployVelocityRPM)
-        .withName("Intake Reverse");
+        .withName("Intake Deploy");
+  }
+
+  public Command retractCommand() {
+    return velocitySetpointCommand(() -> Constants.IntakeConstants.kRetractVelocityRPM)
+        .withName("Intake Retract");
   }
 
   public Command offCommand() {
