@@ -66,7 +66,9 @@ public class TunerConstantsPractice {
                   // low
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Amps.of(40))
-                  .withStatorCurrentLimitEnable(true));
+                  .withStatorCurrentLimitEnable(true))
+          .withVoltage(
+              new VoltageConfigs().withPeakForwardVoltage(10).withPeakReverseVoltage(-10));
   ;
   private static final TalonFXConfiguration steerInitialConfigs =
       new TalonFXConfiguration()
@@ -87,9 +89,9 @@ public class TunerConstantsPractice {
   public static final CANBus kCANBus2 = new CANBus("Default Name", "./logs/example.hoot");
   public static final CANBus kCANBusRio = new CANBus("Default Name", "./logs/example.hoot");
 
-  // Theoretical free speed (m/s) at 12 V applied output;
+  // Theoretical free speed (m/s) at 10 V applied output (virtual voltage compensation cap);
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(12.0);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(10.0);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
