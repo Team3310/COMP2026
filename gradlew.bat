@@ -33,6 +33,12 @@ set APP_HOME=%DIRNAME%
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
+@rem Use a repo-local Gradle cache in sandboxed environments unless explicitly set.
+if not defined GRADLE_USER_HOME set GRADLE_USER_HOME=%APP_HOME%\.gradle-user-home
+
+@rem Default to WPILib JDK when JAVA_HOME is not already configured.
+if not defined JAVA_HOME set JAVA_HOME=C:\Users\Public\wpilib\2026\jdk
+
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 
