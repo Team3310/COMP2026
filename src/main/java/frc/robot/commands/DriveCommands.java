@@ -8,6 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -65,36 +66,67 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
+    PIDController headingHoldController = new PIDController(ANGLE_KP, 0.0, ANGLE_KD);
+    headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
+    headingHoldController.setTolerance(Units.degreesToRadians(1.0));
+    double[] headingHoldSetpointRad = new double[] {0.0};
+    boolean[] headingHoldActive = new boolean[] {false};
+
     return Commands.run(
-        () -> {
-          // Get linear velocity
-          Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+            () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-          // Apply rotation deadband
-          double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+              // Apply rotation deadband
+              double omegaInput = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+              double omega;
 
-          // Omega is the normalized rotation command (unitless); scale later by max angular speed.
-          // Square rotation value for more precise control
-          omega = Math.copySign(omega * omega, omega);
+              if (Math.abs(omegaInput) > 0.0) {
+                // Manual rotation mode: track current heading so release holds this angle.
+                headingHoldSetpointRad[0] = drive.getRotation().getRadians();
+                headingHoldActive[0] = false;
+                omega =
+                    Math.copySign(omegaInput * omegaInput, omegaInput)
+                        * drive.getMaxAngularSpeedRadPerSec();
+              } else {
+                // Hold heading mode: lock to the most recent heading from manual-rotation mode.
+                if (!headingHoldActive[0]) {
+                  headingHoldSetpointRad[0] = drive.getRotation().getRadians();
+                  headingHoldController.reset();
+                  headingHoldActive[0] = true;
+                }
+                omega =
+                    MathUtil.clamp(
+                        headingHoldController.calculate(
+                            drive.getRotation().getRadians(), headingHoldSetpointRad[0]),
+                        -drive.getMaxAngularSpeedRadPerSec(),
+                        drive.getMaxAngularSpeedRadPerSec());
+              }
 
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec());
-          boolean isFlipped =
-              DriverStation.getAlliance().isPresent()
-                  && DriverStation.getAlliance().get() == Alliance.Red;
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds,
-                  isFlipped
-                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation()));
-        },
-        drive);
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped
+                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                          : drive.getRotation()));
+            },
+            drive)
+        .beforeStarting(
+            () -> {
+              headingHoldSetpointRad[0] = drive.getRotation().getRadians();
+              headingHoldController.reset();
+              headingHoldActive[0] = true;
+            });
   }
 
   /**
