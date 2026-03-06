@@ -120,7 +120,7 @@ public class Robot extends LoggedRobot {
   @java.lang.Override
   public void robotPeriodic() {
 
-    //track(); TODO
+    // track(); TODO
 
     CommandScheduler.getInstance()
         .schedule(
