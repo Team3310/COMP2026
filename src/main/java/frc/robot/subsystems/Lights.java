@@ -27,7 +27,7 @@ public class Lights extends SubsystemBase {
 
   private Lights() {
 
-    ledStrip = new AddressableLED(1);
+    ledStrip = new AddressableLED(2);
     ledBuffer = new AddressableLEDBuffer(43); // Number of LEDs in the strip
 
     ledStrip.setLength(ledBuffer.getLength());
