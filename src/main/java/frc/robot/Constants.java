@@ -232,7 +232,7 @@ public final class Constants {
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;
 
-    public static final double kHoodStowedDegrees = 0.0; // degrees from vertical
+    public static final double kHoodStowedDegrees = 5.0; // degrees from vertical
     public static double kHoodMaxDegrees =
         35.0; // degrees from vertical (flattest shot, 55° elevation)
     public static final double kHoodMinDegrees =
