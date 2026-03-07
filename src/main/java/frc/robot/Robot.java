@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
@@ -121,12 +120,6 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
 
     // track(); TODO
-
-    CommandScheduler.getInstance()
-        .schedule(
-            Commands.parallel(
-                robotContainer.getFlywheelLeft().shootCommand(),
-                robotContainer.getFlywheelRight().shootCommand()));
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
@@ -153,7 +146,9 @@ public class Robot extends LoggedRobot {
     // states.
     // If we are deploying or retracting, we want to stay in deploy or retract until
     // we are done.
-    if (!deploying && !retracting && !inPit) {
+    if (inPit) {
+      currentState = BotState.PIT;
+    } else if (!deploying && !retracting) {
       switch (overrideState) {
         case OFF: // nothing runs
           currentState = BotState.PIT;

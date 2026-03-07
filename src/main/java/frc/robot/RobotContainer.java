@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -224,24 +225,25 @@ public class RobotContainer {
     // #region Dashboard Buttons
     SmartDashboard.putData(
         "enterPitMode",
-        Commands.parallel(
-            new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.OFF),
-            new InstantCommand(() -> Robot.inPit = true),
-            intakePivot.setCoast(),
-            intakeRollers.setCoast(),
-            agitatorLeft.setCoast(),
-            agitatorRight.setCoast(),
-            verticalFeedLeft.setCoast(),
-            verticalFeedRight.setCoast(),
-            hoodLeft.setCoast(),
-            hoodRight.setCoast(),
-            turretLeft.setCoast(),
-            turretRight.setCoast(),
-            flywheelLeft.setCoast(),
-            flywheelRight.setCoast()));
+        new InstantCommand(
+            () -> {
+              Robot.inPit = true;
+              Robot.currentState = Robot.BotState.PIT;
+              Robot.overrideState = Robot.OverrideState.OFF;
+              Robot.deploying = false;
+              Robot.retracting = false;
+              CommandScheduler.getInstance().cancelAll();
+            }));
     SmartDashboard.putData(
         "exitPitMode",
-        new InstantCommand(() -> Robot.inPit = false));
+        new InstantCommand(
+            () -> {
+              Robot.inPit = false;
+              Robot.overrideState = Robot.OverrideState.ON;
+              Robot.deploying = false;
+              Robot.retracting = false;
+              CommandScheduler.getInstance().cancelAll();
+            }));
 
     SmartDashboard.putData("intake", intakeRollers.intakeCommand());
     SmartDashboard.putData("outtake", intakeRollers.outtakeCommand());
