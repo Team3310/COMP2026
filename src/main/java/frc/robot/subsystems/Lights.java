@@ -69,9 +69,7 @@ public class Lights extends SubsystemBase {
       case BOT_STATE:
         if (Robot.inPit) {
           // Solid blue in pit mode
-          LEDPattern.solid(new Color(0, 0, 255))
-              .atBrightness(Percent.of(85))
-              .applyTo(ledBuffer);
+          LEDPattern.solid(new Color(0, 0, 255)).atBrightness(Percent.of(85)).applyTo(ledBuffer);
         } else {
           // Color based on current robot state
           Color stateColor;
@@ -128,7 +126,9 @@ public class Lights extends SubsystemBase {
         break;
 
       case AUTO_POSE_BAD:
-        LEDPattern.solid(new Color(255, 0, 0)).blink(edu.wpi.first.units.Units.Seconds.of(0.25)).applyTo(ledBuffer);
+        LEDPattern.solid(new Color(255, 0, 0))
+            .blink(edu.wpi.first.units.Units.Seconds.of(0.25))
+            .applyTo(ledBuffer);
         ledStrip.setData(ledBuffer);
         break;
 
