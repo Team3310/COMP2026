@@ -571,9 +571,9 @@ public final class Constants {
     // Units = degrees
     kIntakePivotConfig.unitToRotorRatio =
         kIsPracticeBot
-            ? (12.0 / 32.0) * (16.0 / 38.0) * (16.0 / 40.0) * (14.0 / 18.0) * 360.0
+            ? (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0
             : // per design sheet, convert rotations to degrees
-            (12.0 / 32.0) * (16.0 / 38.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
+            (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
     kIntakePivotConfig.kMaxPositionUnits = 145.0; // degrees (fully deployed)
