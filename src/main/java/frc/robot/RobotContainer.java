@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -214,6 +215,11 @@ public class RobotContainer {
   // Controllers
   private final CommandXboxController driver = new CommandXboxController(1);
   private final CommandXboxController operator = new CommandXboxController(0);
+  // Flywheel enable policy:
+  // - Pit mode: controlled by pitFlywheelsEnabled via operator/dashboard toggles.
+  // - Normal mode: controlled by normalFlywheelsEnabled (default true for auto + teleop).
+  private boolean pitFlywheelsEnabled = false;
+  private boolean normalFlywheelsEnabled = true;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -227,6 +233,7 @@ public class RobotContainer {
         new InstantCommand(
             () -> {
               Robot.inPit = true;
+              pitFlywheelsEnabled = false;
               Robot.currentState = Robot.BotState.PIT;
               Robot.overrideState = Robot.OverrideState.OFF;
               Robot.deploying = false;
@@ -303,9 +310,24 @@ public class RobotContainer {
             verticalFeedRight.verticalFeedOuttakeCommand()));
     SmartDashboard.putData(
         "flywheel on",
-        Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()));
+        Commands.runOnce(
+            () -> {
+              if (Robot.inPit) {
+                pitFlywheelsEnabled = true;
+              } else {
+                normalFlywheelsEnabled = true;
+              }
+            }));
     SmartDashboard.putData(
-        "flywheel off", Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()));
+        "flywheel off",
+        Commands.runOnce(
+            () -> {
+              if (Robot.inPit) {
+                pitFlywheelsEnabled = false;
+              } else {
+                normalFlywheelsEnabled = false;
+              }
+            }));
     SmartDashboard.putData(
         "Move Hood to max", Commands.parallel(hoodLeft.setMaxCommand(), hoodRight.setMaxCommand()));
     SmartDashboard.putData(
@@ -368,6 +390,20 @@ public class RobotContainer {
   }
 
   private void configureButtonBindings() {
+    // Flywheel defaults enforce desired mode behavior:
+    // - Pit: off unless explicitly enabled.
+    // - Normal: on unless explicitly disabled.
+    flywheelLeft.setDefaultCommand(
+        Commands.either(
+            flywheelLeft.shootCommand(),
+            flywheelLeft.offCommand(),
+            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+    flywheelRight.setDefaultCommand(
+        Commands.either(
+            flywheelRight.shootCommand(),
+            flywheelRight.offCommand(),
+            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
@@ -445,6 +481,18 @@ public class RobotContainer {
                     () ->
                         drive.setPose(
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
+
+    // Back: normal = set pose to behind Red Hub
+    driver
+        .back()
+        .and(() -> !Robot.inPit)
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
 
@@ -535,9 +583,9 @@ public class RobotContainer {
       // Y = pit: shooter rollers on | normal: snowblow state
       operator
           .y()
-          .toggleOnTrue(
+          .onTrue(
               Commands.either(
-                  Commands.parallel(flywheelLeft.shootCommand(), flywheelRight.shootCommand()),
+                  Commands.runOnce(() -> pitFlywheelsEnabled = true),
                   new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW),
                   () -> Robot.inPit));
     }
@@ -545,9 +593,9 @@ public class RobotContainer {
     // X = pit: shooter rollers off | normal: defence state
     operator
         .x()
-        .toggleOnTrue(
+        .onTrue(
             Commands.either(
-                Commands.parallel(flywheelLeft.offCommand(), flywheelRight.offCommand()),
+                Commands.runOnce(() -> pitFlywheelsEnabled = false),
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
@@ -648,9 +696,9 @@ public class RobotContainer {
                   Commands.parallel(
                       hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
                       hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  // Normal: flywheel off + hood stow
+                  // Normal: turn shooters off and stow hoods.
                   Commands.parallel(
-                      flywheelLeft.offCommand(),
+                      Commands.runOnce(() -> normalFlywheelsEnabled = false),
                       hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
                       hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
                   () -> Robot.inPit));
