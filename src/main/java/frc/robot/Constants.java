@@ -293,7 +293,7 @@ public final class Constants {
     public static double kHoodMaxDegrees =
         35.0; // degrees from vertical (flattest shot, 55° elevation)
     public static final double kHoodMinDegrees =
-        10.0; // degrees from vertical (steepest shot, 80° elevation)
+        5.0; // degrees from vertical (steepest shot, 80° elevation)
     public static final double kHoodUnitToRotorRatio =
         (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)

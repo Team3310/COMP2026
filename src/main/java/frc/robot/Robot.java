@@ -235,8 +235,7 @@ public class Robot extends LoggedRobot {
         SmartDashboard.getNumber(
             "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     Constants.ScorerConstants.kTofSeconds =
-        SmartDashboard.getNumber(
-            "SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+        SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
@@ -550,7 +549,7 @@ public class Robot extends LoggedRobot {
   private void snowblow() {
 
     // Deploy intake to snowblow, and run motors to snowblow.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
+    deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
@@ -563,18 +562,17 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().collectCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().collectCommand());
+    deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().verticalFeedCollectCommand());
   }
 
   private void defenseIn() {
 
     // Retract intake to prevent damage, and stop all motors to save battery.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
+    retract();
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
@@ -595,9 +593,7 @@ public class Robot extends LoggedRobot {
   }
 
   private void defenseOut() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
+    deploy();
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
@@ -608,10 +604,10 @@ public class Robot extends LoggedRobot {
 
   private void deploy() {
     CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
   }
 
   private void retract() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
   }
 

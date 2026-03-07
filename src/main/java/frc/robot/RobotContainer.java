@@ -555,6 +555,20 @@ public class RobotContainer {
                     verticalFeedRight.offCommand()),
                 Commands.none(),
                 () -> Robot.inPit));
+
+    driver
+    .povDown()
+          .onTrue(
+              Commands.either(
+                  // Pit: hoods to 10 deg (stowed)
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                  // Normal: stow hoods.
+                  Commands.parallel(
+                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                  () -> Robot.inPit));
     // #endregion
 
     // #region Operator Controls
@@ -613,7 +627,7 @@ public class RobotContainer {
                   () -> Robot.inPit));
     }
 
-    // X = pit: shooter rollers off | normal: defence state
+    // X = pit: shooter rollers off | normal: defenceout state
     operator
         .x()
         .onTrue(
@@ -622,7 +636,7 @@ public class RobotContainer {
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
-    // B = pit: floors on | normal: defence state
+    // B = pit: floors on | normal: collect state
     operator
         .b()
         .toggleOnTrue(
@@ -631,7 +645,7 @@ public class RobotContainer {
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT),
                 () -> Robot.inPit));
 
-    // A = pit: floors off | normal: defence state
+    // A = pit: floors off | normal: defencein state
     operator
         .a()
         .toggleOnTrue(
@@ -707,8 +721,8 @@ public class RobotContainer {
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   // Normal: flywheel on + hood up (live from dashboard)
                   Commands.parallel(
-                      flywheelLeft.shootCommand(),
-                      hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
+                      hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
+                      hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   () -> Robot.inPit));
       operator
           .povDown()
