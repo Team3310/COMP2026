@@ -603,11 +603,11 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kFloorRollerSnowblowRPM = 4500.0; // RPM at output (increased for testing)
+    public static double kFloorRollerSnowblowRPM = 2000.0; // RPM at output (increased for testing)
     public static double kFloorRollerCollectRPM =
         500.0; // RPM while intaking (Decreased for Collect mode)
     public static double kFloorRollerReverseRPM =
-        -4500.0; // RPM while reversing (negative = opposite direction, matches snowblow speed)
+        -2000.0; // RPM while reversing (negative = opposite direction, matches snowblow speed)
     public static double kFloorRollerSnowblowRPS =
         kFloorRollerSnowblowRPM / 60.0; // RPS at output = 30 RPS
     public static double kFloorRollerCollectRPS =
@@ -645,7 +645,7 @@ public final class Constants {
     kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
     kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
 
-    kRightFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    kRightFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -666,6 +666,8 @@ public final class Constants {
     kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
     kLeftFloorRollerConfig.fxConfig.Slot0.kV = 0.1;
+
+    kLeftFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
