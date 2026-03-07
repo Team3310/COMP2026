@@ -694,14 +694,17 @@ public class RobotContainer {
           .povUp()
           .onTrue(
               Commands.either(
-                  // Pit: hoods to 35 deg
+                  // Pit: hoods to max (live from dashboard)
                   Commands.parallel(
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)),
-                  // Normal: flywheel on + hood up
+                      hoodLeft.setDegreesCommand(
+                          () -> Constants.ScorerConstants.kHoodMaxDegrees),
+                      hoodRight.setDegreesCommand(
+                          () -> Constants.ScorerConstants.kHoodMaxDegrees)),
+                  // Normal: flywheel on + hood up (live from dashboard)
                   Commands.parallel(
                       flywheelLeft.shootCommand(),
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees)),
+                      hoodLeft.setDegreesCommand(
+                          () -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   () -> Robot.inPit));
       operator
           .povDown()

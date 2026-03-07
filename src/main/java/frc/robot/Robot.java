@@ -226,6 +226,12 @@ public class Robot extends LoggedRobot {
     Constants.ScorerConstants.kReverseShootRPM =
         SmartDashboard.getNumber(
             "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
+    Constants.ScorerConstants.kHoodMaxDegrees =
+        SmartDashboard.getNumber(
+            "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+    Constants.ScorerConstants.kTurretMaxPositionUnits =
+        SmartDashboard.getNumber(
+            "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
