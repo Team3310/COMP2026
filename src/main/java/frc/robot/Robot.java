@@ -475,26 +475,26 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodLeft()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodRight()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getFlywheelLeft()
-                .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getFlywheelRight()
-                .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getHoodLeft()
+    //             .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getHoodRight()
+    //             .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getFlywheelLeft()
+    //             .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getFlywheelRight()
+    //             .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
   }
 
   // #endregion
