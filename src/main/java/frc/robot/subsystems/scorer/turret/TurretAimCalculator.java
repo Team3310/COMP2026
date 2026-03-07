@@ -321,15 +321,15 @@ public final class TurretAimCalculator {
    * @return Field Translation2d of the chosen landing zone center.
    */
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
-    double outpostY, depotY, targetX;
+    double outpostY, midY, targetX;
     if (isBlue) {
-      outpostY = FieldConstants.Corner.BLUEOUT.getY();
-      depotY = FieldConstants.Corner.BLUEDEP.getY();
-      targetX = FieldConstants.Corner.BLUEOUT.getX(); // same X for both blue landing zones
+      outpostY = FieldConstants.LandingZone.BLUEOUT.getY();
+      midY = FieldConstants.LandingZone.BLUEMID.getY();
+      targetX = FieldConstants.LandingZone.BLUEOUT.getX(); // same X for both blue landing zones
     } else {
-      outpostY = FieldConstants.Corner.REDOUT.getY();
-      depotY = FieldConstants.Corner.REDDEP.getY();
-      targetX = FieldConstants.Corner.REDOUT.getX(); // same X for both red landing zones
+      outpostY = FieldConstants.LandingZone.REDOUT.getY();
+      midY = FieldConstants.LandingZone.REDMID.getY();
+      targetX = FieldConstants.LandingZone.REDOUT.getX(); // same X for both red landing zones
     }
 
     // Pick whichever landing zone is closer to the robot in Y.
@@ -338,8 +338,8 @@ public final class TurretAimCalculator {
     // Increase kDepBiasInches to widen the DEP-preferred region.
     double depBias = Constants.ScorerConstants.kDepBiasMeters;
     double distToOutpost = Math.abs(robotY - outpostY);
-    double distToDepot = Math.abs(robotY - depotY) - depBias;
-    double chosenY = (distToOutpost <= distToDepot) ? outpostY : depotY;
+    double distToMid = Math.abs(robotY - midY) - depBias;
+    double chosenY = (distToOutpost <= distToMid) ? outpostY : midY;
 
     return new Translation2d(targetX, chosenY);
   }

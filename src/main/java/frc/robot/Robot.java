@@ -119,7 +119,7 @@ public class Robot extends LoggedRobot {
   @java.lang.Override
   public void robotPeriodic() {
 
-    // track(); TODO
+    track();
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
@@ -531,8 +531,6 @@ public class Robot extends LoggedRobot {
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedIntakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedRight().verticalFeedIntakeCommand());
-    // TODO turret aim
-
   }
 
   private void collect() {
@@ -542,7 +540,6 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    // TODO turret aim
   }
 
   private void defenseIn() {
@@ -570,6 +567,8 @@ public class Robot extends LoggedRobot {
 
   private void defenseOut() {
     deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
     CommandScheduler.getInstance()
@@ -577,7 +576,6 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getIntakePivot()
                 .setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
-    // TODO turret track
 
     // operator can turn on intake with right trigger and flywheels and vert agis
     // with left trigger
@@ -592,7 +590,7 @@ public class Robot extends LoggedRobot {
       CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() > 130.0) {
-      deploying = false;
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     }
   }
 
@@ -604,7 +602,7 @@ public class Robot extends LoggedRobot {
       CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     }
     if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      retracting = false;
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     }
   }
 

@@ -47,6 +47,7 @@ public class RobotContainer {
     }
     return instance;
   }
+
   // Subsystem Builders
   private Drive buildDriveSystem() {
     if (Constants.currentMode == Constants.Mode.REAL) {
@@ -217,7 +218,8 @@ public class RobotContainer {
   private final CommandXboxController operator = new CommandXboxController(0);
   // Flywheel enable policy:
   // - Pit mode: controlled by pitFlywheelsEnabled via operator/dashboard toggles.
-  // - Normal mode: controlled by normalFlywheelsEnabled (default true for auto + teleop).
+  // - Normal mode: controlled by normalFlywheelsEnabled (default true for auto +
+  // teleop).
   private boolean pitFlywheelsEnabled = false;
   private boolean normalFlywheelsEnabled = true;
 
@@ -260,6 +262,8 @@ public class RobotContainer {
             flywheelRight.shootCommand(),
             verticalFeedLeft.verticalFeedIntakeCommand(),
             verticalFeedRight.verticalFeedIntakeCommand(),
+            agitatorLeft.snowblowCommand(),
+            agitatorRight.snowblowCommand(),
             hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
             hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     SmartDashboard.putData(
@@ -285,7 +289,9 @@ public class RobotContainer {
         turretRight.setDegreesCommand(turretRight.getCurrentPosition() + 90.0));
     SmartDashboard.putData(
         "deploy intake",
-        intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
+        Commands.parallel(
+            intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees),
+            intakeRollers.deployCommand()));
     SmartDashboard.putData(
         "retract intake",
         intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees));
@@ -342,7 +348,8 @@ public class RobotContainer {
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
 
-    // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable number widgets.
+    // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable
+    // number widgets.
     // Robot.robotPeriodic() reads these back into the Constants each loop.
     SmartDashboard.putNumber(
         "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
@@ -410,7 +417,8 @@ public class RobotContainer {
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     // #region Driver Controls
-    // --- DRIVER BINDINGS -----------------------------------------------------------------------
+    // --- DRIVER BINDINGS
+    // -----------------------------------------------------------------------
 
     // Face buttons (pit): hold to snap to cardinal angles.
     driver
@@ -454,8 +462,10 @@ public class RobotContainer {
                 () ->
                     Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleBDeg)));
 
-    // Face buttons (normal): on release, snap to angle and keep holding until driver commands
-    // manual rotation by pushing right-stick X outside the normal rotation deadband.
+    // Face buttons (normal): on release, snap to angle and keep holding until
+    // driver commands
+    // manual rotation by pushing right-stick X outside the normal rotation
+    // deadband.
     driver
         .y()
         .and(() -> !Robot.inPit)
@@ -508,7 +518,8 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(intakeRollers.outtakeCommand(), Commands.none(), () -> Robot.inPit));
 
-    // Driver pit controls: right trigger = shoot (both vertical feeders + both floor rollers)
+    // Driver pit controls: right trigger = shoot (both vertical feeders + both
+    // floor rollers)
     driver
         .rightTrigger()
         .toggleOnTrue(
@@ -636,8 +647,8 @@ public class RobotContainer {
                 () -> Robot.inPit));
 
     // Left Trigger:
-    //   Pit mode   → toggleOnTrue: vertical rollers off
-    //   Normal     → onTrue: intake on only when in DEFENCEOUT state
+    // Pit mode → toggleOnTrue: vertical rollers off
+    // Normal → onTrue: intake on only when in DEFENCEOUT state
     if (verticalFeedRight != null && verticalFeedLeft != null) {
       operator
           .leftTrigger()

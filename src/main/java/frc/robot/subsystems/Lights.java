@@ -1,20 +1,15 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Percent;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
-import java.util.Map;
 
 public class Lights extends SubsystemBase {
   private static Lights instance;
-  private LightMode mode = LightMode.GYRO_RESETING; // Default mode
+  private LightMode mode = LightMode.BOT_STATE; // Default mode
   private AddressableLED ledStrip;
   private AddressableLEDBuffer ledBuffer;
 
@@ -41,27 +36,28 @@ public class Lights extends SubsystemBase {
   Timer gyroLightTimer = new Timer();
 
   public void setMode(LightMode mode) {
-    if (mode == LightMode.GYRO_STOP
-        || mode == LightMode.GYRO_RESETING
-        || mode == LightMode.GYRO_NONRESETING) {
-      gyroLightTimer.restart();
-      this.mode = mode;
-    } else if ((this.mode == LightMode.GYRO_STOP
-            || this.mode == LightMode.GYRO_RESETING
-            || this.mode == LightMode.GYRO_NONRESETING)
-        && gyroLightTimer.hasElapsed(2.0)) {
-      this.mode = mode;
-    } else if (!(this.mode == LightMode.GYRO_STOP
-        || this.mode == LightMode.GYRO_RESETING
-        || this.mode == LightMode.GYRO_NONRESETING)) {
-      this.mode = mode;
-    }
+    // if (mode == LightMode.GYRO_STOP
+    //     || mode == LightMode.GYRO_RESETING
+    //     || mode == LightMode.GYRO_NONRESETING) {
+    //   gyroLightTimer.restart();
+    //   this.mode = mode;
+    // } else if ((this.mode == LightMode.GYRO_STOP
+    //         || this.mode == LightMode.GYRO_RESETING
+    //         || this.mode == LightMode.GYRO_NONRESETING)
+    //     && gyroLightTimer.hasElapsed(2.0)) {
+    //   this.mode = mode;
+    // } else if (!(this.mode == LightMode.GYRO_STOP
+    //     || this.mode == LightMode.GYRO_RESETING
+    //     || this.mode == LightMode.GYRO_NONRESETING)) {
+    //   this.mode = mode;
+    //}
+    this.mode = mode;
   }
 
   @Override
   public void periodic() {
     // TEMP: always red for debugging
-    LEDPattern.solid(Color.kRed).applyTo(ledBuffer);
+    LEDPattern.solid(new Color(255,0,0)).applyTo(ledBuffer);
     ledStrip.setData(ledBuffer);
 
     // switch (mode) {

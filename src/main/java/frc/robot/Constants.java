@@ -675,8 +675,8 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 2250.0; // RPM at output
-    public static double kVerticalFeedOuttakeRPM = -2250.0; // RPM at output (reverse)
+    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
+    public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting
 
