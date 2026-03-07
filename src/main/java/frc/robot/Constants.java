@@ -39,6 +39,9 @@ public final class Constants {
   public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
   public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
 
+  // Global motor voltage limit applied to all TalonFX motors
+  public static final double kMotorPeakVoltage = 10.0;
+
   // Field dimensions for 2026 Reefscape
   public static final double kFieldLengthMeters = 16.54;
   public static final double kFieldWidthMeters = 8.21;
@@ -403,7 +406,7 @@ public final class Constants {
 
     kLeftTurretConfig.fxConfig.Slot0.kP = 2.0;
     kLeftTurretConfig.fxConfig.Slot0.kD = 0.0;
-    kLeftTurretConfig.fxConfig.Slot0.kV = 0.12;
+    kLeftTurretConfig.fxConfig.Slot0.kV = 0.144;
     kLeftTurretConfig.fxConfig.Slot0.kS = 0.0915;
     kLeftTurretConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
     kLeftTurretConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
@@ -433,7 +436,7 @@ public final class Constants {
     kRightTurretConfig.momentOfInertia = ScorerConstants.kTurretMomentOfInertia;
     kRightTurretConfig.fxConfig.Slot0.kP = 2.0;
     kRightTurretConfig.fxConfig.Slot0.kD = 0.0;
-    kRightTurretConfig.fxConfig.Slot0.kV = 0.12;
+    kRightTurretConfig.fxConfig.Slot0.kV = 0.144;
     kRightTurretConfig.fxConfig.Slot0.kS = 0.0915;
     kRightTurretConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 80.0;
     kRightTurretConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0;
@@ -462,7 +465,7 @@ public final class Constants {
 
     kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.12;
+    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.144;
 
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -481,7 +484,7 @@ public final class Constants {
 
     kRightFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kRightFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.12;
+    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.144;
 
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -530,7 +533,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
     kIntakeRollerConfig.fxConfig.Slot0.kD = 0.0;
     kIntakeRollerConfig.fxConfig.Slot0.kS = 0.0195; // Increased from 0.02 - overcome friction
-    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.12; // Increased from 0.1 - velocity feedforward
+    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.144; // Increased from 0.1 - velocity feedforward
     kIntakeRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -554,14 +557,14 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.Slot0.kI = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kS = 0.0; // Static friction compensation (volts)
-    kIntakePivotConfig.fxConfig.Slot0.kV = 0.12; // Velocity feedforward (volts per rot/s)
+    kIntakePivotConfig.fxConfig.Slot0.kV = 0.144; // Velocity feedforward (volts per rot/s)
     kIntakePivotConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakePivotConfig.fxConfig.Slot1.kP = 6.0;
     kIntakePivotConfig.fxConfig.Slot1.kI = 0.0;
     kIntakePivotConfig.fxConfig.Slot1.kD = 0.0;
     kIntakePivotConfig.fxConfig.Slot1.kS = 0.0;
-    kIntakePivotConfig.fxConfig.Slot1.kV = 0.12;
+    kIntakePivotConfig.fxConfig.Slot1.kV = 0.144;
     kIntakePivotConfig.fxConfig.Slot1.kA = 0.0;
 
     // Motion Magic profile — units are rotor rotations/s and rotations/s²
@@ -682,7 +685,7 @@ public final class Constants {
 
     kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
     kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.12;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
 
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -703,7 +706,7 @@ public final class Constants {
 
     kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
     kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.12;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
 
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;

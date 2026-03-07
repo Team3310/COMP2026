@@ -14,6 +14,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.util.CANStatusLogger;
 import frc.lib.util.CTREUtil;
+import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class TalonFXIO implements MotorIO {
@@ -53,6 +54,9 @@ public class TalonFXIO implements MotorIO {
       this.config.fxConfig.ClosedLoopRamps = new ClosedLoopRampsConfigs();
       this.config.fxConfig.OpenLoopRamps = new OpenLoopRampsConfigs();
     }
+
+    this.config.fxConfig.Voltage.PeakForwardVoltage = Constants.kMotorPeakVoltage;
+    this.config.fxConfig.Voltage.PeakReverseVoltage = -Constants.kMotorPeakVoltage;
 
     CTREUtil.applyConfiguration(talon, this.config.fxConfig);
 
