@@ -29,6 +29,7 @@ import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
 
 /**
@@ -146,6 +147,11 @@ public class RobotContainer {
   // AdvantageKit IO.
   private final TurretAimManager turretAimManager =
       new TurretAimManager(drive::getPose, drive::getChassisSpeeds);
+
+  // Vision — 3× Limelight 4 cameras feeding MegaTag 2 poses into the drive
+  // pose estimator.  Logs per-camera data under Vision/<cameraName>/ in
+  // AdvantageScope.
+  private final Vision vision = new Vision(drive);
 
   // #region getters
   public Drive getDrive() {
