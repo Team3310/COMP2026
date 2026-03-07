@@ -460,12 +460,14 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(intakeRollers.outtakeCommand(), Commands.none(), () -> Robot.inPit));
 
-    // Driver pit controls: right trigger = shoot (both vertical feeders)
+    // Driver pit controls: right trigger = shoot (both vertical feeders + both floor rollers)
     driver
         .rightTrigger()
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(
+                    agitatorLeft.snowblowCommand(),
+                    agitatorRight.snowblowCommand(),
                     verticalFeedLeft.verticalFeedIntakeCommand(),
                     verticalFeedRight.verticalFeedIntakeCommand()),
                 Commands.none(),
@@ -475,7 +477,11 @@ public class RobotContainer {
         .leftTrigger()
         .toggleOnTrue(
             Commands.either(
-                Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()),
+                Commands.parallel(
+                    agitatorLeft.offCommand(),
+                    agitatorRight.offCommand(),
+                    verticalFeedLeft.offCommand(),
+                    verticalFeedRight.offCommand()),
                 Commands.none(),
                 () -> Robot.inPit));
     // #endregion
