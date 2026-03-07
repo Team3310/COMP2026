@@ -50,14 +50,14 @@ public class Lights extends SubsystemBase {
     //     || this.mode == LightMode.GYRO_RESETING
     //     || this.mode == LightMode.GYRO_NONRESETING)) {
     //   this.mode = mode;
-    //}
+    // }
     this.mode = mode;
   }
 
   @Override
   public void periodic() {
     // TEMP: always red for debugging
-    LEDPattern.solid(new Color(255,0,0)).applyTo(ledBuffer);
+    LEDPattern.solid(new Color(255, 0, 0)).applyTo(ledBuffer);
     ledStrip.setData(ledBuffer);
 
     // switch (mode) {

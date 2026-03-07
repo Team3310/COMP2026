@@ -335,10 +335,10 @@ public final class TurretAimCalculator {
     // Pick whichever landing zone is closer to the robot in Y.
     // A bias toward DEP shifts the decision line so the robot prefers
     // shooting to DEP unless it's clearly on the OUT side of the field.
-    // Increase kDepBiasInches to widen the DEP-preferred region.
-    double depBias = Constants.ScorerConstants.kDepBiasMeters;
+    // Increase kMidBiasMeters to widen the MID-preferred region.
+    double midBias = FieldConstants.kMidBiasMeters;
     double distToOutpost = Math.abs(robotY - outpostY);
-    double distToMid = Math.abs(robotY - midY) - depBias;
+    double distToMid = Math.abs(robotY - midY) - midBias;
     double chosenY = (distToOutpost <= distToMid) ? outpostY : midY;
 
     return new Translation2d(targetX, chosenY);

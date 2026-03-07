@@ -18,6 +18,11 @@ public class FieldConstants {
   public static final double kFieldLength = Units.inchesToMeters(651.0);
   public static final double kFieldWidth = Units.inchesToMeters(318.0);
 
+  // Bias (meters) that shifts the DEP-vs-OUT decision line in pass mode.
+  // Positive = prefer DEP; the robot must be farther toward the OUT side
+  // before it switches to aiming at OUT.  0 = equal (pure midpoint).
+  public static final double kMidBiasMeters = Units.inchesToMeters(24.0); // ~0.6 m
+
   public static enum StartingPosition { // measured with sim
     BLUEDEP(new Translation2d(3.570, 7.617)),
     BLUEHUB(new Translation2d(3.570, 3.977)),
