@@ -374,6 +374,7 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     SmartDashboard.putNumber("SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+    SmartDashboard.putNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
     // #endregion
 
     // Initialize LED display mode to show bot state colors
@@ -415,6 +416,12 @@ public class RobotContainer {
             flywheelRight.shootCommand(),
             flywheelRight.offCommand(),
             () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+
+    // Hood defaults: continuously hold the last-commanded position via motion
+    // magic.  Without this the base-class neutral command takes over as soon as a
+    // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
+    hoodLeft.setTeleopDefaultCommand();
+    hoodRight.setTeleopDefaultCommand();
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(

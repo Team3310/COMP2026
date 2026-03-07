@@ -387,6 +387,10 @@ public final class Constants {
 
     // Default feeder speed when stowing (turret idle / trench zone).
     public static final double kFeederStowRPM = 0.0;
+
+    // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
+    // NOTE: non-final so SmartDashboard can override at runtime.
+    public static double kTofSeconds = 0.85;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

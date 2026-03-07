@@ -232,6 +232,9 @@ public class Robot extends LoggedRobot {
     Constants.ScorerConstants.kTurretMaxPositionUnits =
         SmartDashboard.getNumber(
             "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
+    Constants.ScorerConstants.kTofSeconds =
+        SmartDashboard.getNumber(
+            "SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
