@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Percent;
+
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 
 public class Lights extends SubsystemBase {
   private static Lights instance;
@@ -33,184 +36,113 @@ public class Lights extends SubsystemBase {
     register();
   }
 
-  Timer gyroLightTimer = new Timer();
+  private final Timer gyroLightTimer = new Timer();
 
+  /**
+   * Sets the LED display mode. Gyro modes (GYRO_STOP, GYRO_RESETING, GYRO_NONRESETING) hold for 2
+   * seconds before any other mode can replace them, so the driver has time to see the indicator.
+   */
   public void setMode(LightMode mode) {
-    // if (mode == LightMode.GYRO_STOP
-    //     || mode == LightMode.GYRO_RESETING
-    //     || mode == LightMode.GYRO_NONRESETING) {
-    //   gyroLightTimer.restart();
-    //   this.mode = mode;
-    // } else if ((this.mode == LightMode.GYRO_STOP
-    //         || this.mode == LightMode.GYRO_RESETING
-    //         || this.mode == LightMode.GYRO_NONRESETING)
-    //     && gyroLightTimer.hasElapsed(2.0)) {
-    //   this.mode = mode;
-    // } else if (!(this.mode == LightMode.GYRO_STOP
-    //     || this.mode == LightMode.GYRO_RESETING
-    //     || this.mode == LightMode.GYRO_NONRESETING)) {
-    //   this.mode = mode;
-    // }
-    this.mode = mode;
+    boolean currentIsGyro =
+        this.mode == LightMode.GYRO_STOP
+            || this.mode == LightMode.GYRO_RESETING
+            || this.mode == LightMode.GYRO_NONRESETING;
+    boolean requestIsGyro =
+        mode == LightMode.GYRO_STOP
+            || mode == LightMode.GYRO_RESETING
+            || mode == LightMode.GYRO_NONRESETING;
+
+    if (requestIsGyro) {
+      // Always accept a gyro mode and restart the hold timer.
+      gyroLightTimer.restart();
+      this.mode = mode;
+    } else if (currentIsGyro && !gyroLightTimer.hasElapsed(2.0)) {
+      // Currently showing a gyro indicator and hold period hasn't elapsed — ignore.
+    } else {
+      this.mode = mode;
+    }
   }
 
   @Override
   public void periodic() {
-    // TEMP: always red for debugging
-    LEDPattern.solid(new Color(255, 0, 0)).applyTo(ledBuffer);
-    ledStrip.setData(ledBuffer);
+    switch (mode) {
+      case BOT_STATE:
+        if (Robot.inPit) {
+          // Solid blue in pit mode
+          LEDPattern.solid(new Color(0, 0, 255))
+              .atBrightness(Percent.of(85))
+              .applyTo(ledBuffer);
+        } else {
+          // Color based on current robot state
+          Color stateColor;
+          switch (Robot.currentState) {
+            case SNOWBLOW:
+              stateColor = new Color(255, 255, 255); // White
+              break;
+            case COLLECT:
+              stateColor = new Color(0, 255, 0); // Green
+              break;
+            case DEFENCEIN:
+              stateColor = new Color(255, 0, 0); // Red
+              break;
+            case DEFENCEOUT:
+              stateColor = new Color(255, 255, 0); // Yellow
+              break;
+            case TRENCH:
+              stateColor = new Color(255, 0, 255); // Purple
+              break;
+            case DEPLOY:
+              stateColor = new Color(0, 255, 128); // Teal
+              break;
+            case RETRACT:
+              stateColor = new Color(255, 128, 0); // Orange
+              break;
+            case PIT:
+            default:
+              stateColor = new Color(0, 0, 0); // Off
+              break;
+          }
+          LEDPattern.solid(stateColor).applyTo(ledBuffer);
+        }
+        ledStrip.setData(ledBuffer);
+        break;
 
-    // switch (mode) {
-    //   case AUTO_POSE_BAD:
-    //     int r, g, b = 0;
-    //     double xError = SmartDashboard.getNumber("pose x error", 0.0);
-    //     double yError = SmartDashboard.getNumber("pose y error", 0.0);
-    //     double rotationError = SmartDashboard.getNumber("rotation error", 0.0);
+      case GYRO_RESETING:
+        LEDPattern.solid(new Color(255, 0, 0)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     if (Math.abs(xError) < 0.1) {
-    //       r = 0;
-    //       g = 255;
-    //       b = 255;
-    //     } else if (xError < 0.0) { // X error negative means go towards blue alliance wall
-    //       r = 0;
-    //       g = 0;
-    //       b = 255;
-    //     } else { // X error positive means go towards red alliance wall
-    //       r = 255;
-    //       g = 0;
-    //       b = 0;
-    //     }
+      case GYRO_NONRESETING:
+        LEDPattern.solid(new Color(0, 255, 0)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     int ry, gy, by = 0;
+      case GYRO_STOP:
+        LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     if (Math.abs(yError) < 0.1) {
-    //       ry = 0;
-    //       gy = 255;
-    //       by = 255;
-    //     } else if (yError > 0.0) { // Y error positive means go towards blue barge
-    //       // yellow ish
-    //       ry = 0;
-    //       gy = 0;
-    //       by = 255;
-    //     } else { // Y error negative means go towards red barge
-    //       ry = 255;
-    //       gy = 0;
-    //       by = 0;
-    //     }
+      case AUTO_POSE_GOOD:
+        LEDPattern.solid(new Color(0, 255, 255)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     int rR, gR, bR = 0;
+      case AUTO_POSE_BAD:
+        LEDPattern.solid(new Color(255, 0, 0)).blink(edu.wpi.first.units.Units.Seconds.of(0.25)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     if (Math.abs(rotationError) < 1.0) {
-    //       rR = 0;
-    //       gR = 255;
-    //       bR = 255;
-    //     } else if (rotationError > 0.0) { // blue means CCW
-    //       rR = 0;
-    //       gR = 0;
-    //       bR = 255;
-    //     } else if (rotationError < 0.0) { // red means CW
-    //       rR = 255;
-    //       gR = 0;
-    //       bR = 0;
-    //     } else {
-    //       rR = 0;
-    //       gR = 0;
-    //       bR = 0;
-    //     }
+      case AUTO_POSE_STOP:
+        LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
 
-    //     LEDPattern.steps(
-    //             Map.of(
-    //                 0,
-    //                 new Color(r, g, b), // bottom - x - alliance walls
-    //                 0.45,
-    //                 new Color(ry, gy, by),
-    //                 0.9,
-    //                 new Color(rR, gR, bR) // top - y - barges
-    //                 ))
-    //         .applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case AUTO_POSE_GOOD:
-    //     LEDPattern.solid(new Color(0, 255, 255))
-    //         .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-    //         .applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case GYRO_STOP:
-    //     (Robot.inPit
-    //             ? LEDPattern.solid(new Color(0, 0, 255)).atBrightness(Percent.of(1.0))
-    //             : LEDPattern.solid(new Color(0, 0, 255)))
-    //         .applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case GYRO_NONRESETING:
-    //     LEDPattern pattern = LEDPattern.solid(new Color(0, 255, 0));
-    //     (Robot.inPit ? pattern.atBrightness(Percent.of(0.85)) : pattern).applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case GYRO_RESETING:
-    //     (Robot.inPit
-    //             ? LEDPattern.solid(new Color(255, 0, 0))
-    //                 .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-    //             : LEDPattern.solid(new Color(255, 0, 0)))
-    //         .applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case AUTO_POSE_STOP:
-    //     (Robot.inPit
-    //             ? LEDPattern.solid(new Color(0, 0, 255))
-    //                 .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-    //             : LEDPattern.solid(new Color(0, 0, 255)))
-    //         .applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case OFF:
-    //     LEDPattern.kOff.applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    //   case BOT_STATE:
-    //     // Check if in pit mode - if so, make entire strip blue
-    //     if (Robot.inPit) {
-    //       LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
-    //       ledStrip.setData(ledBuffer);
-    //     } else {
-    //       // Bottom half (0-21 LEDs) changes color based on bot state
-    //       LEDPattern.solid(new Color(0, 0, 0)).applyTo(ledBuffer);
-    //       Color bottomColor;
-
-    //       switch (Robot.currentState) {
-    //         case SNOWBLOW:
-    //           // White for snowblow mode
-    //           bottomColor = new Color(255, 255, 255);
-    //           break;
-    //         case COLLECT:
-    //           // Blue for collect mode
-    //           bottomColor = new Color(0, 0, 255);
-    //           break;
-    //         case DEFENCEIN:
-    //           // Red for defense inmode
-    //           bottomColor = new Color(255, 0, 0);
-    //           break;
-    //         case DEFENCEOUT:
-    //           // Yellow for defense out mode
-    //           bottomColor = new Color(255, 255, 0);
-    //           break;
-    //         default:
-    //           // Off for other states
-    //           bottomColor = new Color(0, 0, 0);
-    //           break;
-    //       }
-
-    //       // Apply color to bottom half (LEDs 0-21)
-    //       LEDPattern.solid(bottomColor).applyTo(ledBuffer.createView(0, 21));
-    //       ledStrip.setData(ledBuffer);
-    //     }
-    //     break;
-    //   default:
-    //     LEDPattern.kOff.applyTo(ledBuffer);
-    //     ledStrip.setData(ledBuffer);
-    //     break;
-    // }
+      case OFF:
+      default:
+        LEDPattern.kOff.applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
+    }
   }
 
   public enum LightMode {
