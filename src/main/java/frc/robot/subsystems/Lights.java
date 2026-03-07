@@ -60,157 +60,161 @@ public class Lights extends SubsystemBase {
 
   @Override
   public void periodic() {
-    switch (mode) {
-      case AUTO_POSE_BAD:
-        int r, g, b = 0;
-        double xError = SmartDashboard.getNumber("pose x error", 0.0);
-        double yError = SmartDashboard.getNumber("pose y error", 0.0);
-        double rotationError = SmartDashboard.getNumber("rotation error", 0.0);
+    // TEMP: always red for debugging
+    LEDPattern.solid(Color.kRed).applyTo(ledBuffer);
+    ledStrip.setData(ledBuffer);
 
-        if (Math.abs(xError) < 0.1) {
-          r = 0;
-          g = 255;
-          b = 255;
-        } else if (xError < 0.0) { // X error negative means go towards blue alliance wall
-          r = 0;
-          g = 0;
-          b = 255;
-        } else { // X error positive means go towards red alliance wall
-          r = 255;
-          g = 0;
-          b = 0;
-        }
+    // switch (mode) {
+    //   case AUTO_POSE_BAD:
+    //     int r, g, b = 0;
+    //     double xError = SmartDashboard.getNumber("pose x error", 0.0);
+    //     double yError = SmartDashboard.getNumber("pose y error", 0.0);
+    //     double rotationError = SmartDashboard.getNumber("rotation error", 0.0);
 
-        int ry, gy, by = 0;
+    //     if (Math.abs(xError) < 0.1) {
+    //       r = 0;
+    //       g = 255;
+    //       b = 255;
+    //     } else if (xError < 0.0) { // X error negative means go towards blue alliance wall
+    //       r = 0;
+    //       g = 0;
+    //       b = 255;
+    //     } else { // X error positive means go towards red alliance wall
+    //       r = 255;
+    //       g = 0;
+    //       b = 0;
+    //     }
 
-        if (Math.abs(yError) < 0.1) {
-          ry = 0;
-          gy = 255;
-          by = 255;
-        } else if (yError > 0.0) { // Y error positive means go towards blue barge
-          // yellow ish
-          ry = 0;
-          gy = 0;
-          by = 255;
-        } else { // Y error negative means go towards red barge
-          ry = 255;
-          gy = 0;
-          by = 0;
-        }
+    //     int ry, gy, by = 0;
 
-        int rR, gR, bR = 0;
+    //     if (Math.abs(yError) < 0.1) {
+    //       ry = 0;
+    //       gy = 255;
+    //       by = 255;
+    //     } else if (yError > 0.0) { // Y error positive means go towards blue barge
+    //       // yellow ish
+    //       ry = 0;
+    //       gy = 0;
+    //       by = 255;
+    //     } else { // Y error negative means go towards red barge
+    //       ry = 255;
+    //       gy = 0;
+    //       by = 0;
+    //     }
 
-        if (Math.abs(rotationError) < 1.0) {
-          rR = 0;
-          gR = 255;
-          bR = 255;
-        } else if (rotationError > 0.0) { // blue means CCW
-          rR = 0;
-          gR = 0;
-          bR = 255;
-        } else if (rotationError < 0.0) { // red means CW
-          rR = 255;
-          gR = 0;
-          bR = 0;
-        } else {
-          rR = 0;
-          gR = 0;
-          bR = 0;
-        }
+    //     int rR, gR, bR = 0;
 
-        LEDPattern.steps(
-                Map.of(
-                    0,
-                    new Color(r, g, b), // bottom - x - alliance walls
-                    0.45,
-                    new Color(ry, gy, by),
-                    0.9,
-                    new Color(rR, gR, bR) // top - y - barges
-                    ))
-            .applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case AUTO_POSE_GOOD:
-        LEDPattern.solid(new Color(0, 255, 255))
-            .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-            .applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case GYRO_STOP:
-        (Robot.inPit
-                ? LEDPattern.solid(new Color(0, 0, 255)).atBrightness(Percent.of(1.0))
-                : LEDPattern.solid(new Color(0, 0, 255)))
-            .applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case GYRO_NONRESETING:
-        LEDPattern pattern = LEDPattern.solid(new Color(0, 255, 0));
-        (Robot.inPit ? pattern.atBrightness(Percent.of(0.85)) : pattern).applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case GYRO_RESETING:
-        (Robot.inPit
-                ? LEDPattern.solid(new Color(255, 0, 0))
-                    .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-                : LEDPattern.solid(new Color(255, 0, 0)))
-            .applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case AUTO_POSE_STOP:
-        (Robot.inPit
-                ? LEDPattern.solid(new Color(0, 0, 255))
-                    .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
-                : LEDPattern.solid(new Color(0, 0, 255)))
-            .applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case OFF:
-        LEDPattern.kOff.applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-      case BOT_STATE:
-        // Check if in pit mode - if so, make entire strip blue
-        if (Robot.inPit) {
-          LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
-          ledStrip.setData(ledBuffer);
-        } else {
-          // Bottom half (0-21 LEDs) changes color based on bot state
-          LEDPattern.solid(new Color(0, 0, 0)).applyTo(ledBuffer);
-          Color bottomColor;
+    //     if (Math.abs(rotationError) < 1.0) {
+    //       rR = 0;
+    //       gR = 255;
+    //       bR = 255;
+    //     } else if (rotationError > 0.0) { // blue means CCW
+    //       rR = 0;
+    //       gR = 0;
+    //       bR = 255;
+    //     } else if (rotationError < 0.0) { // red means CW
+    //       rR = 255;
+    //       gR = 0;
+    //       bR = 0;
+    //     } else {
+    //       rR = 0;
+    //       gR = 0;
+    //       bR = 0;
+    //     }
 
-          switch (Robot.currentState) {
-            case SNOWBLOW:
-              // White for snowblow mode
-              bottomColor = new Color(255, 255, 255);
-              break;
-            case COLLECT:
-              // Blue for collect mode
-              bottomColor = new Color(0, 0, 255);
-              break;
-            case DEFENCEIN:
-              // Red for defense inmode
-              bottomColor = new Color(255, 0, 0);
-              break;
-            case DEFENCEOUT:
-              // Yellow for defense out mode
-              bottomColor = new Color(255, 255, 0);
-              break;
-            default:
-              // Off for other states
-              bottomColor = new Color(0, 0, 0);
-              break;
-          }
+    //     LEDPattern.steps(
+    //             Map.of(
+    //                 0,
+    //                 new Color(r, g, b), // bottom - x - alliance walls
+    //                 0.45,
+    //                 new Color(ry, gy, by),
+    //                 0.9,
+    //                 new Color(rR, gR, bR) // top - y - barges
+    //                 ))
+    //         .applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case AUTO_POSE_GOOD:
+    //     LEDPattern.solid(new Color(0, 255, 255))
+    //         .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
+    //         .applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case GYRO_STOP:
+    //     (Robot.inPit
+    //             ? LEDPattern.solid(new Color(0, 0, 255)).atBrightness(Percent.of(1.0))
+    //             : LEDPattern.solid(new Color(0, 0, 255)))
+    //         .applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case GYRO_NONRESETING:
+    //     LEDPattern pattern = LEDPattern.solid(new Color(0, 255, 0));
+    //     (Robot.inPit ? pattern.atBrightness(Percent.of(0.85)) : pattern).applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case GYRO_RESETING:
+    //     (Robot.inPit
+    //             ? LEDPattern.solid(new Color(255, 0, 0))
+    //                 .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
+    //             : LEDPattern.solid(new Color(255, 0, 0)))
+    //         .applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case AUTO_POSE_STOP:
+    //     (Robot.inPit
+    //             ? LEDPattern.solid(new Color(0, 0, 255))
+    //                 .atBrightness(Percent.of(Robot.inPit ? 0.85 : 1.0))
+    //             : LEDPattern.solid(new Color(0, 0, 255)))
+    //         .applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case OFF:
+    //     LEDPattern.kOff.applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    //   case BOT_STATE:
+    //     // Check if in pit mode - if so, make entire strip blue
+    //     if (Robot.inPit) {
+    //       LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
+    //       ledStrip.setData(ledBuffer);
+    //     } else {
+    //       // Bottom half (0-21 LEDs) changes color based on bot state
+    //       LEDPattern.solid(new Color(0, 0, 0)).applyTo(ledBuffer);
+    //       Color bottomColor;
 
-          // Apply color to bottom half (LEDs 0-21)
-          LEDPattern.solid(bottomColor).applyTo(ledBuffer.createView(0, 21));
-          ledStrip.setData(ledBuffer);
-        }
-        break;
-      default:
-        LEDPattern.kOff.applyTo(ledBuffer);
-        ledStrip.setData(ledBuffer);
-        break;
-    }
+    //       switch (Robot.currentState) {
+    //         case SNOWBLOW:
+    //           // White for snowblow mode
+    //           bottomColor = new Color(255, 255, 255);
+    //           break;
+    //         case COLLECT:
+    //           // Blue for collect mode
+    //           bottomColor = new Color(0, 0, 255);
+    //           break;
+    //         case DEFENCEIN:
+    //           // Red for defense inmode
+    //           bottomColor = new Color(255, 0, 0);
+    //           break;
+    //         case DEFENCEOUT:
+    //           // Yellow for defense out mode
+    //           bottomColor = new Color(255, 255, 0);
+    //           break;
+    //         default:
+    //           // Off for other states
+    //           bottomColor = new Color(0, 0, 0);
+    //           break;
+    //       }
+
+    //       // Apply color to bottom half (LEDs 0-21)
+    //       LEDPattern.solid(bottomColor).applyTo(ledBuffer.createView(0, 21));
+    //       ledStrip.setData(ledBuffer);
+    //     }
+    //     break;
+    //   default:
+    //     LEDPattern.kOff.applyTo(ledBuffer);
+    //     ledStrip.setData(ledBuffer);
+    //     break;
+    // }
   }
 
   public enum LightMode {
