@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -356,6 +355,18 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
+  private Command buildNormalSnapCommand(double targetAngleDeg) {
+    return DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> Rotation2d.fromDegrees(targetAngleDeg))
+        .until(
+            () ->
+                Math.abs(driver.getRightX())
+                    > Constants.DriveCommandConstants.kRotationCommandDeadband);
+  }
+
   private void configureButtonBindings() {
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
@@ -365,71 +376,66 @@ public class RobotContainer {
     // #region Driver Controls
     // --- DRIVER BINDINGS -----------------------------------------------------------------------
 
-    // A = pit: snap robot to 0° | normal = lock to 0°
+    // Face buttons (pit): hold to snap to cardinal angles.
     driver
         .y()
+        .and(() -> Robot.inPit)
         .whileTrue(
-            Commands.either(
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.fromDegrees(0.0)),
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.kZero),
-                () -> Robot.inPit));
-
-    // B: pit = snap robot to 90° | normal = zero gyro
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () ->
+                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleYDeg)));
     driver
         .x()
+        .and(() -> Robot.inPit)
         .whileTrue(
-            Commands.either(
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.fromDegrees(90.0)),
-                Commands.runOnce(
-                        () ->
-                            drive.setPose(
-                                new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                        drive)
-                    .ignoringDisable(true),
-                () -> Robot.inPit));
-
-    // X: = pit: snap robot to 180° | normal: set pose to behind Red Hub
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () ->
+                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleXDeg)));
     driver
         .a()
+        .and(() -> Robot.inPit)
         .whileTrue(
-            Commands.either(
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.fromDegrees(180.0)),
-                Commands.runOnce(
-                        () ->
-                            drive.setPose(
-                                new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
-                        drive)
-                    .ignoringDisable(true),
-                () -> Robot.inPit));
-
-    // Y: pit = snap robot to 270°
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () ->
+                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleADeg)));
     driver
         .b()
+        .and(() -> Robot.inPit)
         .whileTrue(
-            Commands.either(
-                DriveCommands.joystickDriveAtAngle(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> Rotation2d.fromDegrees(270.0)),
-                Commands.none(),
-                () -> Robot.inPit));
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () ->
+                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleBDeg)));
+
+    // Face buttons (normal): on release, snap to angle and keep holding until driver commands
+    // manual rotation by pushing right-stick X outside the normal rotation deadband.
+    driver
+        .y()
+        .and(() -> !Robot.inPit)
+        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleYDeg));
+    driver
+        .x()
+        .and(() -> !Robot.inPit)
+        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleXDeg));
+    driver
+        .a()
+        .and(() -> !Robot.inPit)
+        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleADeg));
+    driver
+        .b()
+        .and(() -> !Robot.inPit)
+        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleBDeg));
 
     // Start: normal = zero gyro (both modes)
     driver

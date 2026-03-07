@@ -229,6 +229,60 @@ public final class Constants {
   }
   // #endregion
 
+  // #region Drive Command Tuning
+  // Constants used by frc.robot.commands.DriveCommands.
+  // Usage references:
+  //   - DriveCommands.getLinearVelocityFromJoysticks()
+  //   - DriveCommands.joystickDrive()
+  //   - DriveCommands.joystickDriveAtAngle()
+  //   - DriveCommands.feedforwardCharacterization()
+  //   - DriveCommands.wheelRadiusCharacterization()
+  public static final class DriveCommandConstants {
+    // Joystick deadband applied to translation magnitude in
+    // getLinearVelocityFromJoysticks().
+    public static final double kJoystickDeadband = 0.1;
+
+    // Joystick deadband applied to rotational command shaping in joystickDrive().
+    public static final double kRotationCommandDeadband = kJoystickDeadband;
+
+    // Larger neutral threshold used to decide when heading hold should engage in joystickDrive().
+    public static final double kHoldStickNeutralDeadband = 0.25;
+
+    // Maximum measured yaw rate (rad/s) allowed before heading hold can engage in joystickDrive().
+    // If robot rotates faster than this, hold setpoint tracks current heading instead of locking.
+    public static final double kHoldEngageMaxRateRadPerSec = Units.degreesToRadians(90.0);
+
+    // PID gains used for heading hold in joystickDrive() and angle control in
+    // joystickDriveAtAngle().
+    public static final double kAngleHoldKp = 5.0;
+    public static final double kAngleHoldKd = 0.4;
+
+    // Trapezoid profile limits used only in joystickDriveAtAngle().
+    public static final double kAngleProfileMaxVelocityRadPerSec = 12.0;
+    public static final double kAngleProfileMaxAccelerationRadPerSec2 = 20.0;
+
+    // Feedforward characterization timing/ramp values used only in
+    // feedforwardCharacterization().
+    public static final double kFfCharacterizationStartDelaySec = 2.0;
+    public static final double kFfCharacterizationRampRate = 0.1; // Volts per second
+
+    // Wheel-radius characterization limits used only in wheelRadiusCharacterization().
+    public static final double kWheelRadiusCharacterizationMaxVelocity = 0.45; // Rad/s
+    public static final double kWheelRadiusCharacterizationRampRate = 0.05; // Rad/s^2
+
+    // Driver face-button snap targets (degrees).
+    // RobotContainer mappings:
+    //   - Y -> kDriverSnapAngleYDeg
+    //   - X -> kDriverSnapAngleXDeg
+    //   - A -> kDriverSnapAngleADeg
+    //   - B -> kDriverSnapAngleBDeg
+    public static final double kDriverSnapAngleYDeg = 0.0;
+    public static final double kDriverSnapAngleXDeg = 90.0;
+    public static final double kDriverSnapAngleADeg = 180.0;
+    public static final double kDriverSnapAngleBDeg = 270.0;
+  }
+  // #endregion
+
   // #region Scorer Subsystems
   public static final class ScorerConstants {
     // NOTE: non-final so SmartDashboard can override at runtime

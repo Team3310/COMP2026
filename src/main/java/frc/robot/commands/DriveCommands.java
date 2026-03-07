@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -32,21 +33,12 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class DriveCommands {
-  private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 5.0;
-  private static final double ANGLE_KD = 0.4;
-  private static final double ANGLE_MAX_VELOCITY = 12.0;
-  private static final double ANGLE_MAX_ACCELERATION = 20.0;
-  private static final double FF_START_DELAY = 2.0; // Secs
-  private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
-  private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.45; // Rad/Sec
-  private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
-
   private DriveCommands() {}
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
-    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
+    double linearMagnitude =
+        MathUtil.applyDeadband(Math.hypot(x, y), Constants.DriveCommandConstants.kJoystickDeadband);
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control
@@ -66,7 +58,11 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
-    PIDController headingHoldController = new PIDController(ANGLE_KP, 0.0, ANGLE_KD);
+    PIDController headingHoldController =
+        new PIDController(
+            Constants.DriveCommandConstants.kAngleHoldKp,
+            0.0,
+            Constants.DriveCommandConstants.kAngleHoldKd);
     headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
     headingHoldController.setTolerance(Units.degreesToRadians(1.0));
     double[] headingHoldSetpointRad = new double[] {0.0};
@@ -78,11 +74,17 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Apply rotation deadband
-              double omegaInput = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+              // Use a dedicated deadband for rotation command shaping.
+              double omegaInput =
+                  MathUtil.applyDeadband(
+                      omegaSupplier.getAsDouble(),
+                      Constants.DriveCommandConstants.kRotationCommandDeadband);
+              boolean wantsHold =
+                  Math.abs(omegaSupplier.getAsDouble())
+                      <= Constants.DriveCommandConstants.kHoldStickNeutralDeadband;
               double omega;
 
-              if (Math.abs(omegaInput) > 0.0) {
+              if (!wantsHold) {
                 // Manual rotation mode: track current heading so release holds this angle.
                 headingHoldSetpointRad[0] = drive.getRotation().getRadians();
                 headingHoldActive[0] = false;
@@ -90,18 +92,28 @@ public class DriveCommands {
                     Math.copySign(omegaInput * omegaInput, omegaInput)
                         * drive.getMaxAngularSpeedRadPerSec();
               } else {
-                // Hold heading mode: lock to the most recent heading from manual-rotation mode.
-                if (!headingHoldActive[0]) {
+                // Delay hold engagement until measured yaw rate settles to avoid snap-back after
+                // spins.
+                double measuredYawRateRadPerSec = drive.getChassisSpeeds().omegaRadiansPerSecond;
+                if (Math.abs(measuredYawRateRadPerSec)
+                    > Constants.DriveCommandConstants.kHoldEngageMaxRateRadPerSec) {
                   headingHoldSetpointRad[0] = drive.getRotation().getRadians();
-                  headingHoldController.reset();
-                  headingHoldActive[0] = true;
+                  headingHoldActive[0] = false;
+                  omega = 0.0;
+                } else {
+                  // Hold heading mode: lock to the most recent heading from manual-rotation mode.
+                  if (!headingHoldActive[0]) {
+                    headingHoldSetpointRad[0] = drive.getRotation().getRadians();
+                    headingHoldController.reset();
+                    headingHoldActive[0] = true;
+                  }
+                  omega =
+                      MathUtil.clamp(
+                          headingHoldController.calculate(
+                              drive.getRotation().getRadians(), headingHoldSetpointRad[0]),
+                          -drive.getMaxAngularSpeedRadPerSec(),
+                          drive.getMaxAngularSpeedRadPerSec());
                 }
-                omega =
-                    MathUtil.clamp(
-                        headingHoldController.calculate(
-                            drive.getRotation().getRadians(), headingHoldSetpointRad[0]),
-                        -drive.getMaxAngularSpeedRadPerSec(),
-                        drive.getMaxAngularSpeedRadPerSec());
               }
 
               // Convert to field relative speeds & send command
@@ -143,10 +155,12 @@ public class DriveCommands {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
-            ANGLE_KP,
+            Constants.DriveCommandConstants.kAngleHoldKp,
             0.0,
-            ANGLE_KD,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+            Constants.DriveCommandConstants.kAngleHoldKd,
+            new TrapezoidProfile.Constraints(
+                Constants.DriveCommandConstants.kAngleProfileMaxVelocityRadPerSec,
+                Constants.DriveCommandConstants.kAngleProfileMaxAccelerationRadPerSec2));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -207,7 +221,7 @@ public class DriveCommands {
                   drive.runCharacterization(0.0);
                 },
                 drive)
-            .withTimeout(FF_START_DELAY),
+            .withTimeout(Constants.DriveCommandConstants.kFfCharacterizationStartDelaySec),
 
         // Start timer
         Commands.runOnce(timer::restart),
@@ -215,7 +229,8 @@ public class DriveCommands {
         // Accelerate and gather data
         Commands.run(
                 () -> {
-                  double voltage = timer.get() * FF_RAMP_RATE;
+                  double voltage =
+                      timer.get() * Constants.DriveCommandConstants.kFfCharacterizationRampRate;
                   drive.runCharacterization(voltage);
                   velocitySamples.add(drive.getFFCharacterizationVelocity());
                   voltageSamples.add(voltage);
@@ -248,7 +263,8 @@ public class DriveCommands {
 
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(Drive drive) {
-    SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
+    SlewRateLimiter limiter =
+        new SlewRateLimiter(Constants.DriveCommandConstants.kWheelRadiusCharacterizationRampRate);
     WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
 
     return Commands.parallel(
@@ -263,7 +279,9 @@ public class DriveCommands {
             // Turn in place, accelerating up to full speed
             Commands.run(
                 () -> {
-                  double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
+                  double speed =
+                      limiter.calculate(
+                          Constants.DriveCommandConstants.kWheelRadiusCharacterizationMaxVelocity);
                   drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
                 },
                 drive)),
