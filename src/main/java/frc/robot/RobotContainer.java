@@ -223,10 +223,10 @@ public class RobotContainer {
 
     // #region Dashboard Buttons
     SmartDashboard.putData(
-        "inPitSwitch",
+        "enterPitMode",
         Commands.parallel(
             new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.OFF),
-            new InstantCommand(() -> Robot.inPit = !Robot.inPit),
+            new InstantCommand(() -> Robot.inPit = true),
             intakePivot.setCoast(),
             intakeRollers.setCoast(),
             agitatorLeft.setCoast(),
@@ -239,6 +239,9 @@ public class RobotContainer {
             turretRight.setCoast(),
             flywheelLeft.setCoast(),
             flywheelRight.setCoast()));
+    SmartDashboard.putData(
+        "exitPitMode",
+        new InstantCommand(() -> Robot.inPit = false));
 
     SmartDashboard.putData("intake", intakeRollers.intakeCommand());
     SmartDashboard.putData("outtake", intakeRollers.outtakeCommand());
