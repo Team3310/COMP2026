@@ -303,6 +303,11 @@ public final class Constants {
     // the intake can receive balls unobstructed.
     public static final double kHoodStowDistanceMeters = 1.5; // meters
 
+    // Bias (meters) that shifts the DEP-vs-OUT decision line in pass mode.
+    // Positive = prefer DEP; the robot must be farther toward the OUT side
+    // before it switches to aiming at OUT.  0 = equal (pure midpoint).
+    public static final double kDepBiasMeters = Units.inchesToMeters(24.0); // ~0.6 m
+
     public static final double kTurretStowedPosition = 0.0; // degrees
     public static double kTurretMaxPositionUnits = 220.0; // degrees
     public static final double kTurretMinPositionUnits = -220.0; // degrees

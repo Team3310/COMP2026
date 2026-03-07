@@ -41,11 +41,11 @@ public class FieldConstants {
       Corner { // landing zones of where we want the balls to land when passing (little bit out from
     // corner)
     BLUEOUT(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(79.5))),
-    BLUEDEP(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
+    BLUEDEP(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(159.0))),
     REDOUT(
         new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
     REDDEP(
-        new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(79.5)));
+        new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(159.0)));
 
     private final double x;
     private final double y;
@@ -66,8 +66,8 @@ public class FieldConstants {
 
   public static enum Zone { // Zones of field where x is where it ends
     BLUE(Units.inchesToMeters(179.0)),
-    BLUETRENCH(Units.inchesToMeters(205.5)),
-    MID(Units.inchesToMeters(445.5)),
+    BLUETRENCH(Units.inchesToMeters(229.5)),
+    MID(Units.inchesToMeters(421.5)),
     REDTRENCH(Units.inchesToMeters(492.5)),
     RED(kFieldLength);
 
