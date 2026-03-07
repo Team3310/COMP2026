@@ -229,6 +229,8 @@ public class Robot extends LoggedRobot {
     Constants.ScorerConstants.kHoodMaxDegrees =
         SmartDashboard.getNumber(
             "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+    Constants.kLeftHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
+    Constants.kRightHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
     Constants.ScorerConstants.kTurretMaxPositionUnits =
         SmartDashboard.getNumber(
             "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
