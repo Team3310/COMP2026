@@ -628,27 +628,30 @@ public class RobotContainer {
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEIN),
                 () -> Robot.inPit));
 
-    // Right Trigger = pit:
+    // Right Trigger:
+    // Pit mode -> toggle vertical feed rollers on/off.
+    // Normal mode -> toggle floor + vertical rollers while in DEFENCEOUT.
     operator
         .rightTrigger()
-        .onTrue(
-            Commands.either(
-                // Pit: retract intake
-                Commands.parallel(
-                    agitatorLeft.verticalFeedIntakeCommand(),
-                    agitatorRight.verticalFeedIntakeCommand()),
-                // Normal: outtake
-                Commands.either(
-                    Commands.parallel(
-                        agitatorLeft.verticalFeedIntakeCommand(),
-                        agitatorRight.verticalFeedIntakeCommand()),
-                    Commands.none(),
-                    () -> Robot.currentState == Robot.BotState.DEFENCEOUT),
-                () -> Robot.inPit));
+        .and(() -> Robot.inPit)
+        .toggleOnTrue(
+            Commands.parallel(
+                verticalFeedLeft.verticalFeedIntakeCommand(),
+                verticalFeedRight.verticalFeedIntakeCommand()));
+    operator
+        .rightTrigger()
+        .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
+        .toggleOnTrue(
+            Commands.parallel(
+                    agitatorLeft.snowblowCommand(),
+                    agitatorRight.snowblowCommand(),
+                    verticalFeedLeft.verticalFeedIntakeCommand(),
+                    verticalFeedRight.verticalFeedIntakeCommand())
+                .until(() -> Robot.currentState != Robot.BotState.DEFENCEOUT));
 
     // Left Trigger:
-    // Pit mode → toggleOnTrue: vertical rollers off
-    // Normal → onTrue: intake on only when in DEFENCEOUT state
+    // Pit mode -> toggleOnTrue: vertical rollers off
+    // Normal mode -> whileTrue: intake on only while held in DEFENCEOUT
     if (verticalFeedRight != null && verticalFeedLeft != null) {
       operator
           .leftTrigger()
@@ -658,12 +661,8 @@ public class RobotContainer {
 
       operator
           .leftTrigger()
-          .and(() -> !Robot.inPit)
-          .onTrue(
-              Commands.either(
-                  intakeRollers.intakeCommand(),
-                  Commands.none(),
-                  () -> Robot.currentState == Robot.BotState.DEFENCEOUT));
+          .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
+          .whileTrue(intakeRollers.intakeCommand());
     }
 
     // Right bumper = both: deploy intake

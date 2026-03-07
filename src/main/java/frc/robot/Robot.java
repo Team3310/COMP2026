@@ -69,6 +69,7 @@ public class Robot extends LoggedRobot {
   public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
   public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
+  private BotState lastAppliedState = null;
 
   public Robot() {
     // Record metadata
@@ -118,8 +119,6 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
-
-    track();
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
@@ -180,33 +179,15 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    switch (currentState) {
-      case SNOWBLOW:
-        snowblow();
-        break;
-      case COLLECT:
-        collect();
-        break;
-      case DEFENCEIN:
-        defenseIn();
-        break;
-      case DEFENCEOUT:
-        defenseOut();
-        break;
-      case DEPLOY:
-        deploy();
-        break;
-      case RETRACT:
-        retract();
-        break;
-      case TRENCH:
-        trench();
-        break;
-      case PIT:
-        // In pit mode, we want to be able to manually control the robot without the
-        // state machine
-        break;
+    if (currentState != lastAppliedState) {
+      onStateEntered(currentState);
+      lastAppliedState = currentState;
     }
+
+    if (shouldTrack(currentState)) {
+      track();
+    }
+
     // logging
     SmartDashboard.putBoolean("inPit", inPit);
     SmartDashboard.putString("currentState", "" + currentState);
@@ -519,11 +500,46 @@ public class Robot extends LoggedRobot {
   // #endregion
 
   // #region state methods
+  private boolean shouldTrack(BotState state) {
+    return !inPit
+        && state != BotState.DEFENCEIN
+        && state != BotState.TRENCH
+        && state != BotState.PIT;
+  }
+
+  private void onStateEntered(BotState state) {
+    switch (state) {
+      case SNOWBLOW:
+        snowblow();
+        break;
+      case COLLECT:
+        collect();
+        break;
+      case DEFENCEIN:
+        defenseIn();
+        break;
+      case DEFENCEOUT:
+        defenseOut();
+        break;
+      case DEPLOY:
+        deploy();
+        break;
+      case RETRACT:
+        retract();
+        break;
+      case TRENCH:
+        trench();
+        break;
+      case PIT:
+        // In pit mode, manual controls drive behavior.
+        break;
+    }
+  }
 
   private void snowblow() {
 
     // Deploy intake to snowblow, and run motors to snowblow.
-    deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
@@ -536,16 +552,18 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().collectCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
   }
 
   private void defenseIn() {
 
     // Retract intake to prevent damage, and stop all motors to save battery.
-    retract();
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
@@ -566,44 +584,24 @@ public class Robot extends LoggedRobot {
   }
 
   private void defenseOut() {
-    deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getIntakePivot()
-                .setDegreesCommand(Constants.IntakeConstants.kIntakePivotDeployDegrees));
-
-    // operator can turn on intake with right trigger and flywheels and vert agis
-    // with left trigger
-
+    // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
   }
 
   private void deploy() {
-
-    // Deploy intake to collect, and run motors to intake.
-    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    }
-    if (robotContainer.getIntakePivot().getCurrentPosition() > 130.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
-    }
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
   }
 
   private void retract() {
-
-    // Retract intake to prevent damage.
-    if (robotContainer.getIntakePivot().getCurrentPosition() > 100.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
-    }
-    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
-    }
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
   }
 
   private void trench() {
