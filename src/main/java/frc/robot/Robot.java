@@ -205,59 +205,60 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putBoolean("hubOverride", hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
-    // Read speed tuning overrides from SmartDashboard into Constants (updated each
-    // loop)
-    Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
-    Constants.AgitatorConstants.kFloorRollerReverseRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FloorReverseRPM", Constants.AgitatorConstants.kFloorRollerReverseRPM);
-    Constants.IntakeConstants.kIntakeVelocityRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/IntakeForwardRPM", Constants.IntakeConstants.kIntakeVelocityRPM);
-    Constants.IntakeConstants.kOuttakeVelocityRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/IntakeReverseRPM", Constants.IntakeConstants.kOuttakeVelocityRPM);
-    Constants.AgitatorConstants.kVerticalFeedIntakeRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/VertFeedForwardRPM", Constants.AgitatorConstants.kVerticalFeedIntakeRPM);
-    Constants.AgitatorConstants.kVerticalFeedOuttakeRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/VertFeedReverseRPM", Constants.AgitatorConstants.kVerticalFeedOuttakeRPM);
-    Constants.ScorerConstants.kShootRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
-    Constants.ScorerConstants.kReverseShootRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
-    Constants.ScorerConstants.kHoodMaxDegrees =
-        SmartDashboard.getNumber(
-            "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
-    Constants.kLeftHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
-    Constants.kRightHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
-    Constants.ScorerConstants.kTurretMaxPositionUnits =
-        SmartDashboard.getNumber(
-            "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
-    Constants.ScorerConstants.kTofSeconds =
-        SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
-    Constants.ScorerConstants.kPhaseDelaySeconds =
-        SmartDashboard.getNumber(
-            "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+    // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
+    if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
+      Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
+      Constants.AgitatorConstants.kFloorRollerReverseRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FloorReverseRPM", Constants.AgitatorConstants.kFloorRollerReverseRPM);
+      Constants.IntakeConstants.kIntakeVelocityRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/IntakeForwardRPM", Constants.IntakeConstants.kIntakeVelocityRPM);
+      Constants.IntakeConstants.kOuttakeVelocityRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/IntakeReverseRPM", Constants.IntakeConstants.kOuttakeVelocityRPM);
+      Constants.AgitatorConstants.kVerticalFeedIntakeRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/VertFeedForwardRPM", Constants.AgitatorConstants.kVerticalFeedIntakeRPM);
+      Constants.AgitatorConstants.kVerticalFeedOuttakeRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/VertFeedReverseRPM", Constants.AgitatorConstants.kVerticalFeedOuttakeRPM);
+      Constants.ScorerConstants.kShootRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
+      Constants.ScorerConstants.kReverseShootRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
+      Constants.ScorerConstants.kHoodMaxDegrees =
+          SmartDashboard.getNumber(
+              "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+      Constants.kLeftHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
+      Constants.kRightHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
+      Constants.ScorerConstants.kTurretMaxPositionUnits =
+          SmartDashboard.getNumber(
+              "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
+      Constants.ScorerConstants.kTofSeconds =
+          SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+      Constants.ScorerConstants.kPhaseDelaySeconds =
+          SmartDashboard.getNumber(
+              "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
 
-    // Vision filter-strength overrides
-    Constants.VisionConstants.kMT2StdDevMultiplier =
-        SmartDashboard.getNumber(
-            "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
-    Constants.VisionConstants.kMT1StdDevMultiplier =
-        SmartDashboard.getNumber(
-            "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
-    Constants.VisionConstants.kMaxPoseJumpMeters =
-        SmartDashboard.getNumber(
-            "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
-    Constants.VisionConstants.kMT2MaxAcceptedStdDev =
-        SmartDashboard.getNumber(
-            "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
+      // Vision filter-strength overrides
+      Constants.VisionConstants.kMT2StdDevMultiplier =
+          SmartDashboard.getNumber(
+              "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
+      Constants.VisionConstants.kMT1StdDevMultiplier =
+          SmartDashboard.getNumber(
+              "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
+      Constants.VisionConstants.kMaxPoseJumpMeters =
+          SmartDashboard.getNumber(
+              "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
+      Constants.VisionConstants.kMT2MaxAcceptedStdDev =
+          SmartDashboard.getNumber(
+              "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
+    }
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
