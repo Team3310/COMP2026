@@ -149,14 +149,44 @@ public final class Constants {
     // The Limelight publishes a 12-element "stddevs" array on NetworkTables:
     //   [MT1x, MT1y, MT1z, MT1roll, MT1pitch, MT1yaw,
     //    MT2x, MT2y, MT2z, MT2roll, MT2pitch, MT2yaw]
-    // We only use the MegaTag 2 entries (indices 6–11).
     public static final int kExpectedStdDevArrayLength = 12;
+
+    // MegaTag 1 std dev indices (used for pre-match seeding)
+    public static final int kMT1XStdDevIndex = 0;
+    public static final int kMT1YStdDevIndex = 1;
+    public static final int kMT1YawStdDevIndex = 5;
+
+    // MegaTag 2 std dev indices (used during match)
     public static final int kMT2XStdDevIndex = 6;
     public static final int kMT2YStdDevIndex = 7;
 
     // Theta std dev — set very high because MegaTag 2 uses gyro for rotation.
     // We ignore the LL-reported yaw std dev and always override with this value.
     public static final double kThetaStdDev = 999999.0;
+
+    // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
+    // While disabled the cameras run throttled but still produce MegaTag 1
+    // estimates.  MT1 solves full 6-DOF (including rotation) so it can
+    // determine the robot's heading without a laser-aligned gyro.  The
+    // first accepted result hard-resets the pose estimator (including gyro
+    // offset) so the robot knows its exact field position and heading
+    // before auto starts.  Subsequent results refine via addVisionMeasurement.
+    //
+    // On enable the system switches to MegaTag 2 which uses the now-correct
+    // gyro heading for its constrained solve.
+
+    // Require at least this many tags visible to accept a disabled-mode seed.
+    // 2 = multi-tag only (highest confidence).  Set to 1 if your starting
+    // position only has one tag in view, but beware of single-tag ambiguity.
+    public static final int kPreMatchMinTagCount = 2;
+
+    // Maximum Limelight-reported XY std dev (meters) to accept a seed.
+    public static final double kPreMatchMaxStdDev = 0.5;
+
+    // Maximum Limelight-reported yaw std dev (degrees) to accept a seed.
+    // MT1 yaw accuracy degrades with distance and single-tag ambiguity.
+    // Only trust the heading when MT1 is very confident.
+    public static final double kPreMatchMaxYawStdDevDeg = 5.0;
   }
   // #endregion
 
