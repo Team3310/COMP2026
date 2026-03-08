@@ -31,7 +31,8 @@ import java.util.Enumeration;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-  public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+  // NOTE: non-final — refreshed every cycle in Robot.robotPeriodic() once DS connects.
+  public static Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
   // Set this to select which robot's tuner constants to use
   public static final Bot currentBot = Bot.PRACTICE;

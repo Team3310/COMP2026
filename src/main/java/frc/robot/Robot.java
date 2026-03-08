@@ -135,6 +135,11 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
+    // Refresh alliance color every cycle — DriverStation data may not be
+    // available at class-load time, so the initial value can be wrong.
+    currentAlliance = DriverStation.getAlliance().orElse(currentAlliance);
+    Constants.alliance = currentAlliance;
+
     double robotX = robotContainer.getDrive().getPose().getX();
     double robotY = robotContainer.getDrive().getPose().getY();
     double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
