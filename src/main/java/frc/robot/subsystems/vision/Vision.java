@@ -36,6 +36,12 @@ public class Vision extends SubsystemBase {
   private int configCounter = CONFIG_INTERVAL; // Start at threshold so first loop configures
   private static final int CONFIG_INTERVAL = 250; // Re-send config every 250 loops (~5 seconds)
 
+  // Thermal throttle — skip frames while disabled to keep cameras cool.
+  // Per Limelight docs (LDS §13): 100–200 while disabled, 0 while enabled.
+  private static final int THROTTLE_DISABLED = 150; // skip 150 frames between processed frames
+  private static final int THROTTLE_ENABLED = 0; // process every frame
+  private boolean wasDisabled = true; // assume starting disabled
+
   /**
    * Creates a new Vision subsystem.
    *
@@ -62,25 +68,44 @@ public class Vision extends SubsystemBase {
     // happens promptly when the robot is enabled.
     setIMUModes();
 
+    // Thermal throttle: skip frames while disabled to keep cameras cool (LDS §13).
+    // Only push the throttle value on enable/disable transitions to avoid NT spam.
+    boolean isDisabled = DriverStation.isDisabled();
+    if (isDisabled != wasDisabled) {
+      int throttle = isDisabled ? THROTTLE_DISABLED : THROTTLE_ENABLED;
+      for (String name : VisionConstants.kCameraNames) {
+        LimelightHelpers.SetThrottle(name, throttle);
+      }
+      wasDisabled = isDisabled;
+    }
+
     // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
     // and MegaTag 2 has up-to-date yaw while enabled.
+    // Pass yaw rate so the Limelight can predict orientation between NT updates.
+    // Use _NoFlush for all but the last camera to avoid redundant NT flushes.
     double robotYawDeg = drive.getRotation().getDegrees();
-    for (String name : VisionConstants.kCameraNames) {
-      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+    double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
+    for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+      String name = VisionConstants.kCameraNames[i];
+      if (i < VisionConstants.kCameraNames.length - 1) {
+        LimelightHelpers.SetRobotOrientation_NoFlush(
+            name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
+      } else {
+        // Last camera — flush once to push all orientation updates together.
+        LimelightHelpers.SetRobotOrientation(
+            name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
+      }
     }
 
     // Don't process vision while disabled — no point in seeding pose data when we might be moving
     // the robot manually, and it avoids spamming pose estimator with stale data.
-    if (DriverStation.isDisabled()) {
+    if (isDisabled) {
       return;
     }
 
-    // Current angular velocity — used to reject updates during fast spins.
-    double yawRateDegPerSec = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
-
-    // Process each camera
+    // Process each camera (reuse yawRateDps computed above for spin-rejection).
     for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDegPerSec, i);
+      processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i);
     }
   }
 
