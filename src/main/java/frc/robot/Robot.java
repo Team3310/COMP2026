@@ -247,6 +247,12 @@ public class Robot extends LoggedRobot {
     Constants.VisionConstants.kMT1StdDevMultiplier =
         SmartDashboard.getNumber(
             "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
+    Constants.VisionConstants.kMaxPoseJumpMeters =
+        SmartDashboard.getNumber(
+            "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
+    Constants.VisionConstants.kMT2MaxAcceptedStdDev =
+        SmartDashboard.getNumber(
+            "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
