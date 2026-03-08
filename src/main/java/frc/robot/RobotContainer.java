@@ -385,6 +385,10 @@ public class RobotContainer {
         "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
     SmartDashboard.putNumber(
         "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
+    SmartDashboard.putNumber(
+        "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
+    SmartDashboard.putNumber(
+        "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     // #endregion
 
     // Initialize LED display mode to show bot state colors
@@ -416,16 +420,30 @@ public class RobotContainer {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
     // - Normal: on unless explicitly disabled.
+    // Flywheels off when:
+    //  - Pit mode and pitFlywheelsEnabled is false
+    //  - Normal mode and normalFlywheelsEnabled is false
+    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)
     flywheelLeft.setDefaultCommand(
         Commands.either(
             flywheelLeft.shootCommand(),
             flywheelLeft.offCommand(),
-            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+            () -> {
+              if (Robot.inPit) return pitFlywheelsEnabled;
+              if (Robot.currentState == Robot.BotState.DEFENCEIN
+                  || Robot.currentState == Robot.BotState.TRENCH) return false;
+              return normalFlywheelsEnabled;
+            }));
     flywheelRight.setDefaultCommand(
         Commands.either(
             flywheelRight.shootCommand(),
             flywheelRight.offCommand(),
-            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+            () -> {
+              if (Robot.inPit) return pitFlywheelsEnabled;
+              if (Robot.currentState == Robot.BotState.DEFENCEIN
+                  || Robot.currentState == Robot.BotState.TRENCH) return false;
+              return normalFlywheelsEnabled;
+            }));
 
     // Hood defaults: continuously hold the last-commanded position via motion
     // magic.  Without this the base-class neutral command takes over as soon as a

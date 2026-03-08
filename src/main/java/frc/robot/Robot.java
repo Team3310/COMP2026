@@ -508,16 +508,16 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodLeft()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodRight()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
     // CommandScheduler.getInstance()
     //     .schedule(
     //         robotContainer

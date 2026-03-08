@@ -142,8 +142,21 @@ public final class Constants {
     // Minimum average tag area (% of image) required to trust a single-tag result
     public static final double kMinTagAreaForSingleTag = 0.1;
 
-    // Maximum allowed distance from prior pose before rejecting (meters)
-    public static final double kMaxPoseJumpMeters = 1.5;
+    // Maximum allowed distance from prior pose before rejecting (meters).
+    // This catches gross outliers (e.g., ghost detections on the far side of the
+    // field).  Keep this large enough that normal drift doesn't trigger it.
+    public static double kMaxPoseJumpMeters = 1.0;
+
+    // Maximum accepted Limelight-reported XY std dev (meters) for MT2.
+    // Measurements with stddevs above this are rejected outright — they indicate
+    // poor tag geometry or excessive distance and would add noise even with a
+    // high stddev weight.  Set to 0.0 to disable this filter.
+    public static double kMT2MaxAcceptedStdDev = 0.5;
+
+    // Maximum measurement age (seconds) before we reject a vision result.
+    // Stale timestamps can cause the pose estimator to "rewind" and replay
+    // with bad data.  Typical camera pipeline latency is 20–60 ms.
+    public static final double kMaxMeasurementAgeSec = 0.3;
 
     // ---- Limelight NT std-dev array ----
     // The Limelight publishes a 12-element "stddevs" array on NetworkTables:
@@ -179,12 +192,12 @@ public final class Constants {
     //
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
-    public static double kMT2StdDevMultiplier = 1.0;
+    public static double kMT2StdDevMultiplier = 5.0;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
     // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
-    public static double kMT1StdDevMultiplier = 1.0;
+    public static double kMT1StdDevMultiplier = 40.0;
 
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
