@@ -71,6 +71,11 @@ public class Robot extends LoggedRobot {
   public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
   private BotState lastAppliedState = null;
 
+  // Dashboard read rate-limiting — tuning values don't need 50 Hz updates.
+  // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
+  private int dashboardReadCounter = 0;
+  private static final int DASHBOARD_READ_INTERVAL = 10; // Every 10th cycle (~5 Hz)
+
   public Robot() {
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
