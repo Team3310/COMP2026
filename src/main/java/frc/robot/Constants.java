@@ -353,36 +353,45 @@ public final class Constants {
     //
     // Column 0: distance (meters) — horizontal distance from shooter to target
     // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — vertical feeder roller speed
-    // Column 3: time of flight (seconds) — predicted ball flight time at this distance
+    // Column 2: feeder speed (RPM) — flywheel speed
+    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     //           Used for aim-ahead: the turret leads the target by velocity × TOF.
-    //           Tune by measuring actual flight times or via ballistic simulation.
+    // Column 4: vertical feeder speed (RPM)
     public static final double[][] kHubTable = {
-      // { distance_m, hoodDeg, feederRPM, tofSeconds }
-      {2.0, 12.0, 2000.0, 0.55},
-      {4.0, 18.0, 2800.0, 0.70},
-      {6.0, 24.0, 3400.0, 0.85},
-      {8.0, 29.0, 3800.0, 1.00},
-      {10.0, 32.0, 4200.0, 1.10},
-      {12.0, 34.0, 4500.0, 1.20},
+      // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
+      {1.60,   5.00, 3000.0, 0.35, 2000.0},
+      {3.15,  10.66, 3500.0, 0.55, 2000.0},
+      {3.20,   9.87, 3700.0, 0.56, 2000.0},
+      {4.37,  10.85, 4000.0, 0.65, 3000.0},
+      // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
+      {5.31,  12.82, 4100.0, 0.75, 3000.0}, // verticalRPM not recorded, using 3000 estimate
     };
 
-    // Pass (lob) — lob to a landing zone on our side of the field.
+    // Landing (pass/lob) — lob to a landing zone on our side of the field.
     // Stays closer to vertical (lower hood values) for hang time / height.
-    // Feeder speed is lower — we just need the ball to arc over, not blast.
-    // No TOF column — passes aim at a large landing zone, not a precise target,
-    // so aim-ahead lead is not applied in pass mode.
     //
     // Column 0: distance (meters) — horizontal distance from shooter to target
     // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — vertical feeder roller speed
+    // Column 2: feeder speed (RPM) — flywheel speed
+    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     public static final double[][] kPassTable = {
-      // { distance_m, hoodDeg, feederRPM }
-      {3.0, 13.0, 1800.0},
-      {5.0, 16.0, 2200.0},
-      {7.0, 19.0, 2600.0},
-      {9.0, 21.0, 2800.0},
-      {12.0, 23.0, 3000.0},
+      // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est) }
+      {3.517, 12.0,  3700.0, 0.55},
+      {3.56,   9.5,  3600.0, 0.56},
+      {4.06,  10.2,  3500.0, 0.60},
+      {4.46,  12.3,  3600.0, 0.63},
+      {4.69,   9.8,  4000.0, 0.65},
+      {6.10,  12.0,  4200.0, 0.80},
+      // {6.29, 12.0, 4000.0, 0.82}, // RPM drops vs 6.10 m row — needs retest
+      {6.30,  12.0,  4200.0, 0.82},
+      // {6.30, 12.0, 4900.0, 0.82}, // duplicate distance, RPM jumps 700 — needs retest
+      {6.79,  15.0,  4600.0, 0.86},
+      {6.80,  12.0,  4900.0, 0.86},
+      {8.12,  20.0,  5200.0, 1.00},
+      // {8.60, 19.0, 4900.0, 1.02}, // hood & RPM both lower than 8.12 m — needs retest
+      // {8.62, 15.0, 5200.0, 1.02}, // hood angle drops from 20° at 8.12 m — needs retest
+      {8.90,  21.0,  5000.0, 1.05},
+      {15.59, 35.0,  6300.0, 1.60},
     };
 
     // Default feeder speed when stowing (turret idle / trench zone).
