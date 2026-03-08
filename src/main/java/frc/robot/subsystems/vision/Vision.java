@@ -18,31 +18,32 @@ import org.littletonrobotics.junction.Logger;
  * <h3>Phase 1 — Disabled (pre-match): MegaTag 1</h3>
  *
  * <p>While the robot is disabled, cameras run throttled (~0.6 fps) and produce <b>MegaTag 1</b>
- * estimates (full 6-DOF including rotation).  This lets the robot determine its field position
- * <b>and heading</b> without manual gyro alignment.  The first high-confidence multi-tag result
+ * estimates (full 6-DOF including rotation). This lets the robot determine its field position
+ * <b>and heading</b> without manual gyro alignment. The first high-confidence multi-tag result
  * hard-resets the pose estimator (via {@link Drive#setPose}), which also sets the Pigeon2 gyro
- * offset.  Subsequent MT1 results refine the estimate.  The corrected heading is continuously
- * pushed to the Limelight IMUs via {@code SetRobotOrientation()} so they are seeded with the
- * correct heading by the time the match starts.
+ * offset. Subsequent MT1 results refine the estimate. The corrected heading is continuously pushed
+ * to the Limelight IMUs via {@code SetRobotOrientation()} so they are seeded with the correct
+ * heading by the time the match starts.
  *
  * <h3>Phase 2 — Enabled (auto / teleop): MegaTag 2</h3>
  *
- * <p>Once enabled, the system switches to <b>MegaTag 2</b> which uses the now-correct gyro
- * heading to constrain its solve (XY only).  The LL4's internal 1 kHz IMU (seeded during Phase 1)
- * tracks orientation between the 50 Hz robot-code updates for frame-accurate rotation.
+ * <p>Once enabled, the system switches to <b>MegaTag 2</b> which uses the now-correct gyro heading
+ * to constrain its solve (XY only). The LL4's internal 1 kHz IMU (seeded during Phase 1) tracks
+ * orientation between the 50 Hz robot-code updates for frame-accurate rotation.
  *
  * <p>Each enabled loop we:
+ *
  * <ol>
  *   <li>Push IMU mode 4 (Internal + External Assist) and feed gyro yaw + yaw rate.
  *   <li>Query {@code getBotPoseEstimate_wpiBlue_MegaTag2()} for each camera.
  *   <li>Filter out bad results (no tags, spinning too fast, off-field, big jumps).
- *   <li>Read the Limelight's own MegaTag 2 standard deviations and use {@code max(xStd, yStd)}
- *       as the XY trust weight.
+ *   <li>Read the Limelight's own MegaTag 2 standard deviations and use {@code max(xStd, yStd)} as
+ *       the XY trust weight.
  *   <li>Feed accepted measurements into {@code Drive.addVisionMeasurement()}.
  * </ol>
  *
- * <p>Theta std dev is set to 999999 during enabled mode because MegaTag 2 does <b>not</b>
- * estimate rotation — it uses the gyro heading you supply.
+ * <p>Theta std dev is set to 999999 during enabled mode because MegaTag 2 does <b>not</b> estimate
+ * rotation — it uses the gyro heading you supply.
  */
 public class Vision extends SubsystemBase {
 
@@ -307,13 +308,13 @@ public class Vision extends SubsystemBase {
   //  Pre-match pose seeding (while disabled, MegaTag 1)
   // -----------------------------------------------------------------------
   /**
-   * Process a single camera while disabled to seed the pose estimator before auto using
-   * <b>MegaTag 1</b> (full 6-DOF solve including rotation).
+   * Process a single camera while disabled to seed the pose estimator before auto using <b>MegaTag
+   * 1</b> (full 6-DOF solve including rotation).
    *
-   * <p>This eliminates the need to laser-align the gyro before every match.  MT1 determines
-   * the robot's heading from tag geometry alone.  The first accepted measurement hard-resets
-   * the pose estimator (including the gyro offset) so the Pigeon2 and LL4 IMUs are
-   * automatically aligned to the correct field heading.
+   * <p>This eliminates the need to laser-align the gyro before every match. MT1 determines the
+   * robot's heading from tag geometry alone. The first accepted measurement hard-resets the pose
+   * estimator (including the gyro offset) so the Pigeon2 and LL4 IMUs are automatically aligned to
+   * the correct field heading.
    *
    * <p>Filters are stricter than normal match processing:
    *
@@ -327,8 +328,8 @@ public class Vision extends SubsystemBase {
    * </ul>
    *
    * <p>The first accepted measurement uses {@link Drive#setPose} to hard-reset the estimator
-   * (including gyro offset).  Subsequent measurements use {@link Drive#addVisionMeasurement}
-   * so the estimate converges smoothly across multiple cameras and frames.
+   * (including gyro offset). Subsequent measurements use {@link Drive#addVisionMeasurement} so the
+   * estimate converges smoothly across multiple cameras and frames.
    *
    * @param cameraName Limelight hostname.
    * @param cameraIndex Index into kCameraNames (for logging).
@@ -407,10 +408,11 @@ public class Vision extends SubsystemBase {
         drive.setPose(visionPose); // Full pose including MT1 yaw
       }
       hasInitialSeed = true;
-      Logger.recordOutput("Vision/" + cameraName + "/preMatchAction",
+      Logger.recordOutput(
+          "Vision/" + cameraName + "/preMatchAction",
           visionEnabled ? "setPose" : "setPose_suppressed");
-      Logger.recordOutput("Vision/" + cameraName + "/preMatchSeededYawDeg",
-          visionPose.getRotation().getDegrees());
+      Logger.recordOutput(
+          "Vision/" + cameraName + "/preMatchSeededYawDeg", visionPose.getRotation().getDegrees());
     } else {
       // After the initial seed, keep refining position.  We trust MT1 yaw
       // with moderate weight (not 999999) since the gyro offset is already set.
@@ -423,7 +425,8 @@ public class Vision extends SubsystemBase {
             estimate.timestampSeconds,
             VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
       }
-      Logger.recordOutput("Vision/" + cameraName + "/preMatchAction",
+      Logger.recordOutput(
+          "Vision/" + cameraName + "/preMatchAction",
           visionEnabled ? "refine" : "refine_suppressed");
     }
 
