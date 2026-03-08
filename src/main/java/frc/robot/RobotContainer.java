@@ -376,6 +376,15 @@ public class RobotContainer {
         "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     SmartDashboard.putNumber("SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
     SmartDashboard.putNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+    SmartDashboard.putNumber(
+        "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+
+    // Vision filter-strength tuning — multipliers for the Limelight std devs
+    // fed into the WPILib pose estimator.  >1.0 = smoother, <1.0 = snappier.
+    SmartDashboard.putNumber(
+        "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
+    SmartDashboard.putNumber(
+        "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
     // #endregion
 
     // Initialize LED display mode to show bot state colors

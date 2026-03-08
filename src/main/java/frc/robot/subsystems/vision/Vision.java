@@ -278,12 +278,16 @@ public class Vision extends SubsystemBase {
       return;
     }
 
+    // Apply the MT2 filter-strength multiplier before injecting.
+    // >1.0 = trust less (smoother), <1.0 = trust more (snappier).
+    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier;
+
     // 8. Inject into the drive pose estimator (only when vision is enabled on the dashboard).
     if (visionEnabled) {
       drive.addVisionMeasurement(
           visionPose,
           estimate.timestampSeconds,
-          VecBuilder.fill(xyStdDev, xyStdDev, VisionConstants.kThetaStdDev));
+          VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, VisionConstants.kThetaStdDev));
     }
 
     // 9. Logging for AdvantageScope (always logged regardless of visionEnabled).
@@ -293,7 +297,8 @@ public class Vision extends SubsystemBase {
     Logger.recordOutput("Vision/" + cameraName + "/tagCount", estimate.tagCount);
     Logger.recordOutput("Vision/" + cameraName + "/avgTagDist", estimate.avgTagDist);
     Logger.recordOutput("Vision/" + cameraName + "/avgTagArea", estimate.avgTagArea);
-    Logger.recordOutput("Vision/" + cameraName + "/xyStdDev", xyStdDev);
+    Logger.recordOutput("Vision/" + cameraName + "/xyStdDev", scaledXYStdDev);
+    Logger.recordOutput("Vision/" + cameraName + "/rawXYStdDev", xyStdDev);
     Logger.recordOutput("Vision/" + cameraName + "/llXStdDev", xStdDev);
     Logger.recordOutput("Vision/" + cameraName + "/llYStdDev", yStdDev);
   }
@@ -409,11 +414,14 @@ public class Vision extends SubsystemBase {
     } else {
       // After the initial seed, keep refining position.  We trust MT1 yaw
       // with moderate weight (not 999999) since the gyro offset is already set.
+      // Apply the MT1 filter-strength multiplier to both XY and yaw stddevs.
+      double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
+      double scaledYawStdDev = yawStdDev * VisionConstants.kMT1StdDevMultiplier;
       if (visionEnabled) {
         drive.addVisionMeasurement(
             visionPose,
             estimate.timestampSeconds,
-            VecBuilder.fill(xyStdDev, xyStdDev, Math.toRadians(yawStdDev)));
+            VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
       }
       Logger.recordOutput("Vision/" + cameraName + "/preMatchAction",
           visionEnabled ? "refine" : "refine_suppressed");

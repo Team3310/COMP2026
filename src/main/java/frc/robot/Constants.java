@@ -164,6 +164,28 @@ public final class Constants {
     // We ignore the LL-reported yaw std dev and always override with this value.
     public static final double kThetaStdDev = 999999.0;
 
+    // ---- Std-dev multipliers (filter strength) ----
+    // These scale the Limelight-reported standard deviations *before* they are
+    // passed to the WPILib pose estimator.  The pose estimator uses stddevs as
+    // trust weights: larger stddev = less trust = smoother but slower to converge.
+    //
+    //   1.0  = use the Limelight's raw stddevs (default)
+    //   >1.0 = trust vision LESS  (smoother pose, higher latency to converge)
+    //   <1.0 = trust vision MORE  (snappier pose, more noise)
+    //
+    // Tune these during practice:
+    //   • If the pose is jittery / jumpy, increase the multiplier.
+    //   • If the pose is sluggish / slow to converge, decrease it.
+    //
+    // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
+    // Scales the XY stddevs fed to addVisionMeasurement().
+    public static double kMT2StdDevMultiplier = 1.0;
+
+    // MegaTag 1 multiplier — applied during disabled pre-match refinement.
+    // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
+    // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
+    public static double kMT1StdDevMultiplier = 1.0;
+
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
     // estimates.  MT1 solves full 6-DOF (including rotation) so it can

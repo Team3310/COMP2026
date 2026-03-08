@@ -236,6 +236,17 @@ public class Robot extends LoggedRobot {
             "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     Constants.ScorerConstants.kTofSeconds =
         SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+    Constants.ScorerConstants.kPhaseDelaySeconds =
+        SmartDashboard.getNumber(
+            "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+
+    // Vision filter-strength overrides
+    Constants.VisionConstants.kMT2StdDevMultiplier =
+        SmartDashboard.getNumber(
+            "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
+    Constants.VisionConstants.kMT1StdDevMultiplier =
+        SmartDashboard.getNumber(
+            "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
