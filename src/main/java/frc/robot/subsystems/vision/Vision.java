@@ -92,8 +92,7 @@ public class Vision extends SubsystemBase {
             name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
       } else {
         // Last camera — flush once to push all orientation updates together.
-        LimelightHelpers.SetRobotOrientation(
-            name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
       }
     }
 

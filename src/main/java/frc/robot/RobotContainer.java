@@ -558,18 +558,18 @@ public class RobotContainer {
                 () -> Robot.inPit));
 
     driver
-    .povDown()
-          .onTrue(
-              Commands.either(
-                  // Pit: hoods to 10 deg (stowed)
-                  Commands.parallel(
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  // Normal: stow hoods.
-                  Commands.parallel(
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  () -> Robot.inPit));
+        .povDown()
+        .onTrue(
+            Commands.either(
+                // Pit: hoods to 10 deg (stowed)
+                Commands.parallel(
+                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                // Normal: stow hoods.
+                Commands.parallel(
+                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                () -> Robot.inPit));
     // #endregion
 
     // #region Operator Controls

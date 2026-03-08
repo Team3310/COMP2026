@@ -565,8 +565,10 @@ public class Robot extends LoggedRobot {
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().verticalFeedCollectCommand());
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedRight().verticalFeedCollectCommand());
   }
 
   private void defenseIn() {
