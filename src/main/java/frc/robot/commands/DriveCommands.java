@@ -179,7 +179,8 @@ public class DriveCommands {
               double headingErrorRad =
                   MathUtil.angleModulus(targetRotation.minus(drive.getRotation()).getRadians());
               Logger.recordOutput("Drive/Snap/TargetRotationRad", targetRotation.getRadians());
-              Logger.recordOutput("Drive/Snap/CurrentRotationRad", drive.getRotation().getRadians());
+              Logger.recordOutput(
+                  "Drive/Snap/CurrentRotationRad", drive.getRotation().getRadians());
               Logger.recordOutput("Drive/Snap/ErrorRad", headingErrorRad);
               Logger.recordOutput("Drive/Snap/OmegaCommandRadPerSec", omega);
 
