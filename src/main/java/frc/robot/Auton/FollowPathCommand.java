@@ -6,8 +6,10 @@ package frc.robot.Auton;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Follows a PathPlanner path. Delegates entirely to AutoBuilder.followPath() which handles
@@ -23,7 +25,13 @@ public class FollowPathCommand extends SequentialCommandGroup {
    */
   public FollowPathCommand(Drive drive, PathPlannerPath path) {
     if (path != null) {
-      addCommands(AutoBuilder.followPath(path));
+      addCommands(
+          AutoBuilder.followPath(path),
+          Commands.runOnce(
+              () -> {
+                Logger.recordOutput("AutoTest/PathName", path.name);
+                Logger.recordOutput("AutoTest/FinalPose", drive.getPose());
+              }));
     }
   }
 }
