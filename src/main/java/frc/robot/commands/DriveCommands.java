@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private DriveCommands() {}
@@ -171,9 +172,17 @@ public class DriveCommands {
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
               // Calculate angular speed
+              Rotation2d targetRotation = rotationSupplier.get();
               double omega =
                   angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+                      drive.getRotation().getRadians(), targetRotation.getRadians());
+              double headingErrorRad =
+                  MathUtil.angleModulus(targetRotation.minus(drive.getRotation()).getRadians());
+              Logger.recordOutput("Drive/Snap/TargetRotationRad", targetRotation.getRadians());
+              Logger.recordOutput(
+                  "Drive/Snap/CurrentRotationRad", drive.getRotation().getRadians());
+              Logger.recordOutput("Drive/Snap/ErrorRad", headingErrorRad);
+              Logger.recordOutput("Drive/Snap/OmegaCommandRadPerSec", omega);
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =

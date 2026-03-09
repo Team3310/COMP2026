@@ -31,7 +31,8 @@ import java.util.Enumeration;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-  public static final Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+  // NOTE: non-final — refreshed every cycle in Robot.robotPeriodic() once DS connects.
+  public static Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
   // Set this to select which robot's tuner constants to use
   public static final Bot currentBot = Bot.PRACTICE;
@@ -142,21 +143,86 @@ public final class Constants {
     // Minimum average tag area (% of image) required to trust a single-tag result
     public static final double kMinTagAreaForSingleTag = 0.1;
 
-    // Maximum allowed distance from prior pose before rejecting (meters)
-    public static final double kMaxPoseJumpMeters = 1.5;
+    // Maximum allowed distance from prior pose before rejecting (meters).
+    // This catches gross outliers (e.g., ghost detections on the far side of the
+    // field).  Keep this large enough that normal drift doesn't trigger it.
+    public static double kMaxPoseJumpMeters = 1.0;
+
+    // Maximum accepted Limelight-reported XY std dev (meters) for MT2.
+    // Measurements with stddevs above this are rejected outright — they indicate
+    // poor tag geometry or excessive distance and would add noise even with a
+    // high stddev weight.  Set to 0.0 to disable this filter.
+    public static double kMT2MaxAcceptedStdDev = 0.5;
+
+    // Maximum measurement age (seconds) before we reject a vision result.
+    // Stale timestamps can cause the pose estimator to "rewind" and replay
+    // with bad data.  Typical camera pipeline latency is 20–60 ms.
+    public static final double kMaxMeasurementAgeSec = 0.3;
 
     // ---- Limelight NT std-dev array ----
     // The Limelight publishes a 12-element "stddevs" array on NetworkTables:
     //   [MT1x, MT1y, MT1z, MT1roll, MT1pitch, MT1yaw,
     //    MT2x, MT2y, MT2z, MT2roll, MT2pitch, MT2yaw]
-    // We only use the MegaTag 2 entries (indices 6–11).
     public static final int kExpectedStdDevArrayLength = 12;
+
+    // MegaTag 1 std dev indices (used for pre-match seeding)
+    public static final int kMT1XStdDevIndex = 0;
+    public static final int kMT1YStdDevIndex = 1;
+    public static final int kMT1YawStdDevIndex = 5;
+
+    // MegaTag 2 std dev indices (used during match)
     public static final int kMT2XStdDevIndex = 6;
     public static final int kMT2YStdDevIndex = 7;
 
     // Theta std dev — set very high because MegaTag 2 uses gyro for rotation.
     // We ignore the LL-reported yaw std dev and always override with this value.
     public static final double kThetaStdDev = 999999.0;
+
+    // ---- Std-dev multipliers (filter strength) ----
+    // These scale the Limelight-reported standard deviations *before* they are
+    // passed to the WPILib pose estimator.  The pose estimator uses stddevs as
+    // trust weights: larger stddev = less trust = smoother but slower to converge.
+    //
+    //   1.0  = use the Limelight's raw stddevs (default)
+    //   >1.0 = trust vision LESS  (smoother pose, higher latency to converge)
+    //   <1.0 = trust vision MORE  (snappier pose, more noise)
+    //
+    // Tune these during practice:
+    //   • If the pose is jittery / jumpy, increase the multiplier.
+    //   • If the pose is sluggish / slow to converge, decrease it.
+    //
+    // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
+    // Scales the XY stddevs fed to addVisionMeasurement().
+    public static double kMT2StdDevMultiplier = 5.0;
+
+    // MegaTag 1 multiplier — applied during disabled pre-match refinement.
+    // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
+    // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
+    public static double kMT1StdDevMultiplier = 40.0;
+
+    // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
+    // While disabled the cameras run throttled but still produce MegaTag 1
+    // estimates.  MT1 solves full 6-DOF (including rotation) so it can
+    // determine the robot's heading without a laser-aligned gyro.  The
+    // first accepted result hard-resets the pose estimator (including gyro
+    // offset) so the robot knows its exact field position and heading
+    // before auto starts.  Subsequent results refine via addVisionMeasurement.
+    //
+    // On enable the system switches to MegaTag 2 which uses the now-correct
+    // gyro heading for its constrained solve.
+
+    // Require at least this many tags visible to accept a disabled-mode seed.
+    // 2 = multi-tag only (highest confidence).  Set to 1 if your starting
+    // position only has one tag in view, but beware of single-tag ambiguity.
+    public static final int kPreMatchMinTagCount = 2;
+
+    // Maximum Limelight-reported XY std dev (meters) to accept a seed.
+    public static final double kPreMatchMaxStdDev = 0.5;
+
+    // Maximum Limelight-reported yaw std dev (degrees) to accept a seed.
+    // MT1 yaw accuracy degrades with distance and single-tag ambiguity.
+    // Only trust the heading when MT1 is very confident.
+    public static final double kPreMatchMaxYawStdDevDeg = 5.0;
   }
   // #endregion
 
@@ -293,7 +359,7 @@ public final class Constants {
     public static double kHoodMaxDegrees =
         35.0; // degrees from vertical (flattest shot, 55° elevation)
     public static final double kHoodMinDegrees =
-        10.0; // degrees from vertical (steepest shot, 80° elevation)
+        5.0; // degrees from vertical (steepest shot, 80° elevation)
     public static final double kHoodUnitToRotorRatio =
         (10.0 / 44.0) * (18.0 / 294.0) * 360.0; // convert rotations to degrees
     public static final double kHoodMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
@@ -353,40 +419,53 @@ public final class Constants {
     //
     // Column 0: distance (meters) — horizontal distance from shooter to target
     // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — vertical feeder roller speed
-    // Column 3: time of flight (seconds) — predicted ball flight time at this distance
+    // Column 2: feeder speed (RPM) — flywheel speed
+    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     //           Used for aim-ahead: the turret leads the target by velocity × TOF.
-    //           Tune by measuring actual flight times or via ballistic simulation.
+    // Column 4: vertical feeder speed (RPM)
     public static final double[][] kHubTable = {
-      // { distance_m, hoodDeg, feederRPM, tofSeconds }
-      {2.0, 12.0, 2000.0, 0.55},
-      {4.0, 18.0, 2800.0, 0.70},
-      {6.0, 24.0, 3400.0, 0.85},
-      {8.0, 29.0, 3800.0, 1.00},
-      {10.0, 32.0, 4200.0, 1.10},
-      {12.0, 34.0, 4500.0, 1.20},
+      // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
+      {1.60, 5.00, 3000.0, 0.35, 2000.0},
+      {3.15, 10.66, 3500.0, 0.55, 2000.0},
+      {3.20, 9.87, 3700.0, 0.56, 2000.0},
+      {4.37, 10.85, 4000.0, 0.65, 3000.0},
+      // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
+      {5.31, 12.82, 4100.0, 0.75, 3000.0}, // verticalRPM not recorded, using 3000 estimate
     };
 
-    // Pass (lob) — lob to a landing zone on our side of the field.
+    // Landing (pass/lob) — lob to a landing zone on our side of the field.
     // Stays closer to vertical (lower hood values) for hang time / height.
-    // Feeder speed is lower — we just need the ball to arc over, not blast.
-    // No TOF column — passes aim at a large landing zone, not a precise target,
-    // so aim-ahead lead is not applied in pass mode.
     //
     // Column 0: distance (meters) — horizontal distance from shooter to target
     // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — vertical feeder roller speed
+    // Column 2: feeder speed (RPM) — flywheel speed
+    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     public static final double[][] kPassTable = {
-      // { distance_m, hoodDeg, feederRPM }
-      {3.0, 13.0, 1800.0},
-      {5.0, 16.0, 2200.0},
-      {7.0, 19.0, 2600.0},
-      {9.0, 21.0, 2800.0},
-      {12.0, 23.0, 3000.0},
+      // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est) }
+      {3.517, 12.0, 3700.0, 0.55},
+      {3.56, 9.5, 3600.0, 0.56},
+      {4.06, 10.2, 3500.0, 0.60},
+      {4.46, 12.3, 3600.0, 0.63},
+      {4.69, 9.8, 4000.0, 0.65},
+      {6.10, 12.0, 4200.0, 0.80},
+      // {6.29, 12.0, 4000.0, 0.82}, // RPM drops vs 6.10 m row — needs retest
+      {6.30, 12.0, 4200.0, 0.82},
+      // {6.30, 12.0, 4900.0, 0.82}, // duplicate distance, RPM jumps 700 — needs retest
+      {6.79, 15.0, 4600.0, 0.86},
+      {6.80, 12.0, 4900.0, 0.86},
+      {8.12, 20.0, 5200.0, 1.00},
+      // {8.60, 19.0, 4900.0, 1.02}, // hood & RPM both lower than 8.12 m — needs retest
+      // {8.62, 15.0, 5200.0, 1.02}, // hood angle drops from 20° at 8.12 m — needs retest
+      {8.90, 21.0, 5000.0, 1.05},
+      {15.59, 35.0, 6300.0, 1.60},
     };
 
     // Default feeder speed when stowing (turret idle / trench zone).
     public static final double kFeederStowRPM = 0.0;
+
+    // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
+    // NOTE: non-final so SmartDashboard can override at runtime.
+    public static double kTofSeconds = 0.85;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

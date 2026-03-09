@@ -174,7 +174,7 @@ public final class TurretAimCalculator {
     if (!home) {
       return 0.0; // No lead for pass/lob shots
     }
-    return interpolateTable(Constants.ScorerConstants.kHubTable, distance, 3);
+    return Constants.ScorerConstants.kTofSeconds;
   }
 
   /**

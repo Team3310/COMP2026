@@ -9,6 +9,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -71,6 +72,11 @@ public class Robot extends LoggedRobot {
   public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
   private BotState lastAppliedState = null;
 
+  // Dashboard read rate-limiting — tuning values don't need 50 Hz updates.
+  // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
+  private int dashboardReadCounter = 0;
+  private static final int DASHBOARD_READ_INTERVAL = 10; // Every 10th cycle (~5 Hz)
+
   public Robot() {
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
@@ -129,6 +135,12 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
+
+    // Refresh alliance color every cycle — DriverStation data may not be
+    // available at class-load time, so the initial value can be wrong.
+    currentAlliance = DriverStation.getAlliance().orElse(currentAlliance);
+    Constants.alliance = currentAlliance;
 
     double robotX = robotContainer.getDrive().getPose().getX();
     double robotY = robotContainer.getDrive().getPose().getY();
@@ -200,38 +212,60 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putBoolean("hubOverride", hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
 
-    // Read speed tuning overrides from SmartDashboard into Constants (updated each
-    // loop)
-    Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
-    Constants.AgitatorConstants.kFloorRollerReverseRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FloorReverseRPM", Constants.AgitatorConstants.kFloorRollerReverseRPM);
-    Constants.IntakeConstants.kIntakeVelocityRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/IntakeForwardRPM", Constants.IntakeConstants.kIntakeVelocityRPM);
-    Constants.IntakeConstants.kOuttakeVelocityRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/IntakeReverseRPM", Constants.IntakeConstants.kOuttakeVelocityRPM);
-    Constants.AgitatorConstants.kVerticalFeedIntakeRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/VertFeedForwardRPM", Constants.AgitatorConstants.kVerticalFeedIntakeRPM);
-    Constants.AgitatorConstants.kVerticalFeedOuttakeRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/VertFeedReverseRPM", Constants.AgitatorConstants.kVerticalFeedOuttakeRPM);
-    Constants.ScorerConstants.kShootRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
-    Constants.ScorerConstants.kReverseShootRPM =
-        SmartDashboard.getNumber(
-            "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
-    Constants.ScorerConstants.kHoodMaxDegrees =
-        SmartDashboard.getNumber(
-            "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
-    Constants.ScorerConstants.kTurretMaxPositionUnits =
-        SmartDashboard.getNumber(
-            "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
+    // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
+    if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
+      Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FloorForwardRPM", Constants.AgitatorConstants.kFloorRollerSnowblowRPM);
+      Constants.AgitatorConstants.kFloorRollerReverseRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FloorReverseRPM", Constants.AgitatorConstants.kFloorRollerReverseRPM);
+      Constants.IntakeConstants.kIntakeVelocityRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/IntakeForwardRPM", Constants.IntakeConstants.kIntakeVelocityRPM);
+      Constants.IntakeConstants.kOuttakeVelocityRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/IntakeReverseRPM", Constants.IntakeConstants.kOuttakeVelocityRPM);
+      Constants.AgitatorConstants.kVerticalFeedIntakeRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/VertFeedForwardRPM", Constants.AgitatorConstants.kVerticalFeedIntakeRPM);
+      Constants.AgitatorConstants.kVerticalFeedOuttakeRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/VertFeedReverseRPM", Constants.AgitatorConstants.kVerticalFeedOuttakeRPM);
+      Constants.ScorerConstants.kShootRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FlywheelForwardRPM", Constants.ScorerConstants.kShootRPM);
+      Constants.ScorerConstants.kReverseShootRPM =
+          SmartDashboard.getNumber(
+              "SpeedTune/FlywheelReverseRPM", Constants.ScorerConstants.kReverseShootRPM);
+      Constants.ScorerConstants.kHoodMaxDegrees =
+          SmartDashboard.getNumber(
+              "SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+      Constants.kLeftHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
+      Constants.kRightHoodConfig.kMaxPositionUnits = Constants.ScorerConstants.kHoodMaxDegrees;
+      Constants.ScorerConstants.kTurretMaxPositionUnits =
+          SmartDashboard.getNumber(
+              "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
+      Constants.ScorerConstants.kTofSeconds =
+          SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+      Constants.ScorerConstants.kPhaseDelaySeconds =
+          SmartDashboard.getNumber(
+              "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+
+      // Vision filter-strength overrides
+      Constants.VisionConstants.kMT2StdDevMultiplier =
+          SmartDashboard.getNumber(
+              "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
+      Constants.VisionConstants.kMT1StdDevMultiplier =
+          SmartDashboard.getNumber(
+              "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
+      Constants.VisionConstants.kMaxPoseJumpMeters =
+          SmartDashboard.getNumber(
+              "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
+      Constants.VisionConstants.kMT2MaxAcceptedStdDev =
+          SmartDashboard.getNumber(
+              "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
+    }
 
     // Per-subsystem supply current (amps)
     double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
@@ -481,16 +515,16 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodLeft()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodRight()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getHoodRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
     // CommandScheduler.getInstance()
     //     .schedule(
     //         robotContainer
@@ -545,7 +579,7 @@ public class Robot extends LoggedRobot {
   private void snowblow() {
 
     // Deploy intake to snowblow, and run motors to snowblow.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
+    deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
@@ -558,18 +592,19 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().collectCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().collectCommand());
+    deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getVerticalFeedRight().verticalFeedCollectCommand());
   }
 
   private void defenseIn() {
 
     // Retract intake to prevent damage, and stop all motors to save battery.
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
+    retract();
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
@@ -590,9 +625,7 @@ public class Robot extends LoggedRobot {
   }
 
   private void defenseOut() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
+    deploy();
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
@@ -603,10 +636,10 @@ public class Robot extends LoggedRobot {
 
   private void deploy() {
     CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
   }
 
   private void retract() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
   }
 

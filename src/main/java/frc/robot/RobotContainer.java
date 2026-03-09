@@ -29,6 +29,7 @@ import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
 
 /**
@@ -150,7 +151,7 @@ public class RobotContainer {
   // Vision — 3× Limelight 4 cameras feeding MegaTag 2 poses into the drive
   // pose estimator.  Logs per-camera data under Vision/<cameraName>/ in
   // AdvantageScope.
-  // private final Vision vision = new Vision(drive);
+  private final Vision vision = new Vision(drive);
 
   // #region getters
   public Drive getDrive() {
@@ -374,6 +375,20 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     SmartDashboard.putNumber("SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
+    SmartDashboard.putNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
+    SmartDashboard.putNumber(
+        "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+
+    // Vision filter-strength tuning — multipliers for the Limelight std devs
+    // fed into the WPILib pose estimator.  >1.0 = smoother, <1.0 = snappier.
+    SmartDashboard.putNumber(
+        "VisionTune/MT2StdDevMultiplier", Constants.VisionConstants.kMT2StdDevMultiplier);
+    SmartDashboard.putNumber(
+        "VisionTune/MT1StdDevMultiplier", Constants.VisionConstants.kMT1StdDevMultiplier);
+    SmartDashboard.putNumber(
+        "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
+    SmartDashboard.putNumber(
+        "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     // #endregion
 
     // Initialize LED display mode to show bot state colors
@@ -405,16 +420,36 @@ public class RobotContainer {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
     // - Normal: on unless explicitly disabled.
+    // Flywheels off when:
+    //  - Pit mode and pitFlywheelsEnabled is false
+    //  - Normal mode and normalFlywheelsEnabled is false
+    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)
     flywheelLeft.setDefaultCommand(
         Commands.either(
             flywheelLeft.shootCommand(),
             flywheelLeft.offCommand(),
-            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+            () -> {
+              if (Robot.inPit) return pitFlywheelsEnabled;
+              if (Robot.currentState == Robot.BotState.DEFENCEIN
+                  || Robot.currentState == Robot.BotState.TRENCH) return false;
+              return normalFlywheelsEnabled;
+            }));
     flywheelRight.setDefaultCommand(
         Commands.either(
             flywheelRight.shootCommand(),
             flywheelRight.offCommand(),
-            () -> Robot.inPit ? pitFlywheelsEnabled : normalFlywheelsEnabled));
+            () -> {
+              if (Robot.inPit) return pitFlywheelsEnabled;
+              if (Robot.currentState == Robot.BotState.DEFENCEIN
+                  || Robot.currentState == Robot.BotState.TRENCH) return false;
+              return normalFlywheelsEnabled;
+            }));
+
+    // Hood defaults: continuously hold the last-commanded position via motion
+    // magic.  Without this the base-class neutral command takes over as soon as a
+    // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
+    hoodLeft.setTeleopDefaultCommand();
+    hoodRight.setTeleopDefaultCommand();
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
@@ -548,6 +583,20 @@ public class RobotContainer {
                     verticalFeedRight.offCommand()),
                 Commands.none(),
                 () -> Robot.inPit));
+
+    driver
+        .povDown()
+        .onTrue(
+            Commands.either(
+                // Pit: hoods to 10 deg (stowed)
+                Commands.parallel(
+                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                // Normal: stow hoods.
+                Commands.parallel(
+                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                () -> Robot.inPit));
     // #endregion
 
     // #region Operator Controls
@@ -606,7 +655,7 @@ public class RobotContainer {
                   () -> Robot.inPit));
     }
 
-    // X = pit: shooter rollers off | normal: defence state
+    // X = pit: shooter rollers off | normal: defenceout state
     operator
         .x()
         .onTrue(
@@ -615,7 +664,7 @@ public class RobotContainer {
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
-    // B = pit: floors on | normal: defence state
+    // B = pit: floors on | normal: collect state
     operator
         .b()
         .toggleOnTrue(
@@ -624,7 +673,7 @@ public class RobotContainer {
                 new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT),
                 () -> Robot.inPit));
 
-    // A = pit: floors off | normal: defence state
+    // A = pit: floors off | normal: defencein state
     operator
         .a()
         .toggleOnTrue(
@@ -696,15 +745,12 @@ public class RobotContainer {
               Commands.either(
                   // Pit: hoods to max (live from dashboard)
                   Commands.parallel(
-                      hoodLeft.setDegreesCommand(
-                          () -> Constants.ScorerConstants.kHoodMaxDegrees),
-                      hoodRight.setDegreesCommand(
-                          () -> Constants.ScorerConstants.kHoodMaxDegrees)),
+                      hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
+                      hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   // Normal: flywheel on + hood up (live from dashboard)
                   Commands.parallel(
-                      flywheelLeft.shootCommand(),
-                      hoodLeft.setDegreesCommand(
-                          () -> Constants.ScorerConstants.kHoodMaxDegrees)),
+                      hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
+                      hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   () -> Robot.inPit));
       operator
           .povDown()
