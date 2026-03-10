@@ -61,9 +61,12 @@ public class Vision extends SubsystemBase {
 
   // Thermal throttle — skip frames while disabled to keep cameras cool.
   // Per Limelight docs (LDS §13): 100–200 while disabled, 0 while enabled.
-  private static final int THROTTLE_DISABLED = 150; // skip 150 frames between processed frames
+  // We use 0 while disabled too so pre-match pose seeding gets full frame rate.
+  // The cameras won't overheat during a few minutes of pre-match idle.
+  private static final int THROTTLE_DISABLED = 0; // full frame rate for fast pre-match seeding
   private static final int THROTTLE_ENABLED = 0; // process every frame
   private boolean wasDisabled = true; // assume starting disabled
+  private boolean firstLoop = true; // push throttle on the very first periodic() call
 
   // Pre-match pose seeding state.
   // The first accepted seed uses setPose() (hard reset); subsequent seeds use
@@ -120,20 +123,22 @@ public class Vision extends SubsystemBase {
     // happens promptly when the robot is enabled.
     setIMUModes();
 
-    // Thermal throttle: skip frames while disabled to keep cameras cool (LDS §13).
-    // Only push the throttle value on enable/disable transitions to avoid NT spam.
+    // Thermal throttle: set frame processing rate.
+    // Push on first loop (so cameras are configured immediately on boot)
+    // and on enable/disable transitions.
     boolean isDisabled = DriverStation.isDisabled();
-    if (isDisabled != wasDisabled) {
+    if (firstLoop || isDisabled != wasDisabled) {
       int throttle = isDisabled ? THROTTLE_DISABLED : THROTTLE_ENABLED;
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
       // Reset pre-match seed when transitioning back to disabled (e.g., between
       // practice matches) so the robot re-localizes from scratch.
-      if (isDisabled) {
+      if (isDisabled && !firstLoop) {
         hasInitialSeed = false;
       }
       wasDisabled = isDisabled;
+      firstLoop = false;
     }
 
     // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
