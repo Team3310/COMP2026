@@ -7,13 +7,13 @@ import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.RobotContainer;
 
-public class DepLoop1 extends AutonCommandBase {
-  public DepLoop1(RobotContainer robotContainer) {
+public class DepCycle1 extends AutonCommandBase {
+  public DepCycle1(RobotContainer robotContainer) {
     super(
         robotContainer,
         new Pose2d(
             FieldConstants.StartingPosition.BLUEDEP.getTranslation(), Rotation2d.fromDegrees(180)));
 
-    this.addCommands(followPathAndSnowblow(Paths.depLoop));
+    this.addCommands(followPathAndSnowblow(Paths.depCycle));
   }
 }
