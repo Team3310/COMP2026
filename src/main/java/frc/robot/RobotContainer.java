@@ -389,6 +389,7 @@ public class RobotContainer {
         "VisionTune/MaxPoseJumpM", Constants.VisionConstants.kMaxPoseJumpMeters);
     SmartDashboard.putNumber(
         "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
+    SmartDashboard.putNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
     // #endregion
 
     // Initialize LED display mode to show bot state colors

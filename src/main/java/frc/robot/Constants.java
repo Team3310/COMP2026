@@ -146,13 +146,13 @@ public final class Constants {
     // Maximum allowed distance from prior pose before rejecting (meters).
     // This catches gross outliers (e.g., ghost detections on the far side of the
     // field).  Keep this large enough that normal drift doesn't trigger it.
-    public static double kMaxPoseJumpMeters = 1.0;
+    public static double kMaxPoseJumpMeters = 0.5;
 
     // Maximum accepted Limelight-reported XY std dev (meters) for MT2.
     // Measurements with stddevs above this are rejected outright — they indicate
     // poor tag geometry or excessive distance and would add noise even with a
     // high stddev weight.  Set to 0.0 to disable this filter.
-    public static double kMT2MaxAcceptedStdDev = 0.5;
+    public static double kMT2MaxAcceptedStdDev = 0.3;
 
     // Maximum measurement age (seconds) before we reject a vision result.
     // Stale timestamps can cause the pose estimator to "rewind" and replay
@@ -193,7 +193,8 @@ public final class Constants {
     //
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
-    public static double kMT2StdDevMultiplier = 5.0;
+    // Increase to reduce jitter (less trust in vision, smoother pose).
+    public static double kMT2StdDevMultiplier = 10.0;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
@@ -375,6 +376,7 @@ public final class Constants {
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
+    public static double kTurretOffsetDegrees = 7.0;
 
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
@@ -425,6 +427,19 @@ public final class Constants {
     // Column 4: vertical feeder speed (RPM)
     public static final double[][] kHubTable = {
       // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
+      {5.247, 12.47, 4000.0, 0.65, 2000.0}, //new
+      {4.67, 12.47, 4400.0, 0.63, 2000.0},
+      {4.5, 12.47, 3900.0, 0.62, 2000.0},
+      {2.9, 12.47, 3400, 0.58, 2000.0},
+      {4.5, 12.15, 3900.0, 0.62, 2000.0},
+      {3.8, 10.41, 3800, 0.60, 2000.0},
+      {3.6, 10.41, 3700, 0.60, 2000.0},
+      {3.12, 10.41, 3700, 0.58, 2000.0},
+      {2.3, 10.41, 3200, 0.55, 2000.0},
+      {2.6, 5.05, 3200.0, 0.55, 2000.0},
+      {2.1, 5.05, 3200.0, 0.55, 2000.0},
+      {1.4, 5.05, 2700.0, 0.50, 2000.0},
+      {1.2, 5.05, 2600.0, 0.50, 2000.0}, //new ^
       {1.60, 5.00, 3000.0, 0.35, 2000.0},
       {3.15, 10.66, 3500.0, 0.55, 2000.0},
       {3.20, 9.87, 3700.0, 0.56, 2000.0},

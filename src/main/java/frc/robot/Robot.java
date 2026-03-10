@@ -339,6 +339,9 @@ public class Robot extends LoggedRobot {
             + iTurretR
             + robotContainer.getDrive().getTotalDriveTrainCurrentAmps());
 
+    Constants.ScorerConstants.kTurretOffsetDegrees =
+        SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
+
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
   }
