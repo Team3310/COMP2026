@@ -61,7 +61,7 @@ public class Robot extends LoggedRobot {
 
   public static boolean inPit = false;
 
-  public static BotState currentState = BotState.PIT;
+  public static BotState currentState = BotState.DEFENCEIN;
   public static OverrideState overrideState = OverrideState.OFF;
   public static boolean deploying = false;
   public static boolean retracting = false;
@@ -145,8 +145,6 @@ public class Robot extends LoggedRobot {
     double robotX = robotContainer.getDrive().getPose().getX();
     double robotY = robotContainer.getDrive().getPose().getY();
     double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
-    Zone currentZone =
-        robotX < Zone.BLUE.getX() ? Zone.BLUE : robotX < Zone.MID.getX() ? Zone.MID : Zone.RED;
 
     updateZone();
 
@@ -159,10 +157,12 @@ public class Robot extends LoggedRobot {
     // we are done.
     if (inPit) {
       currentState = BotState.PIT;
+    } else if (isInTrenchZone()) {
+      currentState = BotState.TRENCH;
     } else if (!deploying && !retracting) {
       switch (overrideState) {
         case OFF: // nothing runs
-          currentState = BotState.PIT;
+          currentState = BotState.DEFENCEIN;
           break;
         case COLLECT:
           currentState = BotState.COLLECT;
@@ -183,8 +183,6 @@ public class Robot extends LoggedRobot {
             currentState = BotState.COLLECT;
           } else if (currentZone == Zone.RED && currentAlliance == Alliance.Red && !(activeHub)) {
             currentState = BotState.COLLECT;
-          } else if (isInTrenchZone()) {
-            currentState = BotState.TRENCH;
           } else {
             currentState = BotState.SNOWBLOW;
           }
@@ -340,6 +338,9 @@ public class Robot extends LoggedRobot {
             + iTurretL
             + iTurretR
             + robotContainer.getDrive().getTotalDriveTrainCurrentAmps());
+
+    Constants.ScorerConstants.kTurretOffsetDegrees =
+        SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
@@ -515,16 +516,16 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodLeft()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodRight()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getHoodLeft()
+    //             .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+    // CommandScheduler.getInstance()
+    //     .schedule(
+    //         robotContainer
+    //             .getHoodRight()
+    //             .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
     // CommandScheduler.getInstance()
     //     .schedule(
     //         robotContainer

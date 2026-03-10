@@ -147,7 +147,8 @@ public final class TurretAimCalculator {
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
     double[] result = computeAngles(midShooterField, fieldTarget, heading, home, inTrench);
 
-    double turretDeg = result[0];
+    double turretDeg =
+        result[0] + Constants.ScorerConstants.kTurretOffsetDegrees; // add any static offset
     double hoodDeg = result[1];
     double feederRPM = result[2];
 
