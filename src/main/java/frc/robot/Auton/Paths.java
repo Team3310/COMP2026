@@ -4,6 +4,8 @@
 
 package frc.robot.Auton;
 
+import java.nio.file.Path;
+
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -16,6 +18,16 @@ public class Paths {
   public static PathPlannerPath forward2m;
 
   public static PathPlannerPath depCycle;
+  public static PathPlannerPath outCycle;
+
+  public static PathPlannerPath outtoout;
+  public static PathPlannerPath deptodep;
+
+  public static PathPlannerPath deptosstrenchcycle;
+  public static PathPlannerPath outtosstrenchcycle;
+
+  public static PathPlannerPath deptoout;
+  public static PathPlannerPath outtodep;
 
   public static boolean loaded;
 
@@ -24,13 +36,35 @@ public class Paths {
     if (alliance == Alliance.Blue) {
 
       forward2m = loadPath("forward2m");
+
       depCycle = loadPath("DepLoop");
+      outCycle = loadPath("OutLoop");
+      
+      deptodep = loadPath("DepToDep");
+      outtoout = loadPath("OutToOut");
+
+      deptosstrenchcycle = loadPath("DepToSSTrenchCycle");
+      outtosstrenchcycle = loadPath("OutToSSTrenchCycle");
+
+      deptoout = loadPath("DepToOut");
+      outtodep = loadPath("OutToDep");
 
       loaded = true;
     } else {
 
       forward2m = loadPath("forward2m"); // dont flip for this one
+
       depCycle = loadPath("DepLoop").flipPath();
+      outCycle = loadPath("OutLoop").flipPath();
+
+      deptodep = loadPath("DepToDep").flipPath();
+      outtoout = loadPath("OutToOut").flipPath();
+
+      deptosstrenchcycle = loadPath("DepToSSTrenchCycle").flipPath();
+      outtosstrenchcycle = loadPath("OutToSSTrenchCycle").flipPath();
+
+      deptoout = loadPath("DepToOut").flipPath();
+      outtodep = loadPath("OutToDep").flipPath();
 
       loaded = true;
     }
