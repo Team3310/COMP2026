@@ -371,8 +371,8 @@ public final class Constants {
     public static final double kHoodStowDistanceMeters = 1.5; // meters
 
     public static final double kTurretStowedPosition = 0.0; // degrees
-    public static double kTurretMaxPositionUnits = 220.0; // degrees
-    public static final double kTurretMinPositionUnits = -220.0; // degrees
+    public static double kTurretMaxPositionUnits = 270.0; // degrees
+    public static final double kTurretMinPositionUnits = -270.0; // degrees
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
@@ -427,7 +427,7 @@ public final class Constants {
     // Column 4: vertical feeder speed (RPM)
     public static final double[][] kHubTable = {
       // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {5.247, 12.47, 4000.0, 0.65, 2000.0}, //new
+      {5.247, 12.47, 4000.0, 0.65, 2000.0}, // new
       {4.67, 12.47, 4400.0, 0.63, 2000.0},
       {4.5, 12.47, 3900.0, 0.62, 2000.0},
       {2.9, 12.47, 3400, 0.58, 2000.0},
@@ -439,7 +439,7 @@ public final class Constants {
       {2.6, 5.05, 3200.0, 0.55, 2000.0},
       {2.1, 5.05, 3200.0, 0.55, 2000.0},
       {1.4, 5.05, 2700.0, 0.50, 2000.0},
-      {1.2, 5.05, 2600.0, 0.50, 2000.0}, //new ^
+      {1.2, 5.05, 2600.0, 0.50, 2000.0}, // new ^
       {1.60, 5.00, 3000.0, 0.35, 2000.0},
       {3.15, 10.66, 3500.0, 0.55, 2000.0},
       {3.20, 9.87, 3700.0, 0.56, 2000.0},

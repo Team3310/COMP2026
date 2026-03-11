@@ -31,7 +31,12 @@ public class AutonCommandBase extends SequentialCommandGroup {
     this.startingPose = startingPose;
   }
 
+  /**
+   * Returns the starting pose, or null if this auto should run from wherever the robot currently is
+   * (no pose reset).
+   */
   public Pose2d getStartingPose() {
+    if (startingPose == null) return null;
     return new Pose2d(
         this.startingPose.getTranslation(),
         Robot.currentAlliance == Alliance.Red

@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
-import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.subsystems.Lights;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -151,6 +150,15 @@ public class Robot extends LoggedRobot {
     // Update activeHub based on match time / override flag
     updateHub();
 
+    if (robotContainer.normalFlywheelsEnabled) {
+      // If both flywheel modes are enabled, prioritize normal mode and disable pit mode.
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
+    } else {
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    }
+
     // This basically says if we are not deploying or retracting, then we can change
     // states.
     // If we are deploying or retracting, we want to stay in deploy or retract until
@@ -194,9 +202,7 @@ public class Robot extends LoggedRobot {
       lastAppliedState = currentState;
     }
 
-    if (shouldTrack(currentState)) {
-      track();
-    }
+    track();
 
     // logging
     SmartDashboard.putBoolean("inPit", inPit);
@@ -209,6 +215,8 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putBoolean("activeHub", activeHub);
     SmartDashboard.putBoolean("hubOverride", hubOverride);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
+    SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
+    SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
 
     // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
     if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
@@ -360,9 +368,6 @@ public class Robot extends LoggedRobot {
     Paths.loadPaths(currentAlliance);
 
     autonomousCommand = robotContainer.getAutonomousCommand();
-
-    robotContainer.getDrive().setPose(((AutonCommandBase) autonomousCommand).getStartingPose());
-
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
@@ -516,26 +521,28 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodLeft()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getHoodRight()
-    //             .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getFlywheelLeft()
-    //             .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
-    // CommandScheduler.getInstance()
-    //     .schedule(
-    //         robotContainer
-    //             .getFlywheelRight()
-    //             .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
+    if (shouldTrack(currentState)) {
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getHoodLeft()
+                  .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getHoodRight()
+                  .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelLeft()
+                  .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelRight()
+                  .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
+    }
   }
 
   // #endregion
@@ -594,7 +601,6 @@ public class Robot extends LoggedRobot {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
     deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
@@ -636,12 +642,17 @@ public class Robot extends LoggedRobot {
   }
 
   private void deploy() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
+    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
+    }
   }
 
   private void retract() {
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
+    if (robotContainer.getIntakePivot().getCurrentPosition() > 40.0) {
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
+    }
   }
 
   private void trench() {

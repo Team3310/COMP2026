@@ -226,8 +226,8 @@ public class RobotContainer {
   // - Pit mode: controlled by pitFlywheelsEnabled via operator/dashboard toggles.
   // - Normal mode: controlled by normalFlywheelsEnabled (default true for auto +
   // teleop).
-  private boolean pitFlywheelsEnabled = false;
-  private boolean normalFlywheelsEnabled = true;
+  public boolean pitFlywheelsEnabled = false;
+  public boolean normalFlywheelsEnabled = true;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -424,27 +424,7 @@ public class RobotContainer {
     // Flywheels off when:
     //  - Pit mode and pitFlywheelsEnabled is false
     //  - Normal mode and normalFlywheelsEnabled is false
-    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)
-    flywheelLeft.setDefaultCommand(
-        Commands.either(
-            flywheelLeft.shootCommand(),
-            flywheelLeft.offCommand(),
-            () -> {
-              if (Robot.inPit) return pitFlywheelsEnabled;
-              if (Robot.currentState == Robot.BotState.DEFENCEIN
-                  || Robot.currentState == Robot.BotState.TRENCH) return false;
-              return normalFlywheelsEnabled;
-            }));
-    flywheelRight.setDefaultCommand(
-        Commands.either(
-            flywheelRight.shootCommand(),
-            flywheelRight.offCommand(),
-            () -> {
-              if (Robot.inPit) return pitFlywheelsEnabled;
-              if (Robot.currentState == Robot.BotState.DEFENCEIN
-                  || Robot.currentState == Robot.BotState.TRENCH) return false;
-              return normalFlywheelsEnabled;
-            }));
+    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)]
 
     // Hood defaults: continuously hold the last-commanded position via motion
     // magic.  Without this the base-class neutral command takes over as soon as a
@@ -696,13 +676,40 @@ public class RobotContainer {
     operator
         .rightTrigger()
         .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
-        .toggleOnTrue(
+        .whileTrue(
             Commands.parallel(
                     agitatorLeft.snowblowCommand(),
                     agitatorRight.snowblowCommand(),
                     verticalFeedLeft.verticalFeedIntakeCommand(),
                     verticalFeedRight.verticalFeedIntakeCommand())
                 .until(() -> Robot.currentState != Robot.BotState.DEFENCEOUT));
+
+    // Normal COLLECT mode -> while held: vertical feeders at full intake speed
+    // (shoot).  On release: vertical feeders return to collect speed.
+    operator
+        .rightTrigger()
+        .and(() -> !Robot.inPit && (Robot.currentState == Robot.BotState.COLLECT || Robot.currentState == Robot.BotState.DEFENCEOUT))
+        .whileTrue(
+            Commands.parallel(
+                    verticalFeedLeft.verticalFeedIntakeCommand(),
+                    verticalFeedRight.verticalFeedIntakeCommand(),
+                    agitatorLeft.snowblowCommand(),
+                    agitatorRight.snowblowCommand())
+                .finallyDo(
+                    () -> {
+                      // Re-schedule collect-speed commands when the trigger is released
+                      // (only if still in COLLECT state).
+                      if (Robot.currentState == Robot.BotState.COLLECT) {
+                        CommandScheduler.getInstance()
+                            .schedule(verticalFeedLeft.verticalFeedCollectCommand());
+                        CommandScheduler.getInstance()
+                            .schedule(verticalFeedRight.verticalFeedCollectCommand());
+                        CommandScheduler.getInstance()
+                            .schedule(agitatorLeft.offCommand());
+                        CommandScheduler.getInstance()
+                            .schedule(agitatorRight.offCommand());
+                      }
+                    }));
 
     // Left Trigger:
     // Pit mode -> toggleOnTrue: vertical rollers off
@@ -721,7 +728,13 @@ public class RobotContainer {
     }
 
     // Right bumper = both: deploy intake
-    operator.rightBumper().onTrue(intakePivot.deployCommand());
+    operator
+        .rightBumper()
+        .onTrue(
+            new InstantCommand(
+                () -> {
+                  normalFlywheelsEnabled = !normalFlywheelsEnabled;
+                }));
 
     // Left bumper = pit: retract intake | normal: outtake in defenseout
     operator
