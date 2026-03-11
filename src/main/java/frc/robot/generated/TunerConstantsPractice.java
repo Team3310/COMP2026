@@ -18,7 +18,8 @@ import edu.wpi.first.units.measure.*;
 public class TunerConstantsPractice {
   // Both sets of gains need to be tuned to your individual robot.
 
-  // The steer motor uses any SwerveModule.SteerRequestType control request with the
+  // The steer motor uses any SwerveModule.SteerRequestType control request with
+  // the
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
   private static final Slot0Configs steerGains =
       new Slot0Configs()
@@ -31,7 +32,8 @@ public class TunerConstantsPractice {
           .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
-  // Paul changed kP from 0.1 to 0.8 and kV from .124 to .144 since we are now 10V limited.
+  // Paul changed kP from 0.1 to 0.8 and kV from .124 to .144 since we are now 10V
+  // limited.
   private static final Slot0Configs driveGains =
       new Slot0Configs().withKP(0.8).withKI(0).withKD(0).withKS(0).withKV(0.144);
 
@@ -57,13 +59,16 @@ public class TunerConstantsPractice {
   // This needs to be tuned to your individual robot
   private static final Current kSlipCurrent = Amps.of(40);
 
-  // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
-  // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
+  // Initial configs for the drive and steer motors and the azimuth encoder; these
+  // cannot be null.
+  // Some configs will be overwritten; check the `with*InitialConfigs()` API
+  // documentation.
   private static final TalonFXConfiguration driveInitialConfigs =
       new TalonFXConfiguration()
           .withCurrentLimits(
               new CurrentLimitsConfigs()
-                  // Swerve azimuth does not require much torque output, so we can set a relatively
+                  // Swerve azimuth does not require much torque output, so we can set a
+                  // relatively
                   // low
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Amps.of(40))
@@ -74,7 +79,8 @@ public class TunerConstantsPractice {
       new TalonFXConfiguration()
           .withCurrentLimits(
               new CurrentLimitsConfigs()
-                  // Swerve azimuth does not require much torque output, so we can set a relatively
+                  // Swerve azimuth does not require much torque output, so we can set a
+                  // relatively
                   // low
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Amps.of(40))
@@ -91,7 +97,8 @@ public class TunerConstantsPractice {
   public static final CANBus kCANBus2 = new CANBus("Default Name", "./logs/example.hoot");
   public static final CANBus kCANBusRio = new CANBus("Default Name", "./logs/example.hoot");
 
-  // Theoretical free speed (m/s) at 10 V applied output (virtual voltage compensation cap);
+  // Theoretical free speed (m/s) at 10 V applied output (virtual voltage
+  // compensation cap);
   // This needs to be tuned to your individual robot
   public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.0);
 

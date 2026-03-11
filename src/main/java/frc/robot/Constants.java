@@ -378,6 +378,9 @@ public final class Constants {
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
     public static double kTurretOffsetDegrees = 7.0;
 
+    public static double kLeftTurretOffset = 0.0;
+    public static double kRightTurretOffset = 0.0;
+
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 20.0;
@@ -552,7 +555,7 @@ public final class Constants {
     kLeftTurretConfig.kMinPositionUnits = ScorerConstants.kTurretMinPositionUnits;
     kLeftTurretConfig.momentOfInertia = ScorerConstants.kTurretMomentOfInertia;
 
-    kLeftTurretConfig.fxConfig.Slot0.kP = 2.0;
+    kLeftTurretConfig.fxConfig.Slot0.kP = 1.0;
     kLeftTurretConfig.fxConfig.Slot0.kD = 0.0;
     kLeftTurretConfig.fxConfig.Slot0.kV = 0.144;
     kLeftTurretConfig.fxConfig.Slot0.kS = 0.0915;

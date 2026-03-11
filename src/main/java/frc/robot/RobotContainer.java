@@ -688,7 +688,11 @@ public class RobotContainer {
     // (shoot).  On release: vertical feeders return to collect speed.
     operator
         .rightTrigger()
-        .and(() -> !Robot.inPit && (Robot.currentState == Robot.BotState.COLLECT || Robot.currentState == Robot.BotState.DEFENCEOUT))
+        .and(
+            () ->
+                !Robot.inPit
+                    && (Robot.currentState == Robot.BotState.COLLECT
+                        || Robot.currentState == Robot.BotState.DEFENCEOUT))
         .whileTrue(
             Commands.parallel(
                     verticalFeedLeft.verticalFeedIntakeCommand(),
@@ -704,10 +708,8 @@ public class RobotContainer {
                             .schedule(verticalFeedLeft.verticalFeedCollectCommand());
                         CommandScheduler.getInstance()
                             .schedule(verticalFeedRight.verticalFeedCollectCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(agitatorLeft.offCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(agitatorRight.offCommand());
+                        CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                        CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
                       }
                     }));
 
