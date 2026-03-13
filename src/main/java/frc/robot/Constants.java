@@ -212,7 +212,7 @@ public final class Constants {
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
     // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
-    public static double kMT1StdDevMultiplier = 40.0;
+    public static double kMT1StdDevMultiplier = 10.0;
 
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
@@ -240,7 +240,9 @@ public final class Constants {
 
     // Limelight frame throttle while disabled. Higher values skip more frames
     // to reduce thermals during long disabled periods.
-    public static final int kDisabledThrottleFrames = 150;
+    // 0 = process every frame.  LL4 handles heat fine for pre-match.
+    // Low value gives smooth pose convergence instead of choppy jumps.
+    public static final int kDisabledThrottleFrames = 0;
 
     // Limelight frame throttle while enabled. 0 = process every frame.
     public static final int kEnabledThrottleFrames = 0;
