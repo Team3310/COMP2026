@@ -147,14 +147,20 @@ public final class TurretAimCalculator {
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
     double[] result = computeAngles(midShooterField, fieldTarget, heading, home, inTrench);
 
-    double turretDeg =
-        result[0] + Constants.ScorerConstants.kTurretOffsetDegrees; // add any static offset
+    double turretDegLeft =
+        result[0]
+            + Constants.ScorerConstants.kTurretOffsetDegrees
+            + Constants.ScorerConstants.kLeftTurretOffset; // add any static offset
+    double turretDegRight =
+        result[0]
+            + Constants.ScorerConstants.kTurretOffsetDegrees
+            + Constants.ScorerConstants.kRightTurretOffset; // add any static offset
     double hoodDeg = result[1];
     double feederRPM = result[2];
 
     // Same values for both sides (parallel turrets)
     return new AimResult(
-        turretDeg, hoodDeg, feederRPM, turretDeg, hoodDeg, feederRPM, fieldTarget, home);
+        turretDegLeft, hoodDeg, feederRPM, turretDegRight, hoodDeg, feederRPM, fieldTarget, home);
   }
 
   // ====================================================================

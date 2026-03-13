@@ -49,6 +49,9 @@ import org.littletonrobotics.junction.Logger;
  * rotation — it uses the gyro heading you supply.
  */
 public class Vision extends SubsystemBase {
+  private static final String kVisionEnabledKey = "Vision/Enabled";
+  private static final String kVisionSeededKey = "Vision/Seeded";
+  private static final String kVisionSeedStableKey = "Vision/SeedStable";
 
   private final Drive drive;
   private int configCounter = CONFIG_INTERVAL; // Start at threshold so first loop configures
@@ -66,22 +69,22 @@ public class Vision extends SubsystemBase {
   // Per Limelight docs (LDS §13): 100–200 while disabled, 0 while enabled.
   // We use 0 while disabled too so pre-match pose seeding gets full frame rate.
   // The cameras won't overheat during a few minutes of pre-match idle.
-  private static final int THROTTLE_DISABLED = 0; // full frame rate for fast pre-match seeding
-  private static final int THROTTLE_ENABLED = 0; // process every frame
   private boolean wasDisabled = true; // assume starting disabled
   private boolean firstLoop = true; // push throttle on the very first periodic() call
 
   // Pre-match pose seeding state.
   // The first accepted seed uses setPose() (hard reset); subsequent seeds use
   // addVisionMeasurement() so the estimator converges smoothly.
-  private boolean hasInitialSeed = false;
+  private boolean hasSeed = false;
+  private boolean seedStable = false;
+  private Pose2d lastAcceptedPreMatchPose = null;
+  private int stableSeedSampleCount = 0;
 
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
   // Set to false from Elastic/SmartDashboard to remove vision from the pose
   // estimator for debugging (cameras still run, log data, and seed IMU —
   // only the pose injection is suppressed).
-  private static final String kVisionEnabledKey = "Vision/Enabled";
 
   /** A vision measurement that passed all filters and is ready to be injected. */
   private record AcceptedObservation(
@@ -96,6 +99,8 @@ public class Vision extends SubsystemBase {
     this.drive = drive;
     // Publish the default value so the toggle appears on the dashboard immediately.
     SmartDashboard.putBoolean(kVisionEnabledKey, true);
+    SmartDashboard.putBoolean(kVisionSeededKey, false);
+    SmartDashboard.putBoolean(kVisionSeedStableKey, false);
   }
 
   // -----------------------------------------------------------------------
@@ -116,7 +121,12 @@ public class Vision extends SubsystemBase {
     boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, true);
     if (shouldLog) {
       Logger.recordOutput("Vision/enabled", visionEnabled);
+      Logger.recordOutput("Vision/Seeded", hasSeed);
+      Logger.recordOutput("Vision/SeedStable", seedStable);
+      Logger.recordOutput("Vision/StableSeedSampleCount", stableSeedSampleCount);
     }
+    SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
+    SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
     // Periodically re-send camera config so cameras that boot late or power-cycle
     // mid-match still get the correct poses and IMU mode.
@@ -135,14 +145,17 @@ public class Vision extends SubsystemBase {
     // and on enable/disable transitions.
     boolean isDisabled = DriverStation.isDisabled();
     if (firstLoop || isDisabled != wasDisabled) {
-      int throttle = isDisabled ? THROTTLE_DISABLED : THROTTLE_ENABLED;
+      int throttle =
+          isDisabled
+              ? VisionConstants.kDisabledThrottleFrames
+              : VisionConstants.kEnabledThrottleFrames;
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
       // Reset pre-match seed when transitioning back to disabled (e.g., between
       // practice matches) so the robot re-localizes from scratch.
       if (isDisabled && !firstLoop) {
-        hasInitialSeed = false;
+        resetSeedState();
       }
       wasDisabled = isDisabled;
       firstLoop = false;
@@ -498,12 +511,15 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // 6. Seed the pose estimator.
-    if (!hasInitialSeed) {
+    // 6. Update stable-seed tracking from accepted MT1 poses.
+    updateStableSeedState(visionPose, shouldLog, prefix);
+
+    // 7. Seed the pose estimator.
+    if (!hasSeed) {
       if (visionEnabled) {
         drive.setPose(visionPose);
+        hasSeed = true;
       }
-      hasInitialSeed = true;
       if (shouldLog) {
         Logger.recordOutput(
             prefix + "preMatchAction", visionEnabled ? "setPose" : "setPose_suppressed");
@@ -524,14 +540,63 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // 7. Logging (rate-limited).
+    if (!hasSeed && !visionEnabled) {
+      seedStable = false;
+    } else if (hasSeed && stableSeedSampleCount >= VisionConstants.kPreMatchStableSeedMinSamples) {
+      seedStable = true;
+    }
+
+    // 8. Logging (rate-limited).
     if (shouldLog) {
       Logger.recordOutput(prefix + "preMatch", true);
       Logger.recordOutput(prefix + "preMatchInjected", visionEnabled);
+      Logger.recordOutput(prefix + "preMatchHasSeed", hasSeed);
+      Logger.recordOutput(prefix + "preMatchSeedStable", seedStable);
+      Logger.recordOutput(prefix + "preMatchStableSamples", stableSeedSampleCount);
       Logger.recordOutput(prefix + "preMatchPose", visionPose);
       Logger.recordOutput(prefix + "preMatchTagCount", estimate.tagCount);
       Logger.recordOutput(prefix + "preMatchXYStdDev", xyStdDev);
       Logger.recordOutput(prefix + "preMatchYawStdDev", yawStdDev);
+    }
+  }
+
+  private void resetSeedState() {
+    hasSeed = false;
+    seedStable = false;
+    lastAcceptedPreMatchPose = null;
+    stableSeedSampleCount = 0;
+  }
+
+  private void updateStableSeedState(Pose2d visionPose, boolean shouldLog, String prefix) {
+    double xyDeltaMeters = 0.0;
+    double yawDeltaDeg = 0.0;
+
+    if (lastAcceptedPreMatchPose == null) {
+      stableSeedSampleCount = 1;
+      seedStable = false;
+    } else {
+      xyDeltaMeters =
+          lastAcceptedPreMatchPose.getTranslation().getDistance(visionPose.getTranslation());
+      yawDeltaDeg =
+          Math.abs(
+              visionPose.getRotation().minus(lastAcceptedPreMatchPose.getRotation()).getDegrees());
+
+      boolean xyStable = xyDeltaMeters <= VisionConstants.kPreMatchStableSeedXYDeltaMeters;
+      boolean yawStable = yawDeltaDeg <= VisionConstants.kPreMatchStableSeedYawDeltaDeg;
+
+      if (xyStable && yawStable) {
+        stableSeedSampleCount++;
+      } else {
+        stableSeedSampleCount = 1;
+        seedStable = false;
+      }
+    }
+
+    lastAcceptedPreMatchPose = visionPose;
+
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "preMatchXYDeltaMeters", xyDeltaMeters);
+      Logger.recordOutput(prefix + "preMatchYawDeltaDeg", yawDeltaDeg);
     }
   }
 }

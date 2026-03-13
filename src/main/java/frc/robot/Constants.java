@@ -237,6 +237,26 @@ public final class Constants {
     // MT1 yaw accuracy degrades with distance and single-tag ambiguity.
     // Only trust the heading when MT1 is very confident.
     public static final double kPreMatchMaxYawStdDevDeg = 5.0;
+
+    // Limelight frame throttle while disabled. Higher values skip more frames
+    // to reduce thermals during long disabled periods.
+    public static final int kDisabledThrottleFrames = 150;
+
+    // Limelight frame throttle while enabled. 0 = process every frame.
+    public static final int kEnabledThrottleFrames = 0;
+
+    // Stable-seed verification: require this many consecutive accepted MT1
+    // poses that remain within both the XY and yaw deltas below before
+    // declaring the seed stable.
+    public static final int kPreMatchStableSeedMinSamples = 3;
+
+    // Maximum XY delta (meters) between consecutive accepted MT1 poses for the
+    // seed to continue counting as stable.
+    public static final double kPreMatchStableSeedXYDeltaMeters = 0.08;
+
+    // Maximum yaw delta (degrees) between consecutive accepted MT1 poses for
+    // the seed to continue counting as stable.
+    public static final double kPreMatchStableSeedYawDeltaDeg = 2.0;
   }
   // #endregion
 
@@ -390,6 +410,9 @@ public final class Constants {
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
     public static double kTurretOffsetDegrees = 7.0;
+
+    public static double kLeftTurretOffset = 0.0;
+    public static double kRightTurretOffset = 0.0;
 
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
@@ -565,7 +588,7 @@ public final class Constants {
     kLeftTurretConfig.kMinPositionUnits = ScorerConstants.kTurretMinPositionUnits;
     kLeftTurretConfig.momentOfInertia = ScorerConstants.kTurretMomentOfInertia;
 
-    kLeftTurretConfig.fxConfig.Slot0.kP = 2.0;
+    kLeftTurretConfig.fxConfig.Slot0.kP = 1.0;
     kLeftTurretConfig.fxConfig.Slot0.kD = 0.0;
     kLeftTurretConfig.fxConfig.Slot0.kV = 0.144;
     kLeftTurretConfig.fxConfig.Slot0.kS = 0.0915;
