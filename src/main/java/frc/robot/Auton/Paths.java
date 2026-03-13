@@ -4,8 +4,6 @@
 
 package frc.robot.Auton;
 
-import java.nio.file.Path;
-
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -44,7 +42,7 @@ public class Paths {
       depCycle = loadPath("DepLoop");
       outCycle = loadPath("OutLoop");
       hubCycle = loadPath("HubLoop");
-      
+
       deptodep = loadPath("DepToDep");
       outtoout = loadPath("OutToOut");
 
@@ -65,7 +63,7 @@ public class Paths {
       depCycle = loadPath("DepLoop").flipPath();
       outCycle = loadPath("OutLoop").flipPath();
       hubCycle = loadPath("HubLoop").flipPath();
-      
+
       deptodep = loadPath("DepToDep").flipPath();
       outtoout = loadPath("OutToOut").flipPath();
 
@@ -74,7 +72,7 @@ public class Paths {
 
       deptoout = loadPath("DepToOut").flipPath();
       outtodep = loadPath("OutToDep").flipPath();
-      
+
       hubtodep = loadPath("HubToDep").flipPath();
       hubtoout = loadPath("HubToOut").flipPath();
       loaded = true;

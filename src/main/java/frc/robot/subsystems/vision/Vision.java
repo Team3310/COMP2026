@@ -177,10 +177,33 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // Process each camera (reuse yawRateDps computed above for spin-rejection).
+    // Process each camera — collect accepted observations for timestamp-sorted injection.
+    // Sorting ensures the pose estimator processes measurements in chronological order
+    // even when cameras have different pipeline latencies.
+    List<AcceptedObservation> accepted = new ArrayList<>();
     for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      processCamera(
-          VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, visionEnabled, shouldLog);
+      AcceptedObservation obs =
+          processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
+      if (obs != null) {
+        accepted.add(obs);
+      }
+    }
+
+    // Sort by timestamp (oldest first) and inject into pose estimator.
+    accepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+    for (AcceptedObservation obs : accepted) {
+      if (visionEnabled) {
+        drive.addVisionMeasurement(
+            obs.pose(),
+            obs.timestampSeconds(),
+            VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+      }
+    }
+
+    // Log injection count (rate-limited).
+    if (shouldLog) {
+      Logger.recordOutput("Vision/acceptedCount", accepted.size());
+      Logger.recordOutput("Vision/injected", visionEnabled && !accepted.isEmpty());
     }
   }
 
@@ -227,21 +250,21 @@ public class Vision extends SubsystemBase {
   // -----------------------------------------------------------------------
   /**
    * Queries one Limelight for a MegaTag 2 pose estimate, applies filtering, and — if accepted —
-   * injects the measurement into the drive pose estimator.
+   * returns an {@link AcceptedObservation} ready for injection. Returns {@code null} if the
+   * measurement was rejected by any filter.
    *
    * @param cameraName Limelight hostname
    * @param robotYawDeg Current gyro yaw in degrees
    * @param yawRateDegPerSec Current angular velocity in deg/s
-   * @param cameraIndex Index into kCameraNames (for logging)
-   * @param visionEnabled Whether to inject the measurement into the pose estimator
+   * @param cameraIndex Index into kCameraNames (for logging and per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
+   * @return An accepted observation, or {@code null} if rejected.
    */
-  private void processCamera(
+  private AcceptedObservation processCamera(
       String cameraName,
       double robotYawDeg,
       double yawRateDegPerSec,
       int cameraIndex,
-      boolean visionEnabled,
       boolean shouldLog) {
 
     String prefix = "Vision/" + cameraName + "/";
@@ -252,7 +275,7 @@ public class Vision extends SubsystemBase {
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
       if (shouldLog) Logger.recordOutput(prefix + "accepted", false);
-      return;
+      return null;
     }
 
     Pose2d visionPose = estimate.pose;
@@ -266,7 +289,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "rejectReason", "stale_timestamp");
         Logger.recordOutput(prefix + "measurementAgeSec", age);
       }
-      return;
+      return null;
     }
 
     // 4. Reject if the robot is spinning too fast (motion blur degrades detection).
@@ -275,7 +298,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "yaw_rate");
       }
-      return;
+      return null;
     }
 
     // 5. Reject single-tag results that are too small (far away / ambiguous).
@@ -284,7 +307,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "single_tag_area");
       }
-      return;
+      return null;
     }
 
     // 6. Reject poses that are clearly off the field (with small margin to reject origin).
@@ -296,7 +319,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "off_field");
       }
-      return;
+      return null;
     }
 
     // 7. Read the Limelight's own MegaTag 2 std devs from NetworkTables.
@@ -307,7 +330,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "stddevs_missing");
       }
-      return;
+      return null;
     }
 
     double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
@@ -319,7 +342,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "stddevs_zero");
       }
-      return;
+      return null;
     }
 
     // 8. Reject measurements with excessively high std devs.
@@ -330,7 +353,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "rejectReason", "stddev_too_high");
         Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
       }
-      return;
+      return null;
     }
 
     // 9. Reject large jumps from the current pose estimate.
@@ -341,33 +364,30 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "pose_jump");
       }
-      return;
+      return null;
     }
 
-    // 10. Apply the MT2 filter-strength multiplier before injecting.
-    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier;
+    // 10. Apply the MT2 filter-strength multiplier and per-camera trust factor.
+    double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
+    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
-    // 11. Inject into the drive pose estimator (only when vision is enabled on the dashboard).
-    if (visionEnabled) {
-      drive.addVisionMeasurement(
-          visionPose,
-          estimate.timestampSeconds,
-          VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, VisionConstants.kThetaStdDev));
-    }
-
-    // 12. Logging for AdvantageScope (rate-limited).
+    // 11. Logging for AdvantageScope (rate-limited).
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);
-      Logger.recordOutput(prefix + "injected", visionEnabled);
       Logger.recordOutput(prefix + "pose", visionPose);
       Logger.recordOutput(prefix + "tagCount", estimate.tagCount);
       Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
       Logger.recordOutput(prefix + "avgTagArea", estimate.avgTagArea);
       Logger.recordOutput(prefix + "xyStdDev", scaledXYStdDev);
       Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
+      Logger.recordOutput(prefix + "cameraFactor", cameraFactor);
       Logger.recordOutput(prefix + "llXStdDev", xStdDev);
       Logger.recordOutput(prefix + "llYStdDev", yStdDev);
     }
+
+    // 12. Return the accepted observation for timestamp-sorted injection.
+    return new AcceptedObservation(
+        visionPose, estimate.timestampSeconds, scaledXYStdDev, VisionConstants.kThetaStdDev);
   }
 
   // -----------------------------------------------------------------------
