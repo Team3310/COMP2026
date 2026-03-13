@@ -17,6 +17,7 @@ public class Paths {
   // Individual paths (loaded from .path files)
   public static PathPlannerPath forward2m;
 
+  public static PathPlannerPath hubCycle;
   public static PathPlannerPath depCycle;
   public static PathPlannerPath outCycle;
 
@@ -29,6 +30,9 @@ public class Paths {
   public static PathPlannerPath deptoout;
   public static PathPlannerPath outtodep;
 
+  public static PathPlannerPath hubtodep;
+  public static PathPlannerPath hubtoout;
+
   public static boolean loaded;
 
   public static void loadPaths(Alliance alliance) {
@@ -39,6 +43,7 @@ public class Paths {
 
       depCycle = loadPath("DepLoop");
       outCycle = loadPath("OutLoop");
+      hubCycle = loadPath("HubLoop");
       
       deptodep = loadPath("DepToDep");
       outtoout = loadPath("OutToOut");
@@ -49,6 +54,9 @@ public class Paths {
       deptoout = loadPath("DepToOut");
       outtodep = loadPath("OutToDep");
 
+      hubtodep = loadPath("HubToDep");
+      hubtoout = loadPath("HubToOut");
+
       loaded = true;
     } else {
 
@@ -56,7 +64,8 @@ public class Paths {
 
       depCycle = loadPath("DepLoop").flipPath();
       outCycle = loadPath("OutLoop").flipPath();
-
+      hubCycle = loadPath("HubLoop").flipPath();
+      
       deptodep = loadPath("DepToDep").flipPath();
       outtoout = loadPath("OutToOut").flipPath();
 
@@ -65,7 +74,9 @@ public class Paths {
 
       deptoout = loadPath("DepToOut").flipPath();
       outtodep = loadPath("OutToDep").flipPath();
-
+      
+      hubtodep = loadPath("HubToDep").flipPath();
+      hubtoout = loadPath("HubToOut").flipPath();
       loaded = true;
     }
   }

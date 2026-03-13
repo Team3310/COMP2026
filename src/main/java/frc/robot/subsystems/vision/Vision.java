@@ -10,6 +10,9 @@ import frc.lib.limelight.LimelightHelpers.PoseEstimate;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.Drive;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -79,6 +82,10 @@ public class Vision extends SubsystemBase {
   // estimator for debugging (cameras still run, log data, and seed IMU —
   // only the pose injection is suppressed).
   private static final String kVisionEnabledKey = "Vision/Enabled";
+
+  /** A vision measurement that passed all filters and is ready to be injected. */
+  private record AcceptedObservation(
+      Pose2d pose, double timestampSeconds, double scaledXYStdDev, double thetaStdDev) {}
 
   /**
    * Creates a new Vision subsystem.

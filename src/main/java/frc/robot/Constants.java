@@ -135,6 +135,19 @@ public final class Constants {
       {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
     };
 
+    // ---- Per-camera trust weighting ----
+    // Each camera can have a different trust factor that multiplies its stddevs.
+    // Higher value = less trust (wider stddev = smoother but slower convergence).
+    //   1.0 = default trust
+    //   >1.0 = trust this camera LESS  (e.g., poor mounting, lower res, frequent occlusion)
+    //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
+    // Order matches kCameraNames: {rear, right, left}
+    public static final double[] kCameraStdDevFactors = {
+      1.0, // Rear   — centered, high mount, good tag visibility
+      1.0, // Right  — side-mount, upside-down, may have slightly noisier results
+      1.0, // Left   — side-mount, symmetric to right
+    };
+
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
     // Fast rotation causes motion-blur → bad detections.
