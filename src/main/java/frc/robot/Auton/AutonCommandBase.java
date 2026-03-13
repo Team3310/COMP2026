@@ -52,6 +52,4 @@ public class AutonCommandBase extends SequentialCommandGroup {
     return new ParallelCommandGroup(
         followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.ON));
   }
-
-  
 }

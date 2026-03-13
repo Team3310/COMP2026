@@ -224,6 +224,26 @@ public final class Constants {
     // MT1 yaw accuracy degrades with distance and single-tag ambiguity.
     // Only trust the heading when MT1 is very confident.
     public static final double kPreMatchMaxYawStdDevDeg = 5.0;
+
+    // Limelight frame throttle while disabled. Higher values skip more frames
+    // to reduce thermals during long disabled periods.
+    public static final int kDisabledThrottleFrames = 150;
+
+    // Limelight frame throttle while enabled. 0 = process every frame.
+    public static final int kEnabledThrottleFrames = 0;
+
+    // Stable-seed verification: require this many consecutive accepted MT1
+    // poses that remain within both the XY and yaw deltas below before
+    // declaring the seed stable.
+    public static final int kPreMatchStableSeedMinSamples = 3;
+
+    // Maximum XY delta (meters) between consecutive accepted MT1 poses for the
+    // seed to continue counting as stable.
+    public static final double kPreMatchStableSeedXYDeltaMeters = 0.08;
+
+    // Maximum yaw delta (degrees) between consecutive accepted MT1 poses for
+    // the seed to continue counting as stable.
+    public static final double kPreMatchStableSeedYawDeltaDeg = 2.0;
   }
   // #endregion
 
