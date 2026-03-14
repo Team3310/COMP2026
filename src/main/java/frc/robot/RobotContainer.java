@@ -754,58 +754,65 @@ public class RobotContainer {
 
     // Right Trigger:
     // Pit mode -> toggle vertical feed rollers on/off.
-    // Normal mode -> toggle floor + vertical rollers while in DEFENCEOUT.
+    // Normal mode -> spin flywheels to TurretAimManager RPM, wait for at-speed,
+    //                then engage vertical feeders + agitators. All off on release.
     operator
         .rightTrigger()
         .and(() -> !Robot.inPit)
+        .and(
+            () ->
+                Robot.currentState == Robot.BotState.DEFENCEOUT
+                    || Robot.currentState == Robot.BotState.COLLECT)
         .whileTrue(
             Commands.startEnd(
                 () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false));
     operator
         .rightTrigger()
-        .and(() -> Robot.inPit)
-        .toggleOnTrue(
-            Commands.parallel(
-                verticalFeedLeft.verticalFeedIntakeCommand(),
-                verticalFeedRight.verticalFeedIntakeCommand()));
-    operator
-        .rightTrigger()
-        .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
-        .whileTrue(
-            Commands.parallel(
-                    agitatorLeft.snowblowCommand(),
-                    agitatorRight.snowblowCommand(),
-                    verticalFeedLeft.verticalFeedIntakeCommand(),
-                    verticalFeedRight.verticalFeedIntakeCommand())
-                .until(() -> Robot.currentState != Robot.BotState.DEFENCEOUT));
-
-    // Normal COLLECT mode -> while held: vertical feeders at full intake speed
-    // (shoot).  On release: vertical feeders return to collect speed.
-    operator
-        .rightTrigger()
+        .and(() -> !Robot.inPit)
         .and(
             () ->
-                !Robot.inPit
-                    && (Robot.currentState == Robot.BotState.COLLECT
-                        || Robot.currentState == Robot.BotState.DEFENCEOUT))
+                Robot.currentState == Robot.BotState.DEFENCEOUT
+                    || Robot.currentState == Robot.BotState.COLLECT)
         .whileTrue(
+            // Phase 1: spin flywheels to aim-manager RPM
             Commands.parallel(
-                    verticalFeedLeft.verticalFeedIntakeCommand(),
-                    verticalFeedRight.verticalFeedIntakeCommand(),
-                    agitatorLeft.snowblowCommand(),
-                    agitatorRight.snowblowCommand())
+                    flywheelLeft.setRPMCommand(
+                        () -> turretAimManager.getLeftFeederRPM()),
+                    flywheelRight.setRPMCommand(
+                        () -> turretAimManager.getRightFeederRPM()))
+                // Phase 2: once at speed, also run feeders + agitators
+                .alongWith(
+                    Commands.waitUntil(
+                            () -> {
+                              double tolRPM =
+                                  Constants.ScorerConstants.kFlywheelRPMTolerance;
+                              double leftErr =
+                                  Math.abs(
+                                      flywheelLeft.getCurrentVelocity()
+                                          - turretAimManager.getLeftFeederRPM());
+                              double rightErr =
+                                  Math.abs(
+                                      flywheelRight.getCurrentVelocity()
+                                          - turretAimManager.getRightFeederRPM());
+                              return leftErr < tolRPM && rightErr < tolRPM;
+                            })
+                        .andThen(
+                            Commands.parallel(
+                                verticalFeedLeft.verticalFeedIntakeCommand(),
+                                verticalFeedRight.verticalFeedIntakeCommand(),
+                                agitatorLeft.snowblowCommand(),
+                                agitatorRight.snowblowCommand())))
                 .finallyDo(
                     () -> {
-                      // Re-schedule collect-speed commands when the trigger is released
-                      // (only if still in COLLECT state).
-                      if (Robot.currentState == Robot.BotState.COLLECT) {
-                        CommandScheduler.getInstance()
-                            .schedule(verticalFeedLeft.verticalFeedCollectCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(verticalFeedRight.verticalFeedCollectCommand());
-                        CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                        CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                      }
+                      // Turn everything off on release
+                      CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                      CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                      CommandScheduler.getInstance()
+                          .schedule(verticalFeedLeft.offCommand());
+                      CommandScheduler.getInstance()
+                          .schedule(verticalFeedRight.offCommand());
+                      CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                      CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
                     }));
 
     // Left Trigger:
@@ -823,15 +830,6 @@ public class RobotContainer {
           .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
           .whileTrue(intakeRollers.intakeCommand());
     }
-
-    // Right bumper = both: deploy intake
-    operator
-        .rightBumper()
-        .onTrue(
-            new InstantCommand(
-                () -> {
-                  normalFlywheelsEnabled = !normalFlywheelsEnabled;
-                }));
 
     // Left bumper = pit: retract intake | normal: outtake in defenseout
     operator

@@ -542,6 +542,8 @@ public class Robot extends LoggedRobot {
                   .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
     }
 
+    // Flywheel control in pit mode only — normal-mode flywheels are now
+    // commanded by the operator right trigger (spin-up → feed sequence).
     if (inPit) {
       if (robotContainer.pitFlywheelsEnabled) {
         double pitRpm = Constants.ScorerConstants.kShootRPM;
@@ -553,20 +555,6 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
-    } else if (robotContainer.normalFlywheelsEnabled && shouldTrack(currentState)) {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelLeft()
-                  .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelRight()
-                  .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
-    } else {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     }
   }
 
