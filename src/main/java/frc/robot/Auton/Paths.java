@@ -5,7 +5,6 @@
 package frc.robot.Auton;
 
 import com.pathplanner.lib.path.PathPlannerPath;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * Container class for all PathPlanner paths and autonomous routines. Paths are loaded from
@@ -24,6 +23,7 @@ public class Paths {
 
   public static PathPlannerPath depToSSTrench;
   public static PathPlannerPath outToSSTrench;
+  public static PathPlannerPath trenchToDepo;
 
   public static PathPlannerPath depToOut;
   public static PathPlannerPath outToDep;
@@ -33,62 +33,35 @@ public class Paths {
 
   public static boolean loaded;
 
-  public static void loadPaths(Alliance alliance) {
+  /**
+   * Load all paths from PathPlanner path files. Alliance flipping is handled
+   * automatically by AutoBuilder.followPath() at runtime, so no manual flip needed here.
+   */
+  public static void loadPaths() {
     loaded = true;
-    if (alliance == Alliance.Blue) {
 
-      forward2m = loadPathForAlliance("forward2m", false);
-
-      depCycle = loadPathForAlliance("DepCycle", false);
-      outCycle = loadPathForAlliance("OutCycle", false);
-      hubCycle = loadPathForAlliance("HubCycle", false);
-
-      depToDep = loadPathForAlliance("DepToDep", false);
-      outToOut = loadPathForAlliance("OutToOut", false);
-
-      depToSSTrench = loadPathForAlliance("DepToSSTrench", false);
-      outToSSTrench = loadPathForAlliance("OutToSSTrench", false);
-      depToOut = loadPathForAlliance("DepToOut", false);
-      outToDep = loadPathForAlliance("OutToDep", false);
-
-      hubToDep = loadPathForAlliance("HubToDep", false);
-      hubToOut = loadPathForAlliance("HubToOut", false);
-    } else {
-
-      forward2m = loadPathForAlliance("forward2m", false); // dont flip for this one
-
-      depCycle = loadPathForAlliance("DepCycle", true);
-      outCycle = loadPathForAlliance("OutCycle", true);
-      hubCycle = loadPathForAlliance("HubCycle", true);
-
-      depToDep = loadPathForAlliance("DepToDep", true);
-      outToOut = loadPathForAlliance("OutToOut", true);
-
-      depToSSTrench = loadPathForAlliance("DepToSSTrench", true);
-      outToSSTrench = loadPathForAlliance("OutToSSTrench", true);
-      depToOut = loadPathForAlliance("DepToOut", true);
-      outToDep = loadPathForAlliance("OutToDep", true);
-
-      hubToDep = loadPathForAlliance("HubToDep", true);
-      hubToOut = loadPathForAlliance("HubToOut", true);
-    }
+    forward2m = loadPath("forward2m");
+    depCycle = loadPath("DepCycle");
+    outCycle = loadPath("OutCycle");
+    hubCycle = loadPath("HubCycle");
+    depToDep = loadPath("DepToDep");
+    outToOut = loadPath("OutToOut");
+    depToSSTrench = loadPath("DepToSSTrench");
+    outToSSTrench = loadPath("OutToSSTrench");
+    trenchToDepo = loadPath("TrenchToDepo");
+    depToOut = loadPath("DepToOut");
+    outToDep = loadPath("OutToDep");
+    hubToDep = loadPath("HubToDep");
+    hubToOut = loadPath("HubToOut");
   }
 
-  private static PathPlannerPath loadPathForAlliance(String name, boolean flip) {
-    PathPlannerPath path = loadPath(name);
-    if (path == null) {
-      loaded = false;
-      return null;
-    }
-    return flip ? path.flipPath() : path;
-  }
-
-  /** Load all paths from PathPlanner. */
+  /** Load a single path from a PathPlanner .path file. */
   private static PathPlannerPath loadPath(String name) {
     try {
       return PathPlannerPath.fromPathFile(name);
     } catch (Exception e) {
       System.err.println("Failed to load path '" + name + "': " + e.getMessage());
+      loaded = false;
     }
     return null;
   }

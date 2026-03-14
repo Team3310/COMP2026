@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 3.5494772727272723,
-        "y": 7.240420454545455
+        "y": 5.261511363636364
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.106284090909091,
-        "y": 6.292193181818181
+        "x": 2.8507155635062613,
+        "y": 5.681878354203935
       },
       "isLocked": false,
-      "linkedName": "DepStart"
+      "linkedName": "DepoTrench"
     },
     {
       "anchor": {
-        "x": 0.5604999999999998,
-        "y": 0.6543636363636369
+        "x": 3.5494772727272723,
+        "y": 7.240420454545455
       },
       "prevControl": {
-        "x": 2.2611249999999994,
-        "y": 0.8398863636363638
+        "x": 2.5494772727272723,
+        "y": 7.240420454545455
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "DepStart"
     }
   ],
   "rotationTargets": [],
@@ -33,22 +33,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
-    "nominalVoltage": 10.0,
+    "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 1.0,
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "Dep",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

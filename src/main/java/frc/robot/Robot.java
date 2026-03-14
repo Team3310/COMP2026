@@ -143,7 +143,6 @@ public class Robot extends LoggedRobot {
     // Refresh alliance color every cycle — DriverStation data may not be
     // available at class-load time, so the initial value can be wrong.
     currentAlliance = DriverStation.getAlliance().orElse(currentAlliance);
-    Constants.alliance = currentAlliance;
 
     double robotX = robotContainer.getDrive().getPose().getX();
     double robotY = robotContainer.getDrive().getPose().getY();
@@ -288,6 +287,7 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("robotY", robotY);
       SmartDashboard.putNumber("robotOrient", robotOrient);
       SmartDashboard.putString("currentZone", "" + currentZone);
+      SmartDashboard.putString("currentAlliance", "" + currentAlliance);
       SmartDashboard.putBoolean("activeHub", activeHub);
       SmartDashboard.putBoolean("hubOverride", hubOverride);
       SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
@@ -374,8 +374,9 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
+    currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
     if (selectedAuto.requiresPathLoading()) {
-      Paths.loadPaths(currentAlliance);
+      Paths.loadPaths();
     }
     robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
 
@@ -398,6 +399,7 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+    currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
     robotContainer.getVision().setVisionEnabled(true);
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
