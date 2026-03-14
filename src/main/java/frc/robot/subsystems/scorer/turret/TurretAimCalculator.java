@@ -85,12 +85,12 @@ public final class TurretAimCalculator {
   // ---- Turret wrap-around state ----
   // Tracks the last output angle so we can pick the closest 360° wrap each
   // cycle.  This prevents the turret from snapping at ±180° and lets it use
-  // the full ±220° mechanical range before flipping.
+  // the full ±270° software range before flipping.
   private static double lastTurretDeg = 0.0;
 
   // The turret flips to the other side when the commanded angle exceeds this
-  // threshold.  270° is well past the ±220° physical limit, so the turret uses
-  // its full range before wrapping.  A flip at +270 → +270−360 = −90° (safe).
+  // threshold.  With software limits at ±270°, a flip at +270 → +270−360 = −90°
+  // keeps the commanded angle inside the allowed range.
   private static final double FLIP_THRESHOLD = 270.0;
 
   /** Prevent instantiation. */
@@ -231,7 +231,7 @@ public final class TurretAimCalculator {
     double turretRad = fieldBearing - robotHeading.getRadians();
 
     // ---- Wrap-around ----
-    // The turret can physically travel ±220° from forward (440° total).
+    // The turret is software-limited to ±270° from forward (540° total).
     // atan2 gives [-180, +180] which hides the fact that the turret can
     // smoothly pass through ±180°.  We pick the 360° wrap of the raw angle
     // that is closest to the previous output, giving natural continuity.
@@ -239,8 +239,8 @@ public final class TurretAimCalculator {
     // side — the turret has gone as far as it can and must reverse.
 
     double turretDeg = Math.toDegrees(turretRad);
-    double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
-    double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
+    double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +270
+    double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -270
 
     // Normalize raw value to [-180, +180] as a clean starting point
     turretDeg = Math.IEEEremainder(turretDeg, 360.0);

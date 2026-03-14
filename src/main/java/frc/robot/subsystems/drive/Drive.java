@@ -420,13 +420,21 @@ public class Drive extends SubsystemBase {
 
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
-    poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-
-    // Also reset the sim gyro so heading stays in sync
-    if (gyroIO instanceof GyroIOSim simGyro) {
-      simGyro.setYaw(pose.getRotation());
+    odometryLock.lock();
+    try {
+      gyroIO.setYaw(pose.getRotation());
       rawGyroRotation = pose.getRotation();
+      poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+    } finally {
+      odometryLock.unlock();
     }
+  }
+
+  /** Re-applies the current estimated heading to the gyro for enabled-mode vision seeding. */
+  public void lockGyroHeadingToEstimatedPose() {
+    Pose2d estimatedPose = getPose();
+    setPose(estimatedPose);
+    Logger.recordOutput("Drive/GyroHeadingLockDeg", estimatedPose.getRotation().getDegrees());
   }
 
   /** Adds a new timestamped vision measurement. */

@@ -139,6 +139,8 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
     Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
+    Logger.recordOutput("Robot/DetectedBot", Constants.currentBot.name());
+    Logger.recordOutput("Robot/LocalMacAddresses", Constants.getLocalMacAddressesString());
 
     // Refresh alliance color every cycle — DriverStation data may not be
     // available at class-load time, so the initial value can be wrong.
@@ -373,6 +375,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
     if (selectedAuto.requiresPathLoading()) {
@@ -395,6 +398,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove

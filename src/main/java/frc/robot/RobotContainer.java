@@ -636,7 +636,8 @@ public class RobotContainer {
 
     if (turretLeft != null) {
 
-      // Pit: left joystick angle maps directly to left turret angle (±220°).
+      // Pit: left joystick angle maps directly to left turret angle.
+      // The command is still clamped by the turret software limits (currently ±270°).
       // Only updates when stick is pushed past deadband magnitude.
       turretLeft.setDefaultCommand(
           turretLeft.dutyCycleCommand(
@@ -657,7 +658,8 @@ public class RobotContainer {
     }
 
     if (turretRight != null) {
-      // Pit: right joystick angle maps directly to right turret angle (±220°).
+      // Pit: right joystick angle maps directly to right turret angle.
+      // The command is still clamped by the turret software limits (currently ±270°).
       turretRight.setDefaultCommand(
           turretRight.dutyCycleCommand(
               () -> {
