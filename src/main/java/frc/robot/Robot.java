@@ -40,7 +40,6 @@ public class Robot extends LoggedRobot {
     DEFENCEOUT,
     DEPLOY,
     RETRACT,
-    TRENCH,
     PIT
   }
 
@@ -67,6 +66,7 @@ public class Robot extends LoggedRobot {
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
+  public static boolean shootButtonHeld = false;
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
@@ -161,11 +161,7 @@ public class Robot extends LoggedRobot {
     // we are done.
     if (inPit) {
       currentState = BotState.PIT;
-    } 
-    else if (isInTrenchZone()) {
-      currentState = BotState.TRENCH;
-    } 
-    else if (!deploying && !retracting) {
+    } else if (!deploying && !retracting) {
       switch (overrideState) {
         case OFF: // nothing runs
           currentState = BotState.DEFENCEIN;
@@ -442,12 +438,8 @@ public class Robot extends LoggedRobot {
 
     if (robotX < FieldConstants.Zone.BLUE.getX()) {
       currentZone = Zone.BLUE;
-    } else if (robotX < FieldConstants.Zone.BLUETRENCH.getX()) {
-      currentZone = Zone.BLUETRENCH;
     } else if (robotX < FieldConstants.Zone.MID.getX()) {
       currentZone = Zone.MID;
-    } else if (robotX < FieldConstants.Zone.REDTRENCH.getX()) {
-      currentZone = Zone.REDTRENCH;
     } else {
       currentZone = Zone.RED;
     }
@@ -526,13 +518,6 @@ public class Robot extends LoggedRobot {
     }
   }
 
-  private boolean isInTrenchZone() {
-    if (currentZone == Zone.BLUETRENCH || currentZone == Zone.REDTRENCH) {
-      return true;
-    }
-    return false;
-  }
-
   private void track() {
     CommandScheduler.getInstance()
         .schedule(
@@ -589,10 +574,13 @@ public class Robot extends LoggedRobot {
 
   // #region state methods
   private boolean shouldTrack(BotState state) {
-    return !inPit
-        && state != BotState.DEFENCEIN
-        && state != BotState.TRENCH
-        && state != BotState.PIT;
+    return !inPit && state != BotState.DEFENCEIN && state != BotState.PIT;
+  }
+
+  public static boolean shouldLimitHomeZoneDrive() {
+    return (currentState == BotState.SNOWBLOW || shootButtonHeld)
+        && ((currentAlliance == Alliance.Blue && currentZone == Zone.BLUE)
+            || (currentAlliance == Alliance.Red && currentZone == Zone.RED));
   }
 
   private void onStateEntered(BotState state) {
@@ -614,9 +602,6 @@ public class Robot extends LoggedRobot {
         break;
       case RETRACT:
         retract();
-        break;
-      case TRENCH:
-        trench();
         break;
       case PIT:
         // In pit mode, manual controls drive behavior.
@@ -693,19 +678,6 @@ public class Robot extends LoggedRobot {
       CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
       CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
     }
-  }
-
-  private void trench() {
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodLeft()
-                .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodRight()
-                .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees));
   }
 
   // #endregion

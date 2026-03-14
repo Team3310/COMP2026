@@ -34,8 +34,8 @@ public class Paths {
   public static boolean loaded;
 
   /**
-   * Load all paths from PathPlanner path files. Alliance flipping is handled
-   * automatically by AutoBuilder.followPath() at runtime, so no manual flip needed here.
+   * Load all paths from PathPlanner path files. Alliance flipping is handled automatically by
+   * AutoBuilder.followPath() at runtime, so no manual flip needed here.
    */
   public static void loadPaths() {
     loaded = true;

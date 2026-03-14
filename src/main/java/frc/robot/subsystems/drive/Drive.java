@@ -181,6 +181,12 @@ public class Drive extends SubsystemBase {
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
+    int gyroSampleCount = gyroInputs.odometryYawPositions.length;
+    Logger.recordOutput("Drive/Odometry/ModuleSampleCount", sampleTimestamps.length);
+    Logger.recordOutput("Drive/Odometry/GyroSampleCount", gyroSampleCount);
+    Logger.recordOutput(
+        "Drive/Odometry/GyroSampleMismatch",
+        gyroInputs.connected && gyroSampleCount != sampleTimestamps.length);
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
@@ -198,8 +204,10 @@ public class Drive extends SubsystemBase {
 
       // Update gyro angle
       if (gyroInputs.connected) {
-        // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
+        // Prefer the time-aligned gyro sample, but fall back to the latest yaw
+        // if the gyro queue is shorter than the module queues.
+        rawGyroRotation =
+            i < gyroSampleCount ? gyroInputs.odometryYawPositions[i] : gyroInputs.yawPosition;
       } else {
         // Use the angle delta from the kinematics and module deltas
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);

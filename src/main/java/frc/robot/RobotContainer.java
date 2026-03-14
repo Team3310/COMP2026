@@ -470,7 +470,7 @@ public class RobotContainer {
     // Flywheels off when:
     //  - Pit mode and pitFlywheelsEnabled is false
     //  - Normal mode and normalFlywheelsEnabled is false
-    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)]
+    //  - DEFENCEIN (hood at min / "duck" - do not shoot)]
 
     // Hood defaults: continuously hold the last-commanded position via motion
     // magic.  Without this the base-class neutral command takes over as soon as a
@@ -637,7 +637,7 @@ public class RobotContainer {
     if (turretLeft != null) {
 
       // Pit: left joystick angle maps directly to left turret angle.
-      // The command is still clamped by the turret software limits (currently ±270°).
+      // The command is still clamped by the turret software limits (currently ±220°).
       // Only updates when stick is pushed past deadband magnitude.
       turretLeft.setDefaultCommand(
           turretLeft.dutyCycleCommand(
@@ -659,7 +659,7 @@ public class RobotContainer {
 
     if (turretRight != null) {
       // Pit: right joystick angle maps directly to right turret angle.
-      // The command is still clamped by the turret software limits (currently ±270°).
+      // The command is still clamped by the turret software limits (currently ±220°).
       turretRight.setDefaultCommand(
           turretRight.dutyCycleCommand(
               () -> {
@@ -719,6 +719,12 @@ public class RobotContainer {
     // Right Trigger:
     // Pit mode -> toggle vertical feed rollers on/off.
     // Normal mode -> toggle floor + vertical rollers while in DEFENCEOUT.
+    operator
+        .rightTrigger()
+        .and(() -> !Robot.inPit)
+        .whileTrue(
+            Commands.startEnd(
+                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false));
     operator
         .rightTrigger()
         .and(() -> Robot.inPit)

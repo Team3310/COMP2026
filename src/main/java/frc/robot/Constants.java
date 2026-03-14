@@ -12,8 +12,6 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -408,6 +406,12 @@ public final class Constants {
     // 1.0 = full speed, 0.0 = stopped.
     public static double kHubDriveScalar = 0.4;
     public static double kHubTurnScalar = 0.3;
+
+    // While snowblowing in the home zone, soften drive response so the chassis
+    // does not accelerate or rotate too aggressively.
+    public static double kSnowblowHomeDriveScalar = 0.5;
+    public static double kSnowblowHomeMaxAccelMetersPerSec2 = 1.5;
+    public static double kSnowblowHomeTurnScalar = 0.45;
   }
   // #endregion
 
@@ -432,8 +436,8 @@ public final class Constants {
     public static final double kHoodStowDistanceMeters = 1.5; // meters
 
     public static final double kTurretStowedPosition = 0.0; // degrees
-    public static double kTurretMaxPositionUnits = 270.0; // degrees
-    public static final double kTurretMinPositionUnits = -270.0; // degrees
+    public static double kTurretMaxPositionUnits = 220.0; // degrees
+    public static final double kTurretMinPositionUnits = -220.0; // degrees
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)

@@ -69,6 +69,8 @@ public class DriveCommands {
     headingHoldController.setTolerance(Units.degreesToRadians(1.0));
     double[] headingHoldSetpointRad = new double[] {0.0};
     boolean[] headingHoldActive = new boolean[] {false};
+    double[] previousCommandedVxMetersPerSecond = new double[] {0.0};
+    double[] previousCommandedVyMetersPerSecond = new double[] {0.0};
 
     return Commands.run(
             () -> {
@@ -124,11 +126,39 @@ public class DriveCommands {
                   Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
               double turnScale =
                   Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
+              boolean homeZoneShotLimitActive = Robot.shouldLimitHomeZoneDrive();
+              if (homeZoneShotLimitActive) {
+                driveScale *= Constants.DriveCommandConstants.kSnowblowHomeDriveScalar;
+                turnScale *= Constants.DriveCommandConstants.kSnowblowHomeTurnScalar;
+              }
+
+              double targetVxMetersPerSecond =
+                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
+              double targetVyMetersPerSecond =
+                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
+
+              if (homeZoneShotLimitActive) {
+                double maxDeltaMetersPerSecond =
+                    Constants.DriveCommandConstants.kSnowblowHomeMaxAccelMetersPerSec2 * 0.02;
+                targetVxMetersPerSecond =
+                    MathUtil.clamp(
+                        targetVxMetersPerSecond,
+                        previousCommandedVxMetersPerSecond[0] - maxDeltaMetersPerSecond,
+                        previousCommandedVxMetersPerSecond[0] + maxDeltaMetersPerSecond);
+                targetVyMetersPerSecond =
+                    MathUtil.clamp(
+                        targetVyMetersPerSecond,
+                        previousCommandedVyMetersPerSecond[0] - maxDeltaMetersPerSecond,
+                        previousCommandedVyMetersPerSecond[0] + maxDeltaMetersPerSecond);
+              }
+
+              previousCommandedVxMetersPerSecond[0] = targetVxMetersPerSecond;
+              previousCommandedVyMetersPerSecond[0] = targetVyMetersPerSecond;
+
+              Logger.recordOutput("SnowblowDrive/LimitActive", homeZoneShotLimitActive);
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * driveScale,
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * driveScale,
-                      omega * turnScale);
+                      targetVxMetersPerSecond, targetVyMetersPerSecond, omega * turnScale);
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;
@@ -145,6 +175,8 @@ public class DriveCommands {
               headingHoldSetpointRad[0] = drive.getRotation().getRadians();
               headingHoldController.reset();
               headingHoldActive[0] = true;
+              previousCommandedVxMetersPerSecond[0] = 0.0;
+              previousCommandedVyMetersPerSecond[0] = 0.0;
             });
   }
 

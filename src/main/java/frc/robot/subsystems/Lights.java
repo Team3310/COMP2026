@@ -86,9 +86,6 @@ public class Lights extends SubsystemBase {
             case DEFENCEOUT:
               stateColor = new Color(255, 255, 0); // Yellow
               break;
-            case TRENCH:
-              stateColor = new Color(255, 0, 255); // Purple
-              break;
             case DEPLOY:
               stateColor = new Color(0, 255, 128); // Teal
               break;
