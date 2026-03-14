@@ -126,36 +126,12 @@ public class DriveCommands {
                   Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
               double turnScale =
                   Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
-              boolean homeZoneShotLimitActive = Robot.shouldLimitHomeZoneDrive();
-              if (homeZoneShotLimitActive) {
-                driveScale *= Constants.DriveCommandConstants.kSnowblowHomeDriveScalar;
-                turnScale *= Constants.DriveCommandConstants.kSnowblowHomeTurnScalar;
-              }
 
               double targetVxMetersPerSecond =
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
               double targetVyMetersPerSecond =
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
 
-              if (homeZoneShotLimitActive) {
-                double maxDeltaMetersPerSecond =
-                    Constants.DriveCommandConstants.kSnowblowHomeMaxAccelMetersPerSec2 * 0.02;
-                targetVxMetersPerSecond =
-                    MathUtil.clamp(
-                        targetVxMetersPerSecond,
-                        previousCommandedVxMetersPerSecond[0] - maxDeltaMetersPerSecond,
-                        previousCommandedVxMetersPerSecond[0] + maxDeltaMetersPerSecond);
-                targetVyMetersPerSecond =
-                    MathUtil.clamp(
-                        targetVyMetersPerSecond,
-                        previousCommandedVyMetersPerSecond[0] - maxDeltaMetersPerSecond,
-                        previousCommandedVyMetersPerSecond[0] + maxDeltaMetersPerSecond);
-              }
-
-              previousCommandedVxMetersPerSecond[0] = targetVxMetersPerSecond;
-              previousCommandedVyMetersPerSecond[0] = targetVyMetersPerSecond;
-
-              Logger.recordOutput("SnowblowDrive/LimitActive", homeZoneShotLimitActive);
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
                       targetVxMetersPerSecond, targetVyMetersPerSecond, omega * turnScale);

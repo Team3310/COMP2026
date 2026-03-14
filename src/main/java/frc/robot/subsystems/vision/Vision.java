@@ -194,6 +194,18 @@ public class Vision extends SubsystemBase {
       }
     }
 
+    // Publish each Limelight's raw MegaTag 2 Pose2d to SmartDashboard so the
+    // drive team can see what each camera is reporting in real time.
+    for (String camName : VisionConstants.kCameraNames) {
+      PoseEstimate raw = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camName);
+      String key = "Vision/" + camName + "/";
+      if (raw != null && raw.tagCount > 0 && raw.pose != null) {
+        SmartDashboard.putString(key + "pose", raw.pose.toString());
+      } else {
+        SmartDashboard.putString(key + "pose", "No tags");
+      }
+    }
+
     // While disabled, run pre-match pose seeding (strict filters, no pose-jump
     // rejection) so the robot knows its field position before auto starts.
     // While enabled, run normal vision processing with all filters.
