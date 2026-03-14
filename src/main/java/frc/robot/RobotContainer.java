@@ -776,16 +776,13 @@ public class RobotContainer {
         .whileTrue(
             // Phase 1: spin flywheels to aim-manager RPM
             Commands.parallel(
-                    flywheelLeft.setRPMCommand(
-                        () -> turretAimManager.getLeftFeederRPM()),
-                    flywheelRight.setRPMCommand(
-                        () -> turretAimManager.getRightFeederRPM()))
+                    flywheelLeft.setRPMCommand(() -> turretAimManager.getLeftFeederRPM()),
+                    flywheelRight.setRPMCommand(() -> turretAimManager.getRightFeederRPM()))
                 // Phase 2: once at speed, also run feeders + agitators
                 .alongWith(
                     Commands.waitUntil(
                             () -> {
-                              double tolRPM =
-                                  Constants.ScorerConstants.kFlywheelRPMTolerance;
+                              double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
                               double leftErr =
                                   Math.abs(
                                       flywheelLeft.getCurrentVelocity()
@@ -807,10 +804,8 @@ public class RobotContainer {
                       // Turn everything off on release
                       CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
                       CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                      CommandScheduler.getInstance()
-                          .schedule(verticalFeedLeft.offCommand());
-                      CommandScheduler.getInstance()
-                          .schedule(verticalFeedRight.offCommand());
+                      CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                      CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                       CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
                       CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
                     }));
