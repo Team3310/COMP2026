@@ -814,7 +814,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting
@@ -913,6 +913,54 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
+
+  // #region Roof Subsystem
+  public static final class RoofConstants {
+    // Position limits in degrees
+    public static final double kRoofStowedDegrees = 0.0;
+    public static final double kRoofMinDegrees = 0.0;
+    public static final double kRoofMaxDegrees = 90.0;
+
+    // Gear ratio: rotor rotations per output degree
+    // TODO: update with actual mechanical gear ratio
+    public static final double kRoofUnitToRotorRatio = 1.0 / 360.0; // 1:1 placeholder
+
+    public static final double kRoofMomentOfInertia = 0.5; // kg·m² for sim
+  }
+
+  public static final ServoMotorSubsystemConfig kRoofConfig = new ServoMotorSubsystemConfig();
+
+  static {
+    kRoofConfig.name = "Roof";
+    // Motor is on the roboRIO CAN bus (empty string = RIO bus, not CANivore)
+    kRoofConfig.talonCANID = new CANDeviceId(30);
+
+    kRoofConfig.unitToRotorRatio = RoofConstants.kRoofUnitToRotorRatio;
+    kRoofConfig.kMaxPositionUnits = RoofConstants.kRoofMaxDegrees;
+    kRoofConfig.kMinPositionUnits = RoofConstants.kRoofMinDegrees;
+    kRoofConfig.momentOfInertia = RoofConstants.kRoofMomentOfInertia;
+
+    // PID — tune on robot
+    kRoofConfig.fxConfig.Slot0.kP = 1.0;
+    kRoofConfig.fxConfig.Slot0.kD = 0.0;
+    kRoofConfig.fxConfig.Slot0.kV = 0.12;
+    kRoofConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 40.0;
+    kRoofConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 120.0;
+
+    // Software limits
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        kRoofConfig.kMaxPositionUnits / kRoofConfig.unitToRotorRatio;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        kRoofConfig.kMinPositionUnits / kRoofConfig.unitToRotorRatio;
+
+    kRoofConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kRoofConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+  }
+  // #endregion
 
   // #endregion
 

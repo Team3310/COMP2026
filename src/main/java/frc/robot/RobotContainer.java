@@ -25,6 +25,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.IntakePivot;
 import frc.robot.subsystems.intake.IntakeRollers;
+import frc.robot.subsystems.roof.Roof;
 import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
@@ -120,6 +121,14 @@ public class RobotContainer {
     }
   }
 
+  private Roof buildRoofSystem(ServoMotorSubsystemConfig config) {
+    if (Constants.currentMode == Constants.Mode.REAL) {
+      return new Roof(config, new TalonFXIO(config));
+    } else {
+      return new Roof(config, new SimTalonFXIO(config));
+    }
+  }
+
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
 
@@ -139,6 +148,8 @@ public class RobotContainer {
   private final Hood hoodRight = buildHoodSystem(Constants.kRightHoodConfig);
   private final Flywheel flywheelRight = buildFlywheelSystem(Constants.kRightFlywheelConfig);
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
+
+  private final Roof roof = buildRoofSystem(Constants.kRoofConfig);
 
   public final AutonomousChooser autonomousChooser;
 
@@ -217,6 +228,10 @@ public class RobotContainer {
 
   public Turret getTurretRight() {
     return turretRight;
+  }
+
+  public Roof getRoof() {
+    return roof;
   }
 
   public TurretAimManager getTurretAimManager() {
@@ -372,6 +387,9 @@ public class RobotContainer {
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
+
+    SmartDashboard.putData("Roof Deploy", roof.setMaxCommand());
+    SmartDashboard.putData("Roof Stow", roof.stowCommand());
 
     // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable
     // number widgets.
