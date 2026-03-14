@@ -134,6 +134,26 @@ public class Lights extends SubsystemBase {
         ledStrip.setData(ledBuffer);
         break;
 
+      case COLOR_RED:
+        LEDPattern.solid(new Color(255, 0, 0)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
+
+      case COLOR_BLUE:
+        LEDPattern.solid(new Color(0, 0, 255)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
+
+      case COLOR_GREEN:
+        LEDPattern.solid(new Color(0, 255, 0)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
+
+      case COLOR_ORANGE:
+        LEDPattern.solid(new Color(255, 128, 0)).applyTo(ledBuffer);
+        ledStrip.setData(ledBuffer);
+        break;
+
       case OFF:
       default:
         LEDPattern.kOff.applyTo(ledBuffer);
@@ -150,6 +170,10 @@ public class Lights extends SubsystemBase {
     AUTO_POSE_GOOD,
     AUTO_POSE_STOP,
     BOT_STATE,
+    COLOR_RED,
+    COLOR_BLUE,
+    COLOR_GREEN,
+    COLOR_ORANGE,
     OFF;
   }
 }

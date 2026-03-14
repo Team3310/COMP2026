@@ -419,6 +419,24 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     SmartDashboard.putNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
+
+    // Light color buttons — work even while disabled
+    SmartDashboard.putData(
+        "Lights Red",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_RED))
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Lights Blue",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_BLUE))
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Lights Green",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_GREEN))
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Lights Orange",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_ORANGE))
+            .ignoringDisable(true));
     // #endregion
 
     // Initialize LED display mode to show bot state colors
