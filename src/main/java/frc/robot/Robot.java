@@ -62,6 +62,7 @@ public class Robot extends LoggedRobot {
 
   public static BotState currentState = BotState.DEFENCEIN;
   public static OverrideState overrideState = OverrideState.OFF;
+  public static boolean duckOverrideActive = false;
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
@@ -214,6 +215,7 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putString("currentZone", "" + currentZone);
     SmartDashboard.putBoolean("activeHub", activeHub);
     SmartDashboard.putBoolean("hubOverride", hubOverride);
+    SmartDashboard.putBoolean("duckOverrideActive", duckOverrideActive);
     SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
     SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
     SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
@@ -521,7 +523,7 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    if (shouldTrack(currentState)) {
+    if (shouldTrack(currentState) && !duckOverrideActive) {
       CommandScheduler.getInstance()
           .schedule(
               robotContainer

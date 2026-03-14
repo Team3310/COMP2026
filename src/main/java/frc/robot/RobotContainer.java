@@ -770,17 +770,24 @@ public class RobotContainer {
                   () -> Robot.inPit));
       operator
           .povDown()
-          .onTrue(
+          .whileTrue(
               Commands.either(
-                  // Pit: hoods to 10 deg (stowed)
+                  // Pit: hold both hoods at the duck/stowed angle while held.
                   Commands.parallel(
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  // Normal: turn shooters off and stow hoods.
+                          hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                          hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
+                      .alongWith(
+                          Commands.startEnd(
+                              () -> Robot.duckOverrideActive = true,
+                              () -> Robot.duckOverrideActive = false)),
+                  // Normal: same hood override, without changing flywheel state.
                   Commands.parallel(
-                      Commands.runOnce(() -> normalFlywheelsEnabled = false),
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
+                          hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                          hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
+                      .alongWith(
+                          Commands.startEnd(
+                              () -> Robot.duckOverrideActive = true,
+                              () -> Robot.duckOverrideActive = false)),
                   () -> Robot.inPit));
       // Pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
       operator
