@@ -236,6 +236,15 @@ public class Robot extends LoggedRobot {
       Constants.ScorerConstants.kPhaseDelaySeconds =
           SmartDashboard.getNumber(
               "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+      Constants.ScorerConstants.kTurretDeadbandDeg =
+          SmartDashboard.getNumber(
+              "SpeedTune/TurretDeadbandDeg", Constants.ScorerConstants.kTurretDeadbandDeg);
+      Constants.DriveCommandConstants.kHubDriveScalar =
+          SmartDashboard.getNumber(
+              "SpeedTune/HubDriveScalar", Constants.DriveCommandConstants.kHubDriveScalar);
+      Constants.DriveCommandConstants.kHubTurnScalar =
+          SmartDashboard.getNumber(
+              "SpeedTune/HubTurnScalar", Constants.DriveCommandConstants.kHubTurnScalar);
 
       // Vision filter-strength overrides
       Constants.VisionConstants.kMT2StdDevMultiplier =
