@@ -62,6 +62,7 @@ public class Robot extends LoggedRobot {
 
   public static BotState currentState = BotState.DEFENCEIN;
   public static OverrideState overrideState = OverrideState.OFF;
+  public static boolean stateRefreshRequested = false;
   public static boolean duckOverrideActive = false;
   public static boolean deploying = false;
   public static boolean retracting = false;
@@ -191,9 +192,10 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    if (currentState != lastAppliedState) {
+    if (stateRefreshRequested || currentState != lastAppliedState) {
       onStateEntered(currentState);
       lastAppliedState = currentState;
+      stateRefreshRequested = false;
     }
 
     track();
@@ -382,6 +384,7 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
+    stateRefreshRequested = true;
   }
 
   /** This function is called periodically during autonomous. */
@@ -399,6 +402,7 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+    stateRefreshRequested = true;
   }
 
   /** This function is called periodically during operator control. */

@@ -254,11 +254,9 @@ public class RobotContainer {
   public RobotContainer() {
     // Register PathPlanner named commands (must be before any path loading)
     NamedCommands.registerCommand(
-        "switchToCollect",
-        new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT));
+        "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
     NamedCommands.registerCommand(
-        "switchToSnowblow",
-        new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW));
+        "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
@@ -273,6 +271,7 @@ public class RobotContainer {
               pitFlywheelsEnabled = false;
               Robot.currentState = Robot.BotState.PIT;
               Robot.overrideState = Robot.OverrideState.OFF;
+              Robot.stateRefreshRequested = true;
               Robot.deploying = false;
               Robot.retracting = false;
               CommandScheduler.getInstance().cancelAll();
@@ -283,6 +282,7 @@ public class RobotContainer {
             () -> {
               Robot.inPit = false;
               Robot.overrideState = Robot.OverrideState.ON;
+              Robot.stateRefreshRequested = true;
               Robot.deploying = false;
               Robot.retracting = false;
               CommandScheduler.getInstance().cancelAll();
@@ -453,6 +453,14 @@ public class RobotContainer {
         .alongWith(
             Commands.startEnd(
                 () -> Robot.duckOverrideActive = true, () -> Robot.duckOverrideActive = false));
+  }
+
+  private Command buildOverrideStateCommand(Robot.OverrideState overrideState) {
+    return Commands.runOnce(
+        () -> {
+          Robot.overrideState = overrideState;
+          Robot.stateRefreshRequested = true;
+        });
   }
 
   private void configureButtonBindings() {
@@ -675,7 +683,7 @@ public class RobotContainer {
           .onTrue(
               Commands.either(
                   Commands.runOnce(() -> pitFlywheelsEnabled = true),
-                  new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW),
+                  buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW),
                   () -> Robot.inPit));
     }
 
@@ -685,7 +693,7 @@ public class RobotContainer {
         .onTrue(
             Commands.either(
                 Commands.runOnce(() -> pitFlywheelsEnabled = false),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
+                buildOverrideStateCommand(Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
     // B = pit: floors on | normal: collect state
@@ -694,7 +702,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT),
+                buildOverrideStateCommand(Robot.OverrideState.COLLECT),
                 () -> Robot.inPit));
 
     // A = pit: floors off | normal: defencein state
@@ -703,7 +711,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEIN),
+                buildOverrideStateCommand(Robot.OverrideState.DEFENCEIN),
                 () -> Robot.inPit));
 
     // Right Trigger:
