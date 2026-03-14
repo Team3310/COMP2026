@@ -35,7 +35,7 @@ public class TunerConstantsPractice {
   // Paul changed kP from 0.1 to 0.8 and kV from .124 to .144 since we are now 10V
   // limited.
   private static final Slot0Configs driveGains =
-      new Slot0Configs().withKP(0.8).withKI(0).withKD(0).withKS(0).withKV(0.144);
+      new Slot0Configs().withKP(2.0).withKI(0.0).withKD(0).withKS(0).withKV(0.144);
 
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
