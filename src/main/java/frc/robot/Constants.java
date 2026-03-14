@@ -498,27 +498,44 @@ public final class Constants {
     // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     //           Used for aim-ahead: the turret leads the target by velocity × TOF.
     // Column 4: vertical feeder speed (RPM)
-    // NOTE: Table MUST be sorted ascending by distance (column 0) for interpolation to work.
+    // Table order no longer matters. TurretAimCalculator sorts a copied version at runtime.
     public static final double[][] kHubTable = {
-      // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {1.2, 5.05, 2600.0, 0.0, 2000.0},
-      {1.4, 5.05, 2700.0, 0.0, 2000.0},
-      {1.60, 5.00, 3000.0, 0.0, 2000.0},
-      {2.1, 5.05, 3200.0, 0.0, 2000.0},
-      {2.3, 10.41, 3200, 0.0, 2000.0},
-      {2.6, 5.05, 3200.0, 0.0, 2000.0},
-      {2.9, 12.47, 3400, 0.0, 2000.0},
-      {3.12, 10.41, 3700, 0.0, 2000.0},
-      {3.15, 10.66, 3500.0, 0.0, 2000.0},
-      {3.20, 9.87, 3700.0, 0.0, 2000.0},
-      {3.6, 10.41, 3700, 0.0, 2000.0},
-      {3.8, 10.41, 3800, 0.0, 2000.0},
-      {4.37, 10.85, 4000.0, 0.0, 3000.0},
-      {4.5, 12.47, 3900.0, 0.0, 2000.0},
-      {4.67, 12.47, 4400.0, 0.0, 2000.0},
+      // Prior mixed-angle data kept for reference:
+      // {1.2, 5.05, 2600.0, 0.0, 2000.0},
+      // {1.4, 5.05, 2700.0, 0.0, 2000.0},
+      // {1.60, 5.00, 3000.0, 0.0, 2000.0},
+      // {2.1, 5.05, 3200.0, 0.0, 2000.0},
+      // {2.3, 10.41, 3200, 0.0, 2000.0},
+      // {2.6, 5.05, 3200.0, 0.0, 2000.0},
+      // Simplified hub table:
+      // <= 2.5 m: hood fixed at 5 deg
+      // 2.5 to 5.0 m: hood fixed at 10 deg
+      // 5.0 to 6.0 m: hood fixed at 12 deg
+      // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
+      {1.2, 5.0, 2600.0, 0.0, 2000.0},
+      {1.4, 5.0, 2700.0, 0.0, 2000.0},
+      {1.6, 5.0, 3000.0, 0.0, 2000.0},
+      {2.1, 5.0, 3200.0, 0.0, 2000.0},
+      {2.5, 5.0, 3300.0, 0.0, 2000.0},
+      // {2.9, 12.47, 3400, 0.0, 2000.0},
+      // {3.12, 10.41, 3700, 0.0, 2000.0},
+      // {3.15, 10.66, 3500.0, 0.0, 2000.0},
+      // {3.20, 9.87, 3700.0, 0.0, 2000.0},
+      // {3.6, 10.41, 3700, 0.0, 2000.0},
+      // {3.8, 10.41, 3800, 0.0, 2000.0},
+      // {4.37, 10.85, 4000.0, 0.0, 3000.0},
+      // {4.5, 12.47, 3900.0, 0.0, 2000.0},
+      // {4.67, 12.47, 4400.0, 0.0, 2000.0},
+      {3.0, 10.0, 3500.0, 0.0, 2000.0},
+      {3.5, 10.0, 3650.0, 0.0, 2000.0},
+      {4.0, 10.0, 3850.0, 0.0, 2000.0},
+      {4.5, 10.0, 4000.0, 0.0, 2000.0},
+      {5.0, 12.0, 4200.0, 0.0, 2000.0},
       // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
-      {5.247, 12.47, 4000.0, 0.0, 2000.0},
-      {5.31, 12.82, 4100.0, 0.0, 3000.0}, // verticalRPM not recorded, using 3000 estimate
+      // {5.247, 12.47, 4000.0, 0.0, 2000.0},
+      // {5.31, 12.82, 4100.0, 0.0, 3000.0},
+      {5.5, 12.0, 4300.0, 0.0, 2000.0},
+      {6.0, 12.0, 4400.0, 0.0, 2000.0},
     };
 
     // Landing (pass/lob) — lob to a landing zone on our side of the field.
@@ -837,7 +854,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting
@@ -936,6 +953,54 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
+
+  // #region Roof Subsystem
+  public static final class RoofConstants {
+    // Position limits in degrees
+    public static final double kRoofStowedDegrees = 0.0;
+    public static final double kRoofMinDegrees = 0.0;
+    public static final double kRoofMaxDegrees = 90.0;
+
+    // Gear ratio: rotor rotations per output degree
+    // TODO: update with actual mechanical gear ratio
+    public static final double kRoofUnitToRotorRatio = 1.0 / 360.0; // 1:1 placeholder
+
+    public static final double kRoofMomentOfInertia = 0.5; // kg·m² for sim
+  }
+
+  public static final ServoMotorSubsystemConfig kRoofConfig = new ServoMotorSubsystemConfig();
+
+  static {
+    kRoofConfig.name = "Roof";
+    // Motor is on the roboRIO CAN bus (empty string = RIO bus, not CANivore)
+    kRoofConfig.talonCANID = new CANDeviceId(30);
+
+    kRoofConfig.unitToRotorRatio = RoofConstants.kRoofUnitToRotorRatio;
+    kRoofConfig.kMaxPositionUnits = RoofConstants.kRoofMaxDegrees;
+    kRoofConfig.kMinPositionUnits = RoofConstants.kRoofMinDegrees;
+    kRoofConfig.momentOfInertia = RoofConstants.kRoofMomentOfInertia;
+
+    // PID — tune on robot
+    kRoofConfig.fxConfig.Slot0.kP = 1.0;
+    kRoofConfig.fxConfig.Slot0.kD = 0.0;
+    kRoofConfig.fxConfig.Slot0.kV = 0.12;
+    kRoofConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 40.0;
+    kRoofConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 120.0;
+
+    // Software limits
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        kRoofConfig.kMaxPositionUnits / kRoofConfig.unitToRotorRatio;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    kRoofConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        kRoofConfig.kMinPositionUnits / kRoofConfig.unitToRotorRatio;
+
+    kRoofConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kRoofConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+  }
+  // #endregion
 
   // #endregion
 
