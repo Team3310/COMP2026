@@ -12,8 +12,6 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -21,7 +19,9 @@ import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
 import frc.robot.generated.TunerConstants;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -32,13 +32,17 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   // NOTE: non-final — refreshed every cycle in Robot.robotPeriodic() once DS connects.
-  public static Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
-  // Set this to select which robot's tuner constants to use
-  public static final Bot currentBot = Bot.PRACTICE;
+  private static final String[] kLocalMacAddresses = findLocalMacAddresses();
+  public static final String[] kPracticeBotMacAddresses = {
+    "38:41:A5:68:34:74", "00:80:2F:33:CF:65"
+  };
+  // TODO: Fill in the bravo/comp roboRIO MAC once it is known from logs.
+  public static final String[] kBravoBotMacAddresses = {};
 
-  public static final String kPracticeBotMacAddress = "00:80:2F:33:BF:BB";
-  public static boolean kIsPracticeBot = hasMacAddress(kPracticeBotMacAddress);
+  // Auto-detect the robot from the local roboRIO MAC address. Unknown MACs fall back to PRACTICE.
+  public static final Bot currentBot = detectCurrentBot();
+  public static final boolean kIsPracticeBot = currentBot == Bot.PRACTICE;
 
   // Global motor voltage limit applied to all TalonFX motors
   public static final double kMotorPeakVoltage = 10.0;
@@ -66,6 +70,19 @@ public final class Constants {
     // Add more robot variants here as needed, e.g.:
     // COMPETITION,
     PRACTICE
+  }
+
+  /** Logical CAN bus aliases so per-bot routing is centralized. */
+  public static final class CanBusNames {
+    private CanBusNames() {}
+
+    public static final String kDrive = TunerConstants.kCANBus1.getName();
+    public static final String kSuperstructure =
+        switch (currentBot) {
+          case BRAVO -> TunerConstants.kCANBus2.getName();
+          default -> TunerConstants.kCANBus1.getName();
+        };
+    public static final String kRio = TunerConstants.kCANBusRio.getName();
   }
 
   public static final ClosedLoopRampsConfigs makeDefaultClosedLoopRampConfig() {
@@ -389,6 +406,12 @@ public final class Constants {
     // 1.0 = full speed, 0.0 = stopped.
     public static double kHubDriveScalar = 0.4;
     public static double kHubTurnScalar = 0.3;
+
+    // While snowblowing in the home zone, soften drive response so the chassis
+    // does not accelerate or rotate too aggressively.
+    public static double kSnowblowHomeDriveScalar = 0.5;
+    public static double kSnowblowHomeMaxAccelMetersPerSec2 = 1.5;
+    public static double kSnowblowHomeTurnScalar = 0.45;
   }
   // #endregion
 
@@ -413,8 +436,8 @@ public final class Constants {
     public static final double kHoodStowDistanceMeters = 1.5; // meters
 
     public static final double kTurretStowedPosition = 0.0; // degrees
-    public static double kTurretMaxPositionUnits = 270.0; // degrees
-    public static final double kTurretMinPositionUnits = -270.0; // degrees
+    public static double kTurretMaxPositionUnits = 220.0; // degrees
+    public static final double kTurretMinPositionUnits = -220.0; // degrees
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
@@ -475,26 +498,26 @@ public final class Constants {
     // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
     //           Used for aim-ahead: the turret leads the target by velocity × TOF.
     // Column 4: vertical feeder speed (RPM)
+    // NOTE: Table MUST be sorted ascending by distance (column 0) for interpolation to work.
     public static final double[][] kHubTable = {
       // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {5.247, 12.47, 4000.0, 0.0, 2000.0}, // new
-      {4.67, 12.47, 4400.0, 0.0, 2000.0},
-      {4.5, 12.47, 3900.0, 0.0, 2000.0},
-      {2.9, 12.47, 3400, 0.0, 2000.0},
-      {4.5, 12.15, 3900.0, 0.0, 2000.0},
-      {3.8, 10.41, 3800, 0.0, 2000.0},
-      {3.6, 10.41, 3700, 0.0, 2000.0},
-      {3.12, 10.41, 3700, 0.0, 2000.0},
+      {1.2, 5.05, 2600.0, 0.0, 2000.0},
+      {1.4, 5.05, 2700.0, 0.0, 2000.0},
+      {1.60, 5.00, 3000.0, 0.0, 2000.0},
+      {2.1, 5.05, 3200.0, 0.0, 2000.0},
       {2.3, 10.41, 3200, 0.0, 2000.0},
       {2.6, 5.05, 3200.0, 0.0, 2000.0},
-      {2.1, 5.05, 3200.0, 0.0, 2000.0},
-      {1.4, 5.05, 2700.0, 0.0, 2000.0},
-      {1.2, 5.05, 2600.0, 0.0, 2000.0}, // new ^
-      {1.60, 5.00, 3000.0, 0.0, 2000.0},
+      {2.9, 12.47, 3400, 0.0, 2000.0},
+      {3.12, 10.41, 3700, 0.0, 2000.0},
       {3.15, 10.66, 3500.0, 0.0, 2000.0},
       {3.20, 9.87, 3700.0, 0.0, 2000.0},
+      {3.6, 10.41, 3700, 0.0, 2000.0},
+      {3.8, 10.41, 3800, 0.0, 2000.0},
       {4.37, 10.85, 4000.0, 0.0, 3000.0},
+      {4.5, 12.47, 3900.0, 0.0, 2000.0},
+      {4.67, 12.47, 4400.0, 0.0, 2000.0},
       // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
+      {5.247, 12.47, 4000.0, 0.0, 2000.0},
       {5.31, 12.82, 4100.0, 0.0, 3000.0}, // verticalRPM not recorded, using 3000 estimate
     };
 
@@ -537,7 +560,7 @@ public final class Constants {
 
   static {
     kLeftHoodConfig.name = "Left Hood";
-    kLeftHoodConfig.talonCANID = new CANDeviceId(23, TunerConstants.kCANBus1.getName());
+    kLeftHoodConfig.talonCANID = new CANDeviceId(23, CanBusNames.kSuperstructure);
 
     kLeftHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
     kLeftHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
@@ -567,7 +590,7 @@ public final class Constants {
 
   static {
     kRightHoodConfig.name = "Right Hood";
-    kRightHoodConfig.talonCANID = new CANDeviceId(28, TunerConstants.kCANBus1.getName());
+    kRightHoodConfig.talonCANID = new CANDeviceId(28, CanBusNames.kSuperstructure);
     kRightHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
     kRightHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
     kRightHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinDegrees;
@@ -595,7 +618,7 @@ public final class Constants {
 
   static {
     kLeftTurretConfig.name = "Left Turret";
-    kLeftTurretConfig.talonCANID = new CANDeviceId(22, TunerConstants.kCANBus1.getName());
+    kLeftTurretConfig.talonCANID = new CANDeviceId(22, CanBusNames.kSuperstructure);
 
     kLeftTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
     kLeftTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
@@ -627,7 +650,7 @@ public final class Constants {
 
   static {
     kRightTurretConfig.name = "Right Turret";
-    kRightTurretConfig.talonCANID = new CANDeviceId(27, TunerConstants.kCANBus1.getName());
+    kRightTurretConfig.talonCANID = new CANDeviceId(27, CanBusNames.kSuperstructure);
     kRightTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
     kRightTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
     kRightTurretConfig.kMinPositionUnits = ScorerConstants.kTurretMinPositionUnits;
@@ -657,7 +680,7 @@ public final class Constants {
 
   static {
     kLeftFlywheelConfig.name = "Left Flywheel";
-    kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, TunerConstants.kCANBus1.getName());
+    kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, CanBusNames.kSuperstructure);
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
@@ -676,7 +699,7 @@ public final class Constants {
 
   static {
     kRightFlywheelConfig.name = "Right Flywheel";
-    kRightFlywheelConfig.talonCANID = new CANDeviceId(29, TunerConstants.kCANBus1.getName());
+    kRightFlywheelConfig.talonCANID = new CANDeviceId(29, CanBusNames.kSuperstructure);
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
     kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
@@ -722,7 +745,7 @@ public final class Constants {
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
-        new CANDeviceId(13, TunerConstants.kCANBus1.getName()); // Motor 1 (master)
+        new CANDeviceId(13, CanBusNames.kSuperstructure); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
@@ -746,7 +769,7 @@ public final class Constants {
 
   static {
     kIntakePivotConfig.name = "Intake_Pivot";
-    kIntakePivotConfig.talonCANID = new CANDeviceId(12, TunerConstants.kCANBus1.getName());
+    kIntakePivotConfig.talonCANID = new CANDeviceId(12, CanBusNames.kSuperstructure);
     kIntakePivotConfig.momentOfInertia = 0.01;
 
     // PID Slot 0 gains for MotionMagicVoltage
@@ -830,7 +853,7 @@ public final class Constants {
 
   static {
     kRightFloorRollerConfig.name = "RightFloorRoller";
-    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, TunerConstants.kCANBus1.getName());
+    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, CanBusNames.kSuperstructure);
     kRightFloorRollerConfig.momentOfInertia = 0.00132536;
     kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
@@ -857,7 +880,7 @@ public final class Constants {
 
   static {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
-    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, TunerConstants.kCANBus1.getName());
+    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, CanBusNames.kSuperstructure);
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
     kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
@@ -879,7 +902,7 @@ public final class Constants {
 
   static {
     kRightVerticalFeedConfig.name = "RightVerticalFeed";
-    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, TunerConstants.kCANBus1.getName());
+    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, CanBusNames.kSuperstructure);
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
     kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
@@ -900,7 +923,7 @@ public final class Constants {
 
   static {
     kLeftVerticalFeedConfig.name = "LeftVerticalFeed";
-    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, TunerConstants.kCANBus1.getName());
+    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, CanBusNames.kSuperstructure);
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
     kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
@@ -970,7 +993,45 @@ public final class Constants {
    * @param mac_address Mac address to check.
    * @return true if some device with this mac address exists on this system.
    */
-  public static boolean hasMacAddress(final String mac_address) {
+  private static Bot detectCurrentBot() {
+    if (hasAnyMacAddress(kPracticeBotMacAddresses)) {
+      return Bot.PRACTICE;
+    }
+    if (hasAnyMacAddress(kBravoBotMacAddresses)) {
+      return Bot.BRAVO;
+    }
+
+    return Bot.PRACTICE;
+  }
+
+  public static boolean hasMacAddress(final String macAddress) {
+    for (String detectedMacAddress : kLocalMacAddresses) {
+      if (macAddress.equalsIgnoreCase(detectedMacAddress)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasAnyMacAddress(final String[] expectedMacAddresses) {
+    for (String expectedMacAddress : expectedMacAddresses) {
+      if (hasMacAddress(expectedMacAddress)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static String[] getLocalMacAddresses() {
+    return kLocalMacAddresses.clone();
+  }
+
+  public static String getLocalMacAddressesString() {
+    return String.join(", ", kLocalMacAddresses);
+  }
+
+  private static String[] findLocalMacAddresses() {
+    List<String> macAddresses = new ArrayList<>();
     try {
       Enumeration<NetworkInterface> nwInterface = NetworkInterface.getNetworkInterfaces();
       while (nwInterface.hasMoreElements()) {
@@ -978,28 +1039,19 @@ public final class Constants {
         if (nis == null) {
           continue;
         }
-        StringBuilder device_mac_sb = new StringBuilder();
-        System.out.println("hasMacAddress: NIS: " + nis.getDisplayName());
+        StringBuilder deviceMacBuilder = new StringBuilder();
         byte[] mac = nis.getHardwareAddress();
         if (mac != null) {
           for (int i = 0; i < mac.length; i++) {
-            device_mac_sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
+            deviceMacBuilder.append(
+                String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
           }
-          String device_mac = device_mac_sb.toString();
-          System.out.println(
-              "hasMacAddress: NIS " + nis.getDisplayName() + " device_mac: " + device_mac);
-          if (mac_address.equals(device_mac)) {
-            System.out.println("hasMacAddress: ** Mac address match! " + device_mac);
-            return true;
-          }
-        } else {
-          System.out.println("hasMacAddress: Address doesn't exist or is not accessible");
+          macAddresses.add(deviceMacBuilder.toString());
         }
       }
-
     } catch (SocketException e) {
       e.printStackTrace();
     }
-    return false;
+    return macAddresses.toArray(new String[0]);
   }
 }

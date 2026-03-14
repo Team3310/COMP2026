@@ -2,6 +2,7 @@ package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Dep.DepCycle1;
+import frc.robot.Auton.Dep.DepToSSTrench1;
 import frc.robot.Auton.Forward2m;
 import frc.robot.Auton.OneAuton;
 import frc.robot.RobotContainer;
@@ -12,7 +13,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
     setDefaultOption(AutonomousMode.ONE_AUTON)
         .addOption(AutonomousMode.TEST_FORWARD)
-        .addOption(AutonomousMode.DEP_CYCLE1);
+        .addOption(AutonomousMode.DEP_CYCLE1)
+        .addOption(AutonomousMode.DEPSSTRENCH1);
   }
 
   public AutonCommandBase getCommand() {
@@ -27,7 +29,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
   public enum AutonomousMode {
     ONE_AUTON("one cycle anywhere"),
     TEST_FORWARD("test forward"),
-    DEP_CYCLE1("depo cycle");
+    DEP_CYCLE1("depo cycle"),
+    DEPSSTRENCH1("depo to ss trench1");
 
     private String name = "";
 
@@ -46,6 +49,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new Forward2m(RobotContainer.getInstance());
         case DEP_CYCLE1:
           return new DepCycle1(RobotContainer.getInstance());
+        case DEPSSTRENCH1:
+          return new DepToSSTrench1(RobotContainer.getInstance());
         default:
           return new OneAuton(RobotContainer.getInstance());
       }

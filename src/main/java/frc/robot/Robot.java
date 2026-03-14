@@ -40,7 +40,6 @@ public class Robot extends LoggedRobot {
     DEFENCEOUT,
     DEPLOY,
     RETRACT,
-    TRENCH,
     PIT
   }
 
@@ -62,9 +61,12 @@ public class Robot extends LoggedRobot {
 
   public static BotState currentState = BotState.DEFENCEIN;
   public static OverrideState overrideState = OverrideState.OFF;
+  public static boolean stateRefreshRequested = false;
+  public static boolean duckOverrideActive = false;
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
+  public static boolean shootButtonHeld = false;
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
@@ -137,11 +139,12 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
     Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
+    Logger.recordOutput("Robot/DetectedBot", Constants.currentBot.name());
+    Logger.recordOutput("Robot/LocalMacAddresses", Constants.getLocalMacAddressesString());
 
     // Refresh alliance color every cycle — DriverStation data may not be
     // available at class-load time, so the initial value can be wrong.
     currentAlliance = DriverStation.getAlliance().orElse(currentAlliance);
-    Constants.alliance = currentAlliance;
 
     double robotX = robotContainer.getDrive().getPose().getX();
     double robotY = robotContainer.getDrive().getPose().getY();
@@ -158,8 +161,6 @@ public class Robot extends LoggedRobot {
     // we are done.
     if (inPit) {
       currentState = BotState.PIT;
-    } else if (isInTrenchZone()) {
-      currentState = BotState.TRENCH;
     } else if (!deploying && !retracting) {
       switch (overrideState) {
         case OFF: // nothing runs
@@ -190,13 +191,28 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    if (currentState != lastAppliedState) {
+    if (stateRefreshRequested || currentState != lastAppliedState) {
       onStateEntered(currentState);
       lastAppliedState = currentState;
+      stateRefreshRequested = false;
     }
 
     track();
 
+    // logging
+    SmartDashboard.putBoolean("inPit", inPit);
+    SmartDashboard.putString("currentState", "" + currentState);
+    SmartDashboard.putString("overrideState", "" + overrideState);
+    SmartDashboard.putString("robotX", "" + robotX);
+    SmartDashboard.putString("robotY", "" + robotY);
+    SmartDashboard.putString("robotOrient", "" + robotOrient);
+    SmartDashboard.putString("currentZone", "" + currentZone);
+    SmartDashboard.putBoolean("activeHub", activeHub);
+    SmartDashboard.putBoolean("hubOverride", hubOverride);
+    SmartDashboard.putBoolean("duckOverrideActive", duckOverrideActive);
+    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
+    SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
+    SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
     // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
     if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
@@ -271,6 +287,7 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("robotY", robotY);
       SmartDashboard.putNumber("robotOrient", robotOrient);
       SmartDashboard.putString("currentZone", "" + currentZone);
+      SmartDashboard.putString("currentAlliance", "" + currentAlliance);
       SmartDashboard.putBoolean("activeHub", activeHub);
       SmartDashboard.putBoolean("hubOverride", hubOverride);
       SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
@@ -356,9 +373,11 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
+    currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
     if (selectedAuto.requiresPathLoading()) {
-      Paths.loadPaths(currentAlliance);
+      Paths.loadPaths();
     }
     robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
 
@@ -367,6 +386,7 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
+    stateRefreshRequested = true;
   }
 
   /** This function is called periodically during autonomous. */
@@ -376,14 +396,17 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+    currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
     robotContainer.getVision().setVisionEnabled(true);
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+    stateRefreshRequested = true;
   }
 
   /** This function is called periodically during operator control. */
@@ -415,12 +438,8 @@ public class Robot extends LoggedRobot {
 
     if (robotX < FieldConstants.Zone.BLUE.getX()) {
       currentZone = Zone.BLUE;
-    } else if (robotX < FieldConstants.Zone.BLUETRENCH.getX()) {
-      currentZone = Zone.BLUETRENCH;
     } else if (robotX < FieldConstants.Zone.MID.getX()) {
       currentZone = Zone.MID;
-    } else if (robotX < FieldConstants.Zone.REDTRENCH.getX()) {
-      currentZone = Zone.REDTRENCH;
     } else {
       currentZone = Zone.RED;
     }
@@ -499,13 +518,6 @@ public class Robot extends LoggedRobot {
     }
   }
 
-  private boolean isInTrenchZone() {
-    if (currentZone == Zone.BLUETRENCH || currentZone == Zone.REDTRENCH) {
-      return true;
-    }
-    return false;
-  }
-
   private void track() {
     CommandScheduler.getInstance()
         .schedule(
@@ -517,7 +529,7 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    if (shouldTrack(currentState)) {
+    if (shouldTrack(currentState) && !duckOverrideActive) {
       CommandScheduler.getInstance()
           .schedule(
               robotContainer
@@ -562,10 +574,13 @@ public class Robot extends LoggedRobot {
 
   // #region state methods
   private boolean shouldTrack(BotState state) {
-    return !inPit
-        && state != BotState.DEFENCEIN
-        && state != BotState.TRENCH
-        && state != BotState.PIT;
+    return !inPit && state != BotState.DEFENCEIN && state != BotState.PIT;
+  }
+
+  public static boolean shouldLimitHomeZoneDrive() {
+    return (currentState == BotState.SNOWBLOW || shootButtonHeld)
+        && ((currentAlliance == Alliance.Blue && currentZone == Zone.BLUE)
+            || (currentAlliance == Alliance.Red && currentZone == Zone.RED));
   }
 
   private void onStateEntered(BotState state) {
@@ -587,9 +602,6 @@ public class Robot extends LoggedRobot {
         break;
       case RETRACT:
         retract();
-        break;
-      case TRENCH:
-        trench();
         break;
       case PIT:
         // In pit mode, manual controls drive behavior.
@@ -666,19 +678,6 @@ public class Robot extends LoggedRobot {
       CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
       CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
     }
-  }
-
-  private void trench() {
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodLeft()
-                .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getHoodRight()
-                .setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees));
   }
 
   // #endregion

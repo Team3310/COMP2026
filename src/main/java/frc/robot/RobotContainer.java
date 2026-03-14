@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -11,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
@@ -265,6 +267,12 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Register PathPlanner named commands (must be before any path loading)
+    NamedCommands.registerCommand(
+        "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
+    NamedCommands.registerCommand(
+        "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
+
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
     DriverReadout.addChoosers(autonomousChooser);
@@ -278,6 +286,7 @@ public class RobotContainer {
               pitFlywheelsEnabled = false;
               Robot.currentState = Robot.BotState.PIT;
               Robot.overrideState = Robot.OverrideState.OFF;
+              Robot.stateRefreshRequested = true;
               Robot.deploying = false;
               Robot.retracting = false;
               CommandScheduler.getInstance().cancelAll();
@@ -288,6 +297,7 @@ public class RobotContainer {
             () -> {
               Robot.inPit = false;
               Robot.overrideState = Robot.OverrideState.ON;
+              Robot.stateRefreshRequested = true;
               Robot.deploying = false;
               Robot.retracting = false;
               CommandScheduler.getInstance().cancelAll();
@@ -454,6 +464,23 @@ public class RobotContainer {
                     > Constants.DriveCommandConstants.kRotationCommandDeadband);
   }
 
+  private Command buildDuckOverrideCommand() {
+    return Commands.parallel(
+            hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
+        .alongWith(
+            Commands.startEnd(
+                () -> Robot.duckOverrideActive = true, () -> Robot.duckOverrideActive = false));
+  }
+
+  private Command buildOverrideStateCommand(Robot.OverrideState overrideState) {
+    return Commands.runOnce(
+        () -> {
+          Robot.overrideState = overrideState;
+          Robot.stateRefreshRequested = true;
+        });
+  }
+
   private void configureButtonBindings() {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
@@ -461,7 +488,7 @@ public class RobotContainer {
     // Flywheels off when:
     //  - Pit mode and pitFlywheelsEnabled is false
     //  - Normal mode and normalFlywheelsEnabled is false
-    //  - DEFENCEIN or TRENCH (hood at min / "duck" — don't shoot)]
+    //  - DEFENCEIN (hood at min / "duck" - do not shoot)]
 
     // Hood defaults: continuously hold the last-commanded position via motion
     // magic.  Without this the base-class neutral command takes over as soon as a
@@ -578,11 +605,8 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(intakeRollers.intakeCommand(), Commands.none(), () -> Robot.inPit));
 
-    // left bumper = pit: outtake | normal: none
-    driver
-        .leftBumper()
-        .toggleOnTrue(
-            Commands.either(intakeRollers.outtakeCommand(), Commands.none(), () -> Robot.inPit));
+    // left bumper = pit: outtake | normal: hood duck override while held
+    driver.leftBumper().and(() -> Robot.inPit).toggleOnTrue(intakeRollers.outtakeCommand());
 
     // Driver pit controls: right trigger = shoot (both vertical feeders + both
     // floor rollers)
@@ -630,7 +654,8 @@ public class RobotContainer {
 
     if (turretLeft != null) {
 
-      // Pit: left joystick angle maps directly to left turret angle (±220°).
+      // Pit: left joystick angle maps directly to left turret angle.
+      // The command is still clamped by the turret software limits (currently ±220°).
       // Only updates when stick is pushed past deadband magnitude.
       turretLeft.setDefaultCommand(
           turretLeft.dutyCycleCommand(
@@ -651,7 +676,8 @@ public class RobotContainer {
     }
 
     if (turretRight != null) {
-      // Pit: right joystick angle maps directly to right turret angle (±220°).
+      // Pit: right joystick angle maps directly to right turret angle.
+      // The command is still clamped by the turret software limits (currently ±220°).
       turretRight.setDefaultCommand(
           turretRight.dutyCycleCommand(
               () -> {
@@ -677,7 +703,7 @@ public class RobotContainer {
           .onTrue(
               Commands.either(
                   Commands.runOnce(() -> pitFlywheelsEnabled = true),
-                  new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW),
+                  buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW),
                   () -> Robot.inPit));
     }
 
@@ -687,7 +713,7 @@ public class RobotContainer {
         .onTrue(
             Commands.either(
                 Commands.runOnce(() -> pitFlywheelsEnabled = false),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEOUT),
+                buildOverrideStateCommand(Robot.OverrideState.DEFENCEOUT),
                 () -> Robot.inPit));
 
     // B = pit: floors on | normal: collect state
@@ -696,7 +722,7 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT),
+                buildOverrideStateCommand(Robot.OverrideState.COLLECT),
                 () -> Robot.inPit));
 
     // A = pit: floors off | normal: defencein state
@@ -705,12 +731,18 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
-                new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.DEFENCEIN),
+                buildOverrideStateCommand(Robot.OverrideState.DEFENCEIN),
                 () -> Robot.inPit));
 
     // Right Trigger:
     // Pit mode -> toggle vertical feed rollers on/off.
     // Normal mode -> toggle floor + vertical rollers while in DEFENCEOUT.
+    operator
+        .rightTrigger()
+        .and(() -> !Robot.inPit)
+        .whileTrue(
+            Commands.startEnd(
+                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false));
     operator
         .rightTrigger()
         .and(() -> Robot.inPit)
@@ -798,6 +830,9 @@ public class RobotContainer {
                 () -> Robot.inPit));
 
     if (flywheelLeft != null && hoodLeft != null) {
+      Trigger duckOverrideTrigger =
+          operator.povDown().or(driver.leftBumper().and(() -> !Robot.inPit));
+
       // D-Pad Up/Down: normal = flywheel + hood | pit = move both hoods to preset
       // degrees
       operator
@@ -813,20 +848,7 @@ public class RobotContainer {
                       hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   () -> Robot.inPit));
-      operator
-          .povDown()
-          .onTrue(
-              Commands.either(
-                  // Pit: hoods to 10 deg (stowed)
-                  Commands.parallel(
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  // Normal: turn shooters off and stow hoods.
-                  Commands.parallel(
-                      Commands.runOnce(() -> normalFlywheelsEnabled = false),
-                      hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                      hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                  () -> Robot.inPit));
+      duckOverrideTrigger.whileTrue(buildDuckOverrideCommand());
       // Pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
       operator
           .povRight()

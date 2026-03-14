@@ -7,6 +7,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.lib.util.FieldConstants;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Pure-math utility that computes the desired turret (lateral) and hood (vertical) angles for the
@@ -37,6 +39,10 @@ import frc.robot.Robot;
  * </ul>
  */
 public final class TurretAimCalculator {
+  private static final double[][] SORTED_HUB_TABLE =
+      sortTableByDistance(Constants.ScorerConstants.kHubTable);
+  private static final double[][] SORTED_PASS_TABLE =
+      sortTableByDistance(Constants.ScorerConstants.kPassTable);
 
   /** Immutable result of a single aim calculation for both scorers. */
   public static class AimResult {
@@ -85,12 +91,12 @@ public final class TurretAimCalculator {
   // ---- Turret wrap-around state ----
   // Tracks the last output angle so we can pick the closest 360° wrap each
   // cycle.  This prevents the turret from snapping at ±180° and lets it use
-  // the full ±220° mechanical range before flipping.
+  // the full ±220° software range before flipping.
   private static double lastTurretDeg = 0.0;
 
   // The turret flips to the other side when the commanded angle exceeds this
-  // threshold.  270° is well past the ±220° physical limit, so the turret uses
-  // its full range before wrapping.  A flip at +270 → +270−360 = −90° (safe).
+  // threshold.  270° is safely beyond the ±220° software limit, so the turret
+  // uses its full range before wrapping to the opposite side.
   private static final double FLIP_THRESHOLD = 270.0;
 
   /** Prevent instantiation. */
@@ -103,13 +109,9 @@ public final class TurretAimCalculator {
    * @return An {@link AimResult} with six values (L/R turret, hood, feeder) plus debug info.
    */
   public static AimResult calculate(Pose2d robotPose) {
-    boolean isBlue = (Constants.alliance == Alliance.Blue);
+    boolean isBlue = (Robot.currentAlliance == Alliance.Blue);
 
     FieldConstants.Zone zone = Robot.currentZone;
-
-    // ---- Trench zone: stow hood to lowest angle, zero feeder ----
-    boolean inTrench =
-        (zone == FieldConstants.Zone.BLUETRENCH || zone == FieldConstants.Zone.REDTRENCH);
 
     // ---- Pick field-space target ----
     Translation2d fieldTarget;
@@ -130,7 +132,7 @@ public final class TurretAimCalculator {
         fieldTarget =
             new Translation2d(FieldConstants.Hub.RED.getX(), FieldConstants.Hub.RED.getY());
       }
-    } else { // Midfield, trench, or opponent zone
+    } else { // Midfield or opponent zone
       // Pass mode — aim at the landing zone on OUR side.
       // Choose whichever landing zone (outpost vs depot) is closer to the
       // robot's current Y to minimize turret travel.
@@ -150,7 +152,7 @@ public final class TurretAimCalculator {
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
-    double[] result = computeAngles(midShooterField, fieldTarget, heading, home, inTrench);
+    double[] result = computeAngles(midShooterField, fieldTarget, heading, home);
 
     double turretDegLeft =
         result[0]
@@ -209,15 +211,13 @@ public final class TurretAimCalculator {
    * @param targetField Field-space XY of the target.
    * @param robotHeading Current robot heading on the field.
    * @param home true when in own alliance zone (aim at hub); false for pass/lob mode.
-   * @param inTrench true when in a trench zone — forces hood to minimum and feeder off.
    * @return double[3]: [turretDeg, hoodDeg, feederRPM].
    */
   private static double[] computeAngles(
       Translation2d shooterField,
       Translation2d targetField,
       Rotation2d robotHeading,
-      boolean home,
-      boolean inTrench) {
+      boolean home) {
     // --- Lateral (turret) angle ---
     // Vector from shooter to target in field frame
     double dx = targetField.getX() - shooterField.getX();
@@ -231,7 +231,7 @@ public final class TurretAimCalculator {
     double turretRad = fieldBearing - robotHeading.getRadians();
 
     // ---- Wrap-around ----
-    // The turret can physically travel ±220° from forward (440° total).
+    // The turret is software-limited to ±220° from forward (440° total).
     // atan2 gives [-180, +180] which hides the fact that the turret can
     // smoothly pass through ±180°.  We pick the 360° wrap of the raw angle
     // that is closest to the previous output, giving natural continuity.
@@ -268,25 +268,17 @@ public final class TurretAimCalculator {
     double hoodDeg;
     double feederRPM;
 
-    if (inTrench) {
-      // Trench zone: hood as low (steep) as possible, feeder off.
-      hoodDeg = Constants.ScorerConstants.kHoodMinDegrees;
-      feederRPM = Constants.ScorerConstants.kFeederStowRPM;
-    } else {
-      // Pick the correct lookup table
-      double[][] table =
-          home ? Constants.ScorerConstants.kHubTable : Constants.ScorerConstants.kPassTable;
+    double[][] table = home ? SORTED_HUB_TABLE : SORTED_PASS_TABLE;
 
-      hoodDeg = interpolateTable(table, horizontalDist, 1); // column 1 = hood
-      feederRPM = interpolateTable(table, horizontalDist, 2); // column 2 = feeder
+    hoodDeg = interpolateTable(table, horizontalDist, 1); // column 1 = hood
+    feederRPM = interpolateTable(table, horizontalDist, 2); // column 2 = feeder
 
-      // Clamp hood to physical limits
-      hoodDeg =
-          clamp(
-              hoodDeg,
-              Constants.ScorerConstants.kHoodMinDegrees,
-              Constants.ScorerConstants.kHoodMaxDegrees);
-    }
+    // Clamp hood to physical limits
+    hoodDeg =
+        clamp(
+            hoodDeg,
+            Constants.ScorerConstants.kHoodMinDegrees,
+            Constants.ScorerConstants.kHoodMaxDegrees);
 
     return new double[] {turretDeg, hoodDeg, feederRPM};
   }
@@ -324,6 +316,15 @@ public final class TurretAimCalculator {
     }
     // Fallback (should never reach here if table is sorted)
     return table[table.length - 1][valueColumn];
+  }
+
+  private static double[][] sortTableByDistance(double[][] table) {
+    double[][] sorted = new double[table.length][];
+    for (int i = 0; i < table.length; i++) {
+      sorted[i] = table[i].clone();
+    }
+    Arrays.sort(sorted, Comparator.comparingDouble(row -> row[0]));
+    return sorted;
   }
 
   /**

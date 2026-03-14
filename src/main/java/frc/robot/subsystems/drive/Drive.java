@@ -181,6 +181,12 @@ public class Drive extends SubsystemBase {
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
+    int gyroSampleCount = gyroInputs.odometryYawPositions.length;
+    Logger.recordOutput("Drive/Odometry/ModuleSampleCount", sampleTimestamps.length);
+    Logger.recordOutput("Drive/Odometry/GyroSampleCount", gyroSampleCount);
+    Logger.recordOutput(
+        "Drive/Odometry/GyroSampleMismatch",
+        gyroInputs.connected && gyroSampleCount != sampleTimestamps.length);
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
@@ -198,8 +204,10 @@ public class Drive extends SubsystemBase {
 
       // Update gyro angle
       if (gyroInputs.connected) {
-        // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
+        // Prefer the time-aligned gyro sample, but fall back to the latest yaw
+        // if the gyro queue is shorter than the module queues.
+        rawGyroRotation =
+            i < gyroSampleCount ? gyroInputs.odometryYawPositions[i] : gyroInputs.yawPosition;
       } else {
         // Use the angle delta from the kinematics and module deltas
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
@@ -420,13 +428,21 @@ public class Drive extends SubsystemBase {
 
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
-    poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-
-    // Also reset the sim gyro so heading stays in sync
-    if (gyroIO instanceof GyroIOSim simGyro) {
-      simGyro.setYaw(pose.getRotation());
+    odometryLock.lock();
+    try {
+      gyroIO.setYaw(pose.getRotation());
       rawGyroRotation = pose.getRotation();
+      poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+    } finally {
+      odometryLock.unlock();
     }
+  }
+
+  /** Re-applies the current estimated heading to the gyro for enabled-mode vision seeding. */
+  public void lockGyroHeadingToEstimatedPose() {
+    Pose2d estimatedPose = getPose();
+    setPose(estimatedPose);
+    Logger.recordOutput("Drive/GyroHeadingLockDeg", estimatedPose.getRotation().getDegrees());
   }
 
   /** Adds a new timestamped vision measurement. */

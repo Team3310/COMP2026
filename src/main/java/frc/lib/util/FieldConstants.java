@@ -70,12 +70,9 @@ public class FieldConstants {
   }
 
   public static enum Zone { // Zones of field where x is where it ends
-    BLUE(Units.inchesToMeters(159.0)),
-    BLUETRENCH(Units.inchesToMeters(206)),
-    MID(Units.inchesToMeters(433.071)),
-    REDTRENCH(Units.inchesToMeters(493.622)),
+    BLUE(Units.inchesToMeters(192.25)),
+    MID(Units.inchesToMeters(469.0)),
     RED(kFieldLength);
-    // remeasured with sim
 
     private final double x;
 

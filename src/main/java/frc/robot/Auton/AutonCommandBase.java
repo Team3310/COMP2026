@@ -50,6 +50,6 @@ public class AutonCommandBase extends SequentialCommandGroup {
 
   protected Command followPathAndSnowblow(PathPlannerPath path) {
     return new ParallelCommandGroup(
-        followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.ON));
+        followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.SNOWBLOW));
   }
 }
