@@ -115,13 +115,23 @@
       "name": "switchToSnowblow",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "switchToSnowblow"
+        }
+      }
     },
     {
       "name": "switchToCollect",
       "waypointRelativePos": 1.9354838709677438,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "switchToCollect"
+        }
+      }
     }
   ],
   "globalConstraints": {

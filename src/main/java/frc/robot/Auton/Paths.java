@@ -19,17 +19,17 @@ public class Paths {
   public static PathPlannerPath depCycle;
   public static PathPlannerPath outCycle;
 
-  public static PathPlannerPath outtoout;
-  public static PathPlannerPath deptodep;
+  public static PathPlannerPath outToOut;
+  public static PathPlannerPath depToDep;
 
-  public static PathPlannerPath deptosstrenchcycle;
-  public static PathPlannerPath outtosstrenchcycle;
+  public static PathPlannerPath depToSSTrench;
+  public static PathPlannerPath outToSSTrench;
 
-  public static PathPlannerPath deptoout;
-  public static PathPlannerPath outtodep;
+  public static PathPlannerPath depToOut;
+  public static PathPlannerPath outToDep;
 
-  public static PathPlannerPath hubtodep;
-  public static PathPlannerPath hubtoout;
+  public static PathPlannerPath hubToDep;
+  public static PathPlannerPath hubToOut;
 
   public static boolean loaded;
 
@@ -43,17 +43,16 @@ public class Paths {
       outCycle = loadPathForAlliance("OutCycle", false);
       hubCycle = loadPathForAlliance("HubCycle", false);
 
-      deptodep = loadPathForAlliance("DepToDep", false);
-      outtoout = loadPathForAlliance("OutToOut", false);
+      depToDep = loadPathForAlliance("DepToDep", false);
+      outToOut = loadPathForAlliance("OutToOut", false);
 
-      deptosstrenchcycle = loadPathForAlliance("DepToSSTrenchCycle", false);
-      outtosstrenchcycle = loadPathForAlliance("OutToSSTrenchCycle", false);
+      depToSSTrench = loadPathForAlliance("DepToSSTrench", false);
+      outToSSTrench = loadPathForAlliance("OutToSSTrench", false);
+      depToOut = loadPathForAlliance("DepToOut", false);
+      outToDep = loadPathForAlliance("OutToDep", false);
 
-      deptoout = loadPathForAlliance("DepToOut", false);
-      outtodep = loadPathForAlliance("OutToDep", false);
-
-      hubtodep = loadPathForAlliance("HubToDep", false);
-      hubtoout = loadPathForAlliance("HubToOut", false);
+      hubToDep = loadPathForAlliance("HubToDep", false);
+      hubToOut = loadPathForAlliance("HubToOut", false);
     } else {
 
       forward2m = loadPathForAlliance("forward2m", false); // dont flip for this one
@@ -62,17 +61,16 @@ public class Paths {
       outCycle = loadPathForAlliance("OutCycle", true);
       hubCycle = loadPathForAlliance("HubCycle", true);
 
-      deptodep = loadPathForAlliance("DepToDep", true);
-      outtoout = loadPathForAlliance("OutToOut", true);
+      depToDep = loadPathForAlliance("DepToDep", true);
+      outToOut = loadPathForAlliance("OutToOut", true);
 
-      deptosstrenchcycle = loadPathForAlliance("DepToSSTrenchCycle", true);
-      outtosstrenchcycle = loadPathForAlliance("OutToSSTrenchCycle", true);
+      depToSSTrench = loadPathForAlliance("DepToSSTrench", true);
+      outToSSTrench = loadPathForAlliance("OutToSSTrench", true);
+      depToOut = loadPathForAlliance("DepToOut", true);
+      outToDep = loadPathForAlliance("OutToDep", true);
 
-      deptoout = loadPathForAlliance("DepToOut", true);
-      outtodep = loadPathForAlliance("OutToDep", true);
-
-      hubtodep = loadPathForAlliance("HubToDep", true);
-      hubtoout = loadPathForAlliance("HubToOut", true);
+      hubToDep = loadPathForAlliance("HubToDep", true);
+      hubToOut = loadPathForAlliance("HubToOut", true);
     }
   }
 
