@@ -165,7 +165,7 @@ public class Vision extends SubsystemBase {
         boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
         if (resetOnDisable) {
           resetSeedState();
-        } else {
+  
           // Preserve existing seed state; log event for debugging.
           Logger.recordOutput("Vision/resetSkippedOnDisable", true);
         }
