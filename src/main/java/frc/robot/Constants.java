@@ -318,7 +318,7 @@ public final class Constants {
     // Translational soft cap (m/s).  The real kSpeedAt12Volts is the motor's
     // theoretical max; this should be ≤ that value to model traction limits,
     // carpet drag, etc.
-    public static double kTranslationalSoftCapMps = 4.5;
+    public static double kTranslationalSoftCapMps = 7.0;
 
     // Rotational soft cap (rad/s).  Real max ≈ kSpeedAt12Volts / driveBaseRadius.
     // Lower this to model realistic turn-rate limits.

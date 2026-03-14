@@ -100,7 +100,7 @@ public class TunerConstantsPractice {
   // Theoretical free speed (m/s) at 10 V applied output (virtual voltage
   // compensation cap);
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.0);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(7.0);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
