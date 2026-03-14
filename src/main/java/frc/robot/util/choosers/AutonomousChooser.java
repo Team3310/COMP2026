@@ -16,13 +16,17 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
   }
 
   public AutonCommandBase getCommand() {
-    return getSendable().getSelected().getCommand();
+    return getSelectedMode().getCommand();
+  }
+
+  public AutonomousMode getSelectedMode() {
+    AutonomousMode selected = getSendable().getSelected();
+    return selected != null ? selected : AutonomousMode.TEST_FORWARD;
   }
 
   public enum AutonomousMode {
     ONE_AUTON("one cycle anywhere"),
     TEST_FORWARD("test forward"),
-
     DEP_CYCLE1("depo cycle");
 
     private String name = "";
@@ -45,6 +49,14 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         default:
           return new OneAuton(RobotContainer.getInstance());
       }
+    }
+
+    public boolean requiresPathLoading() {
+      return this != TEST_FORWARD;
+    }
+
+    public boolean disablesVisionSeeding() {
+      return this == TEST_FORWARD;
     }
   }
 }

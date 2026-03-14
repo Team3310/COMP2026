@@ -202,12 +202,29 @@ public class RobotContainer {
     return flywheelRight;
   }
 
+  public double getDesiredLeftFlywheelRpm() {
+    return desiredLeftFlywheelRpm;
+  }
+
+  public double getDesiredRightFlywheelRpm() {
+    return desiredRightFlywheelRpm;
+  }
+
+  public void setDesiredFlywheelRpms(double leftRpm, double rightRpm) {
+    desiredLeftFlywheelRpm = leftRpm;
+    desiredRightFlywheelRpm = rightRpm;
+  }
+
   public Turret getTurretRight() {
     return turretRight;
   }
 
   public TurretAimManager getTurretAimManager() {
     return turretAimManager;
+  }
+
+  public Vision getVision() {
+    return vision;
   }
 
   public AutonomousChooser getAutonomousChooser() {
@@ -228,6 +245,8 @@ public class RobotContainer {
   // teleop).
   public boolean pitFlywheelsEnabled = false;
   public boolean normalFlywheelsEnabled = true;
+  private double desiredLeftFlywheelRpm = 0.0;
+  private double desiredRightFlywheelRpm = 0.0;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -431,6 +450,14 @@ public class RobotContainer {
     // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
+    flywheelLeft.setDefaultCommand(
+        flywheelLeft
+            .setRPMCommand(this::getDesiredLeftFlywheelRpm)
+            .withName("Flywheel Left Maintain RPM (default)"));
+    flywheelRight.setDefaultCommand(
+        flywheelRight
+            .setRPMCommand(this::getDesiredRightFlywheelRpm)
+            .withName("Flywheel Right Maintain RPM (default)"));
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
