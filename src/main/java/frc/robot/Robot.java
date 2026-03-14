@@ -87,8 +87,6 @@ public class Robot extends LoggedRobot {
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
     Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
     Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
-    Logger.recordMetadata("DetectedBot", Constants.currentBot.name());
-    Logger.recordMetadata("LocalMacAddresses", String.join(", ", Constants.getLocalMacAddresses()));
     Logger.recordMetadata(
         "GitDirty",
         switch (BuildConstants.DIRTY) {
@@ -141,6 +139,8 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
     Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
+    Logger.recordOutput("Robot/DetectedBot", Constants.currentBot.name());
+    Logger.recordOutput("Robot/LocalMacAddresses", Constants.getLocalMacAddressesString());
 
     // Refresh alliance color every cycle — DriverStation data may not be
     // available at class-load time, so the initial value can be wrong.

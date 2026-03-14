@@ -19,9 +19,9 @@ import frc.lib.drivers.CANDeviceId;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.ServoMotorSubsystemWithCanCoderConfig;
 import frc.robot.generated.TunerConstants;
-import java.util.ArrayList;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -36,8 +36,11 @@ public final class Constants {
   // NOTE: non-final — refreshed every cycle in Robot.robotPeriodic() once DS connects.
   public static Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
-  private static final String[] kLocalMacAddresses = getLocalMacAddresses();
-  public static final String[] kPracticeBotMacAddresses = {"00:80:2F:33:BF:BB"};
+  private static final String[] kLocalMacAddresses = findLocalMacAddresses();
+  public static final String[] kPracticeBotMacAddresses = {
+    "38:41:A5:68:34:74",
+    "00:80:2F:33:CF:65"
+  };
   // TODO: Fill in the bravo/comp roboRIO MAC once it is known from logs.
   public static final String[] kBravoBotMacAddresses = {};
 
@@ -948,9 +951,6 @@ public final class Constants {
       return Bot.BRAVO;
     }
 
-    System.out.println(
-        "detectCurrentBot: Unrecognized MACs, defaulting to PRACTICE. Local MACs="
-            + String.join(", ", kLocalMacAddresses));
     return Bot.PRACTICE;
   }
 
@@ -973,6 +973,14 @@ public final class Constants {
   }
 
   public static String[] getLocalMacAddresses() {
+    return kLocalMacAddresses.clone();
+  }
+
+  public static String getLocalMacAddressesString() {
+    return String.join(", ", kLocalMacAddresses);
+  }
+
+  private static String[] findLocalMacAddresses() {
     List<String> macAddresses = new ArrayList<>();
     try {
       Enumeration<NetworkInterface> nwInterface = NetworkInterface.getNetworkInterfaces();
