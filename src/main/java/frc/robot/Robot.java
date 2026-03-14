@@ -75,6 +75,8 @@ public class Robot extends LoggedRobot {
   // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
   private int dashboardReadCounter = 0;
   private static final int DASHBOARD_READ_INTERVAL = 10; // Every 10th cycle (~5 Hz)
+  // Dashboard write rate-limiting — telemetry doesn't need 50 Hz updates either.
+  private int dashboardWriteCounter = 0;
 
   public Robot() {
     // Record metadata
@@ -150,15 +152,6 @@ public class Robot extends LoggedRobot {
     // Update activeHub based on match time / override flag
     updateHub();
 
-    if (robotContainer.normalFlywheelsEnabled) {
-      // If both flywheel modes are enabled, prioritize normal mode and disable pit mode.
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().shootCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().shootCommand());
-    } else {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
-    }
-
     // This basically says if we are not deploying or retracting, then we can change
     // states.
     // If we are deploying or retracting, we want to stay in deploy or retract until
@@ -203,20 +196,6 @@ public class Robot extends LoggedRobot {
     }
 
     track();
-
-    // logging
-    SmartDashboard.putBoolean("inPit", inPit);
-    SmartDashboard.putString("currentState", "" + currentState);
-    SmartDashboard.putString("overrideState", "" + overrideState);
-    SmartDashboard.putString("robotX", "" + robotX);
-    SmartDashboard.putString("robotY", "" + robotY);
-    SmartDashboard.putString("robotOrient", "" + robotOrient);
-    SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", activeHub);
-    SmartDashboard.putBoolean("hubOverride", hubOverride);
-    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
-    SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
-    SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
 
     // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
     if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
@@ -271,84 +250,84 @@ public class Robot extends LoggedRobot {
       Constants.VisionConstants.kMT2MaxAcceptedStdDev =
           SmartDashboard.getNumber(
               "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
+      Constants.ScorerConstants.kTurretOffsetDegrees =
+          SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
     }
 
-    // Per-subsystem supply current (amps)
-    double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
-    double iFloorRight = robotContainer.getAgitatorRight().getSupplyCurrentAmps();
-    double iVertLeft = robotContainer.getVerticalFeedLeft().getSupplyCurrentAmps();
-    double iVertRight = robotContainer.getVerticalFeedRight().getSupplyCurrentAmps();
-    double iIntake = robotContainer.getIntakeRollers().getSupplyCurrentAmps();
-    double iPivot = robotContainer.getIntakePivot().getSupplyCurrentAmps();
-    double iFlywheelL = robotContainer.getFlywheelLeft().getSupplyCurrentAmps();
-    double iFlywheelR = robotContainer.getFlywheelRight().getSupplyCurrentAmps();
-    double iHoodL = robotContainer.getHoodLeft().getSupplyCurrentAmps();
-    double iHoodR = robotContainer.getHoodRight().getSupplyCurrentAmps();
-    double iTurretL = robotContainer.getTurretLeft().getSupplyCurrentAmps();
-    double iTurretR = robotContainer.getTurretRight().getSupplyCurrentAmps();
+    if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
+      SmartDashboard.putBoolean("inPit", inPit);
+      SmartDashboard.putString("currentState", "" + currentState);
+      SmartDashboard.putString("overrideState", "" + overrideState);
+      SmartDashboard.putNumber("robotX", robotX);
+      SmartDashboard.putNumber("robotY", robotY);
+      SmartDashboard.putNumber("robotOrient", robotOrient);
+      SmartDashboard.putString("currentZone", "" + currentZone);
+      SmartDashboard.putBoolean("activeHub", activeHub);
+      SmartDashboard.putBoolean("hubOverride", hubOverride);
+      SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
+      SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
+      SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
 
-    SmartDashboard.putNumber("Current/FloorLeft_A", iFloorLeft);
-    SmartDashboard.putNumber("Current/FloorRight_A", iFloorRight);
-    SmartDashboard.putNumber("Current/VertFeedLeft_A", iVertLeft);
-    SmartDashboard.putNumber("Current/VertFeedRight_A", iVertRight);
-    SmartDashboard.putNumber("Current/IntakeRoller_A", iIntake);
-    SmartDashboard.putNumber("Current/IntakePivot_A", iPivot);
-    SmartDashboard.putNumber("Current/FlywheelLeft_A", iFlywheelL);
-    SmartDashboard.putNumber("Current/FlywheelRight_A", iFlywheelR);
-    SmartDashboard.putNumber("Current/HoodLeft_A", iHoodL);
-    SmartDashboard.putNumber("Current/HoodRight_A", iHoodR);
-    SmartDashboard.putNumber("Current/TurretLeft_A", iTurretL);
-    SmartDashboard.putNumber("Current/TurretRight_A", iTurretR);
-    SmartDashboard.putNumber(
-        "Current/TotalMotors_A",
-        iFloorLeft
-            + iFloorRight
-            + iVertLeft
-            + iVertRight
-            + iIntake
-            + iPivot
-            + iFlywheelL
-            + iFlywheelR
-            + iHoodL
-            + iHoodR
-            + iTurretL
-            + iTurretR);
-    SmartDashboard.putNumber(
-        "Current/Drive_FL_A", robotContainer.getDrive().getModuleDriveCurrentAmps(0));
-    SmartDashboard.putNumber(
-        "Current/Drive_FR_A", robotContainer.getDrive().getModuleDriveCurrentAmps(1));
-    SmartDashboard.putNumber(
-        "Current/Drive_BL_A", robotContainer.getDrive().getModuleDriveCurrentAmps(2));
-    SmartDashboard.putNumber(
-        "Current/Drive_BR_A", robotContainer.getDrive().getModuleDriveCurrentAmps(3));
-    SmartDashboard.putNumber(
-        "Current/Turn_FL_A", robotContainer.getDrive().getModuleTurnCurrentAmps(0));
-    SmartDashboard.putNumber(
-        "Current/Turn_FR_A", robotContainer.getDrive().getModuleTurnCurrentAmps(1));
-    SmartDashboard.putNumber(
-        "Current/Turn_BL_A", robotContainer.getDrive().getModuleTurnCurrentAmps(2));
-    SmartDashboard.putNumber(
-        "Current/Turn_BR_A", robotContainer.getDrive().getModuleTurnCurrentAmps(3));
-    SmartDashboard.putNumber(
-        "Current/TotalDrivetrain_A", robotContainer.getDrive().getTotalDriveTrainCurrentAmps());
-    SmartDashboard.putNumber(
-        "Current/TotalRobot_A",
-        iFloorLeft
-            + iFloorRight
-            + iVertLeft
-            + iVertRight
-            + iIntake
-            + iPivot
-            + iFlywheelL
-            + iFlywheelR
-            + iHoodL
-            + iHoodR
-            + iTurretL
-            + iTurretR
-            + robotContainer.getDrive().getTotalDriveTrainCurrentAmps());
+      // Per-subsystem supply current (amps)
+      double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
+      double iFloorRight = robotContainer.getAgitatorRight().getSupplyCurrentAmps();
+      double iVertLeft = robotContainer.getVerticalFeedLeft().getSupplyCurrentAmps();
+      double iVertRight = robotContainer.getVerticalFeedRight().getSupplyCurrentAmps();
+      double iIntake = robotContainer.getIntakeRollers().getSupplyCurrentAmps();
+      double iPivot = robotContainer.getIntakePivot().getSupplyCurrentAmps();
+      double iFlywheelL = robotContainer.getFlywheelLeft().getSupplyCurrentAmps();
+      double iFlywheelR = robotContainer.getFlywheelRight().getSupplyCurrentAmps();
+      double iHoodL = robotContainer.getHoodLeft().getSupplyCurrentAmps();
+      double iHoodR = robotContainer.getHoodRight().getSupplyCurrentAmps();
+      double iTurretL = robotContainer.getTurretLeft().getSupplyCurrentAmps();
+      double iTurretR = robotContainer.getTurretRight().getSupplyCurrentAmps();
+      double totalMotorCurrent =
+          iFloorLeft
+              + iFloorRight
+              + iVertLeft
+              + iVertRight
+              + iIntake
+              + iPivot
+              + iFlywheelL
+              + iFlywheelR
+              + iHoodL
+              + iHoodR
+              + iTurretL
+              + iTurretR;
+      double totalDriveCurrent = robotContainer.getDrive().getTotalDriveTrainCurrentAmps();
 
-    Constants.ScorerConstants.kTurretOffsetDegrees =
-        SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
+      SmartDashboard.putNumber("Current/FloorLeft_A", iFloorLeft);
+      SmartDashboard.putNumber("Current/FloorRight_A", iFloorRight);
+      SmartDashboard.putNumber("Current/VertFeedLeft_A", iVertLeft);
+      SmartDashboard.putNumber("Current/VertFeedRight_A", iVertRight);
+      SmartDashboard.putNumber("Current/IntakeRoller_A", iIntake);
+      SmartDashboard.putNumber("Current/IntakePivot_A", iPivot);
+      SmartDashboard.putNumber("Current/FlywheelLeft_A", iFlywheelL);
+      SmartDashboard.putNumber("Current/FlywheelRight_A", iFlywheelR);
+      SmartDashboard.putNumber("Current/HoodLeft_A", iHoodL);
+      SmartDashboard.putNumber("Current/HoodRight_A", iHoodR);
+      SmartDashboard.putNumber("Current/TurretLeft_A", iTurretL);
+      SmartDashboard.putNumber("Current/TurretRight_A", iTurretR);
+      SmartDashboard.putNumber("Current/TotalMotors_A", totalMotorCurrent);
+      SmartDashboard.putNumber(
+          "Current/Drive_FL_A", robotContainer.getDrive().getModuleDriveCurrentAmps(0));
+      SmartDashboard.putNumber(
+          "Current/Drive_FR_A", robotContainer.getDrive().getModuleDriveCurrentAmps(1));
+      SmartDashboard.putNumber(
+          "Current/Drive_BL_A", robotContainer.getDrive().getModuleDriveCurrentAmps(2));
+      SmartDashboard.putNumber(
+          "Current/Drive_BR_A", robotContainer.getDrive().getModuleDriveCurrentAmps(3));
+      SmartDashboard.putNumber(
+          "Current/Turn_FL_A", robotContainer.getDrive().getModuleTurnCurrentAmps(0));
+      SmartDashboard.putNumber(
+          "Current/Turn_FR_A", robotContainer.getDrive().getModuleTurnCurrentAmps(1));
+      SmartDashboard.putNumber(
+          "Current/Turn_BL_A", robotContainer.getDrive().getModuleTurnCurrentAmps(2));
+      SmartDashboard.putNumber(
+          "Current/Turn_BR_A", robotContainer.getDrive().getModuleTurnCurrentAmps(3));
+      SmartDashboard.putNumber("Current/TotalDrivetrain_A", totalDriveCurrent);
+      SmartDashboard.putNumber("Current/TotalRobot_A", totalMotorCurrent + totalDriveCurrent);
+    }
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
@@ -532,16 +511,18 @@ public class Robot extends LoggedRobot {
               robotContainer
                   .getHoodRight()
                   .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelLeft()
-                  .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelRight()
-                  .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
+    }
+
+    if (inPit) {
+      double pitRpm =
+          robotContainer.pitFlywheelsEnabled ? Constants.ScorerConstants.kShootRPM : 0.0;
+      robotContainer.setDesiredFlywheelRpms(pitRpm, pitRpm);
+    } else if (robotContainer.normalFlywheelsEnabled && shouldTrack(currentState)) {
+      robotContainer.setDesiredFlywheelRpms(
+          robotContainer.getTurretAimManager().getLeftFeederRPM(),
+          robotContainer.getTurretAimManager().getRightFeederRPM());
+    } else {
+      robotContainer.setDesiredFlywheelRpms(0.0, 0.0);
     }
   }
 
