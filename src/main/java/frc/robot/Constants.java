@@ -135,6 +135,19 @@ public final class Constants {
       {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
     };
 
+    // ---- Per-camera trust weighting ----
+    // Each camera can have a different trust factor that multiplies its stddevs.
+    // Higher value = less trust (wider stddev = smoother but slower convergence).
+    //   1.0 = default trust
+    //   >1.0 = trust this camera LESS  (e.g., poor mounting, lower res, frequent occlusion)
+    //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
+    // Order matches kCameraNames: {rear, right, left}
+    public static final double[] kCameraStdDevFactors = {
+      1.0, // Rear   — centered, high mount, good tag visibility
+      1.0, // Right  — side-mount, upside-down, may have slightly noisier results
+      1.0, // Left   — side-mount, symmetric to right
+    };
+
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
     // Fast rotation causes motion-blur → bad detections.
@@ -199,7 +212,7 @@ public final class Constants {
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
     // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
-    public static double kMT1StdDevMultiplier = 40.0;
+    public static double kMT1StdDevMultiplier = 10.0;
 
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
@@ -227,7 +240,9 @@ public final class Constants {
 
     // Limelight frame throttle while disabled. Higher values skip more frames
     // to reduce thermals during long disabled periods.
-    public static final int kDisabledThrottleFrames = 150;
+    // 0 = process every frame.  LL4 handles heat fine for pre-match.
+    // Low value gives smooth pose convergence instead of choppy jumps.
+    public static final int kDisabledThrottleFrames = 0;
 
     // Limelight frame throttle while enabled. 0 = process every frame.
     public static final int kEnabledThrottleFrames = 0;
@@ -367,6 +382,13 @@ public final class Constants {
     public static final double kDriverSnapAngleXDeg = 90.0;
     public static final double kDriverSnapAngleADeg = 180.0;
     public static final double kDriverSnapAngleBDeg = 270.0;
+
+    // ---- Hub-scoring drive slowdown ----
+    // When Robot.activeHub is true (scoring in hub), multiply translation
+    // and rotation speeds by these scalars for tighter control while shooting.
+    // 1.0 = full speed, 0.0 = stopped.
+    public static double kHubDriveScalar = 0.4;
+    public static double kHubTurnScalar = 0.3;
   }
   // #endregion
 
@@ -404,6 +426,11 @@ public final class Constants {
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 20.0;
+
+    // Turret command deadband — if the new aim command is within this many
+    // degrees of the previous command, hold the previous value.  Prevents the
+    // turret from chasing tiny jitter while shooting.
+    public static double kTurretDeadbandDeg = 0.5;
 
     // ---- Aim-ahead (lead) compensation ----
     // Phase delay (seconds) to compensate for sensor/processing pipeline latency.
@@ -450,25 +477,25 @@ public final class Constants {
     // Column 4: vertical feeder speed (RPM)
     public static final double[][] kHubTable = {
       // { distance_m,  hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {5.247, 12.47, 4000.0, 0.65, 2000.0}, // new
-      {4.67, 12.47, 4400.0, 0.63, 2000.0},
-      {4.5, 12.47, 3900.0, 0.62, 2000.0},
-      {2.9, 12.47, 3400, 0.58, 2000.0},
-      {4.5, 12.15, 3900.0, 0.62, 2000.0},
-      {3.8, 10.41, 3800, 0.60, 2000.0},
-      {3.6, 10.41, 3700, 0.60, 2000.0},
-      {3.12, 10.41, 3700, 0.58, 2000.0},
-      {2.3, 10.41, 3200, 0.55, 2000.0},
-      {2.6, 5.05, 3200.0, 0.55, 2000.0},
-      {2.1, 5.05, 3200.0, 0.55, 2000.0},
-      {1.4, 5.05, 2700.0, 0.50, 2000.0},
-      {1.2, 5.05, 2600.0, 0.50, 2000.0}, // new ^
-      {1.60, 5.00, 3000.0, 0.35, 2000.0},
-      {3.15, 10.66, 3500.0, 0.55, 2000.0},
-      {3.20, 9.87, 3700.0, 0.56, 2000.0},
-      {4.37, 10.85, 4000.0, 0.65, 3000.0},
+      {5.247, 12.47, 4000.0, 0.0, 2000.0}, // new
+      {4.67, 12.47, 4400.0, 0.0, 2000.0},
+      {4.5, 12.47, 3900.0, 0.0, 2000.0},
+      {2.9, 12.47, 3400, 0.0, 2000.0},
+      {4.5, 12.15, 3900.0, 0.0, 2000.0},
+      {3.8, 10.41, 3800, 0.0, 2000.0},
+      {3.6, 10.41, 3700, 0.0, 2000.0},
+      {3.12, 10.41, 3700, 0.0, 2000.0},
+      {2.3, 10.41, 3200, 0.0, 2000.0},
+      {2.6, 5.05, 3200.0, 0.0, 2000.0},
+      {2.1, 5.05, 3200.0, 0.0, 2000.0},
+      {1.4, 5.05, 2700.0, 0.0, 2000.0},
+      {1.2, 5.05, 2600.0, 0.0, 2000.0}, // new ^
+      {1.60, 5.00, 3000.0, 0.0, 2000.0},
+      {3.15, 10.66, 3500.0, 0.0, 2000.0},
+      {3.20, 9.87, 3700.0, 0.0, 2000.0},
+      {4.37, 10.85, 4000.0, 0.0, 3000.0},
       // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
-      {5.31, 12.82, 4100.0, 0.75, 3000.0}, // verticalRPM not recorded, using 3000 estimate
+      {5.31, 12.82, 4100.0, 0.0, 3000.0}, // verticalRPM not recorded, using 3000 estimate
     };
 
     // Landing (pass/lob) — lob to a landing zone on our side of the field.
@@ -503,7 +530,7 @@ public final class Constants {
 
     // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
     // NOTE: non-final so SmartDashboard can override at runtime.
-    public static double kTofSeconds = 0.85;
+    public static double kTofSeconds = 0.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

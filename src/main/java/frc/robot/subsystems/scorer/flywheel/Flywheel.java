@@ -6,6 +6,7 @@ import frc.lib.subsystems.MotorInputsAutoLogged;
 import frc.lib.subsystems.ServoMotorSubsystem;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 
 /**
  * The {@code Flywheel} controls the flywheel mechanism of the robot's launcher. It manages the
@@ -48,6 +49,10 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return velocitySetpointCommand(() -> rpm).withName("Flywheel Set RPM");
   }
 
+  public Command setRPMCommand(DoubleSupplier rpmSupplier) {
+    return velocitySetpointCommand(rpmSupplier).withName("Flywheel Track RPM");
+  }
+
   /**
    * Command to run flywheel at target velocity for collecting game pieces.
    *
@@ -64,6 +69,6 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that stops the flywheel
    */
   public Command offCommand() {
-    return velocitySetpointCommand(() -> 0.0).withName("Flywheel Off");
+    return neutralCommand().withName("Flywheel Off");
   }
 }

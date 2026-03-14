@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -118,11 +119,16 @@ public class DriveCommands {
               }
 
               // Convert to field relative speeds & send command
+              // Slow down translation and rotation while scoring in hub for tighter control.
+              double driveScale =
+                  Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
+              double turnScale =
+                  Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * driveScale,
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * driveScale,
+                      omega * turnScale);
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;

@@ -10,6 +10,9 @@ import frc.lib.limelight.LimelightHelpers.PoseEstimate;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.Drive;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -83,6 +86,10 @@ public class Vision extends SubsystemBase {
   // estimator for debugging (cameras still run, log data, and seed IMU —
   // only the pose injection is suppressed).
 
+  /** A vision measurement that passed all filters and is ready to be injected. */
+  private record AcceptedObservation(
+      Pose2d pose, double timestampSeconds, double scaledXYStdDev, double thetaStdDev) {}
+
   /**
    * Creates a new Vision subsystem.
    *
@@ -94,6 +101,15 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean(kVisionEnabledKey, true);
     SmartDashboard.putBoolean(kVisionSeededKey, false);
     SmartDashboard.putBoolean(kVisionSeedStableKey, false);
+    // Whether to reset the pre-match seed when transitioning back to disabled.
+    // Default false to preserve a previously-seeded pose when re-disabling
+    // (avoids choppy re-seeding after enable/disable cycles). Set true to
+    // force re-localization between matches / practice runs.
+    SmartDashboard.putBoolean("Vision/ResetOnDisable", false);
+  }
+
+  public void setVisionEnabled(boolean enabled) {
+    SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
   }
 
   // -----------------------------------------------------------------------
@@ -145,10 +161,17 @@ public class Vision extends SubsystemBase {
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
-      // Reset pre-match seed when transitioning back to disabled (e.g., between
-      // practice matches) so the robot re-localizes from scratch.
+      // Reset pre-match seed when transitioning back to disabled only if the
+      // dashboard toggle is enabled. Older behavior always reset which caused
+      // re-seeding and visible jumps after enable→disable cycles. Default is
+      // false so a previously-seeded pose remains stable across brief toggles.
       if (isDisabled && !firstLoop) {
-        resetSeedState();
+        boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
+        if (resetOnDisable) {
+          resetSeedState();
+          // Preserve existing seed state; log event for debugging.
+          Logger.recordOutput("Vision/resetSkippedOnDisable", true);
+        }
       }
       wasDisabled = isDisabled;
       firstLoop = false;
@@ -183,10 +206,33 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // Process each camera (reuse yawRateDps computed above for spin-rejection).
+    // Process each camera — collect accepted observations for timestamp-sorted injection.
+    // Sorting ensures the pose estimator processes measurements in chronological order
+    // even when cameras have different pipeline latencies.
+    List<AcceptedObservation> accepted = new ArrayList<>();
     for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      processCamera(
-          VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, visionEnabled, shouldLog);
+      AcceptedObservation obs =
+          processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
+      if (obs != null) {
+        accepted.add(obs);
+      }
+    }
+
+    // Sort by timestamp (oldest first) and inject into pose estimator.
+    accepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+    for (AcceptedObservation obs : accepted) {
+      if (visionEnabled) {
+        drive.addVisionMeasurement(
+            obs.pose(),
+            obs.timestampSeconds(),
+            VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+      }
+    }
+
+    // Log injection count (rate-limited).
+    if (shouldLog) {
+      Logger.recordOutput("Vision/acceptedCount", accepted.size());
+      Logger.recordOutput("Vision/injected", visionEnabled && !accepted.isEmpty());
     }
   }
 
@@ -233,21 +279,21 @@ public class Vision extends SubsystemBase {
   // -----------------------------------------------------------------------
   /**
    * Queries one Limelight for a MegaTag 2 pose estimate, applies filtering, and — if accepted —
-   * injects the measurement into the drive pose estimator.
+   * returns an {@link AcceptedObservation} ready for injection. Returns {@code null} if the
+   * measurement was rejected by any filter.
    *
    * @param cameraName Limelight hostname
    * @param robotYawDeg Current gyro yaw in degrees
    * @param yawRateDegPerSec Current angular velocity in deg/s
-   * @param cameraIndex Index into kCameraNames (for logging)
-   * @param visionEnabled Whether to inject the measurement into the pose estimator
+   * @param cameraIndex Index into kCameraNames (for logging and per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
+   * @return An accepted observation, or {@code null} if rejected.
    */
-  private void processCamera(
+  private AcceptedObservation processCamera(
       String cameraName,
       double robotYawDeg,
       double yawRateDegPerSec,
       int cameraIndex,
-      boolean visionEnabled,
       boolean shouldLog) {
 
     String prefix = "Vision/" + cameraName + "/";
@@ -258,7 +304,7 @@ public class Vision extends SubsystemBase {
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
       if (shouldLog) Logger.recordOutput(prefix + "accepted", false);
-      return;
+      return null;
     }
 
     Pose2d visionPose = estimate.pose;
@@ -272,7 +318,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "rejectReason", "stale_timestamp");
         Logger.recordOutput(prefix + "measurementAgeSec", age);
       }
-      return;
+      return null;
     }
 
     // 4. Reject if the robot is spinning too fast (motion blur degrades detection).
@@ -281,7 +327,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "yaw_rate");
       }
-      return;
+      return null;
     }
 
     // 5. Reject single-tag results that are too small (far away / ambiguous).
@@ -290,7 +336,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "single_tag_area");
       }
-      return;
+      return null;
     }
 
     // 6. Reject poses that are clearly off the field (with small margin to reject origin).
@@ -302,7 +348,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "off_field");
       }
-      return;
+      return null;
     }
 
     // 7. Read the Limelight's own MegaTag 2 std devs from NetworkTables.
@@ -313,7 +359,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "stddevs_missing");
       }
-      return;
+      return null;
     }
 
     double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
@@ -325,7 +371,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "stddevs_zero");
       }
-      return;
+      return null;
     }
 
     // 8. Reject measurements with excessively high std devs.
@@ -336,7 +382,7 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "rejectReason", "stddev_too_high");
         Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
       }
-      return;
+      return null;
     }
 
     // 9. Reject large jumps from the current pose estimate.
@@ -347,33 +393,30 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(prefix + "accepted", false);
         Logger.recordOutput(prefix + "rejectReason", "pose_jump");
       }
-      return;
+      return null;
     }
 
-    // 10. Apply the MT2 filter-strength multiplier before injecting.
-    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier;
+    // 10. Apply the MT2 filter-strength multiplier and per-camera trust factor.
+    double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
+    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
-    // 11. Inject into the drive pose estimator (only when vision is enabled on the dashboard).
-    if (visionEnabled) {
-      drive.addVisionMeasurement(
-          visionPose,
-          estimate.timestampSeconds,
-          VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, VisionConstants.kThetaStdDev));
-    }
-
-    // 12. Logging for AdvantageScope (rate-limited).
+    // 11. Logging for AdvantageScope (rate-limited).
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);
-      Logger.recordOutput(prefix + "injected", visionEnabled);
       Logger.recordOutput(prefix + "pose", visionPose);
       Logger.recordOutput(prefix + "tagCount", estimate.tagCount);
       Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
       Logger.recordOutput(prefix + "avgTagArea", estimate.avgTagArea);
       Logger.recordOutput(prefix + "xyStdDev", scaledXYStdDev);
       Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
+      Logger.recordOutput(prefix + "cameraFactor", cameraFactor);
       Logger.recordOutput(prefix + "llXStdDev", xStdDev);
       Logger.recordOutput(prefix + "llYStdDev", yStdDev);
     }
+
+    // 12. Return the accepted observation for timestamp-sorted injection.
+    return new AcceptedObservation(
+        visionPose, estimate.timestampSeconds, scaledXYStdDev, VisionConstants.kThetaStdDev);
   }
 
   // -----------------------------------------------------------------------
