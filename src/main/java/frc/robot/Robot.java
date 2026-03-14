@@ -161,9 +161,11 @@ public class Robot extends LoggedRobot {
     // we are done.
     if (inPit) {
       currentState = BotState.PIT;
-    } else if (isInTrenchZone()) {
+    } 
+    else if (isInTrenchZone()) {
       currentState = BotState.TRENCH;
-    } else if (!deploying && !retracting) {
+    } 
+    else if (!deploying && !retracting) {
       switch (overrideState) {
         case OFF: // nothing runs
           currentState = BotState.DEFENCEIN;
