@@ -373,6 +373,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     if (selectedAuto.requiresPathLoading()) {
       Paths.loadPaths(currentAlliance);
@@ -394,6 +395,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
