@@ -47,6 +47,16 @@ public class TunerConstants {
         break;
       case BRAVO:
         kCANBus1 = TunerConstantsBravo.kCANBus1;
+        kCANBusRio = TunerConstantsBravo.kCANBusRio;
+        kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
+        DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;
+        FrontLeft = TunerConstantsBravo.FrontLeft;
+        FrontRight = TunerConstantsBravo.FrontRight;
+        BackLeft = TunerConstantsBravo.BackLeft;
+        BackRight = TunerConstantsBravo.BackRight;
+        break;
+      case COMP:
+        kCANBus1 = TunerConstantsBravo.kCANBus1;
         kCANBus2 = TunerConstantsBravo.kCANBus2;
         kCANBusRio = TunerConstantsBravo.kCANBusRio;
         kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;

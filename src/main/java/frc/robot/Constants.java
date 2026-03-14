@@ -37,8 +37,10 @@ public final class Constants {
   public static final String[] kPracticeBotMacAddresses = {
     "38:41:A5:68:34:74", "00:80:2F:33:CF:65"
   };
-  // TODO: Fill in the bravo/comp roboRIO MAC once it is known from logs.
+  // TODO: Fill in the bravo roboRIO MAC once it is known from logs.
   public static final String[] kBravoBotMacAddresses = {};
+  // TODO: Fill in the comp roboRIO MAC once it is known from logs.
+  public static final String[] kCompBotMacAddresses = {};
 
   // Auto-detect the robot from the local roboRIO MAC address. Unknown MACs fall back to PRACTICE.
   public static final Bot currentBot = detectCurrentBot();
@@ -67,6 +69,8 @@ public final class Constants {
     SOFTWARE,
     /** Bravo robot */
     BRAVO,
+    /** Competition robot */
+    COMP,
     // Add more robot variants here as needed, e.g.:
     // COMPETITION,
     PRACTICE
@@ -76,13 +80,20 @@ public final class Constants {
   public static final class CanBusNames {
     private CanBusNames() {}
 
-    public static final String kDrive = TunerConstants.kCANBus1.getName();
-    public static final String kSuperstructure =
-        switch (currentBot) {
-          case BRAVO -> TunerConstants.kCANBus2.getName();
-          default -> TunerConstants.kCANBus1.getName();
-        };
+    public static final String KCANBUS1_STRING = TunerConstants.kCANBus1.getName();
     public static final String kRio = TunerConstants.kCANBusRio.getName();
+
+    public static String superstructureFor(int deviceId) {
+      if (currentBot != Bot.COMP) {
+        return KCANBUS1_STRING;
+      }
+
+      return switch (deviceId) {
+        case 12, 13, 20, 21, 22, 25, 26, 27, 28, 29 -> TunerConstants.kCANBus2.getName();
+        case 30 -> TunerConstants.kCANBusRio.getName();
+        default -> KCANBUS1_STRING;
+      };
+    }
   }
 
   public static final ClosedLoopRampsConfigs makeDefaultClosedLoopRampConfig() {
@@ -579,7 +590,7 @@ public final class Constants {
 
   static {
     kLeftHoodConfig.name = "Left Hood";
-    kLeftHoodConfig.talonCANID = new CANDeviceId(23, CanBusNames.kSuperstructure);
+    kLeftHoodConfig.talonCANID = new CANDeviceId(23, CanBusNames.superstructureFor(23));
 
     kLeftHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
     kLeftHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
@@ -609,7 +620,7 @@ public final class Constants {
 
   static {
     kRightHoodConfig.name = "Right Hood";
-    kRightHoodConfig.talonCANID = new CANDeviceId(28, CanBusNames.kSuperstructure);
+    kRightHoodConfig.talonCANID = new CANDeviceId(28, CanBusNames.superstructureFor(28));
     kRightHoodConfig.unitToRotorRatio = ScorerConstants.kHoodUnitToRotorRatio;
     kRightHoodConfig.kMaxPositionUnits = ScorerConstants.kHoodMaxDegrees;
     kRightHoodConfig.kMinPositionUnits = ScorerConstants.kHoodMinDegrees;
@@ -637,7 +648,7 @@ public final class Constants {
 
   static {
     kLeftTurretConfig.name = "Left Turret";
-    kLeftTurretConfig.talonCANID = new CANDeviceId(22, CanBusNames.kSuperstructure);
+    kLeftTurretConfig.talonCANID = new CANDeviceId(22, CanBusNames.superstructureFor(22));
 
     kLeftTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
     kLeftTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
@@ -669,7 +680,7 @@ public final class Constants {
 
   static {
     kRightTurretConfig.name = "Right Turret";
-    kRightTurretConfig.talonCANID = new CANDeviceId(27, CanBusNames.kSuperstructure);
+    kRightTurretConfig.talonCANID = new CANDeviceId(27, CanBusNames.superstructureFor(27));
     kRightTurretConfig.unitToRotorRatio = ScorerConstants.kTurretUnitToRotorRatio;
     kRightTurretConfig.kMaxPositionUnits = ScorerConstants.kTurretMaxPositionUnits;
     kRightTurretConfig.kMinPositionUnits = ScorerConstants.kTurretMinPositionUnits;
@@ -699,7 +710,7 @@ public final class Constants {
 
   static {
     kLeftFlywheelConfig.name = "Left Flywheel";
-    kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, CanBusNames.kSuperstructure);
+    kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, CanBusNames.superstructureFor(24));
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
@@ -718,7 +729,7 @@ public final class Constants {
 
   static {
     kRightFlywheelConfig.name = "Right Flywheel";
-    kRightFlywheelConfig.talonCANID = new CANDeviceId(29, CanBusNames.kSuperstructure);
+    kRightFlywheelConfig.talonCANID = new CANDeviceId(29, CanBusNames.superstructureFor(29));
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
     kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
@@ -764,7 +775,7 @@ public final class Constants {
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
-        new CANDeviceId(13, CanBusNames.kSuperstructure); // Motor 1 (master)
+        new CANDeviceId(13, CanBusNames.superstructureFor(13)); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
@@ -788,7 +799,7 @@ public final class Constants {
 
   static {
     kIntakePivotConfig.name = "Intake_Pivot";
-    kIntakePivotConfig.talonCANID = new CANDeviceId(12, CanBusNames.kSuperstructure);
+    kIntakePivotConfig.talonCANID = new CANDeviceId(12, CanBusNames.superstructureFor(12));
     kIntakePivotConfig.momentOfInertia = 0.01;
 
     // PID Slot 0 gains for MotionMagicVoltage
@@ -872,7 +883,7 @@ public final class Constants {
 
   static {
     kRightFloorRollerConfig.name = "RightFloorRoller";
-    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, CanBusNames.kSuperstructure);
+    kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, CanBusNames.superstructureFor(25));
     kRightFloorRollerConfig.momentOfInertia = 0.00132536;
     kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
@@ -899,7 +910,7 @@ public final class Constants {
 
   static {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
-    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, CanBusNames.kSuperstructure);
+    kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, CanBusNames.superstructureFor(20));
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
     kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
 
@@ -921,7 +932,7 @@ public final class Constants {
 
   static {
     kRightVerticalFeedConfig.name = "RightVerticalFeed";
-    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, CanBusNames.kSuperstructure);
+    kRightVerticalFeedConfig.talonCANID = new CANDeviceId(26, CanBusNames.superstructureFor(26));
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
     kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
@@ -942,7 +953,7 @@ public final class Constants {
 
   static {
     kLeftVerticalFeedConfig.name = "LeftVerticalFeed";
-    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, CanBusNames.kSuperstructure);
+    kLeftVerticalFeedConfig.talonCANID = new CANDeviceId(21, CanBusNames.superstructureFor(21));
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
     kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
@@ -974,8 +985,7 @@ public final class Constants {
 
   static {
     kRoofConfig.name = "Roof";
-    // Motor is on the roboRIO CAN bus (empty string = RIO bus, not CANivore)
-    kRoofConfig.talonCANID = new CANDeviceId(30);
+    kRoofConfig.talonCANID = new CANDeviceId(30, CanBusNames.superstructureFor(30));
 
     kRoofConfig.unitToRotorRatio = RoofConstants.kRoofUnitToRotorRatio;
     kRoofConfig.kMaxPositionUnits = RoofConstants.kRoofMaxDegrees;
@@ -1018,6 +1028,9 @@ public final class Constants {
     }
     if (hasAnyMacAddress(kBravoBotMacAddresses)) {
       return Bot.BRAVO;
+    }
+    if (hasAnyMacAddress(kCompBotMacAddresses)) {
+      return Bot.COMP;
     }
 
     return Bot.PRACTICE;
