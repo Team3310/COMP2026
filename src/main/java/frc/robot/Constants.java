@@ -38,8 +38,7 @@ public final class Constants {
 
   private static final String[] kLocalMacAddresses = findLocalMacAddresses();
   public static final String[] kPracticeBotMacAddresses = {
-    "38:41:A5:68:34:74",
-    "00:80:2F:33:CF:65"
+    "38:41:A5:68:34:74", "00:80:2F:33:CF:65"
   };
   // TODO: Fill in the bravo/comp roboRIO MAC once it is known from logs.
   public static final String[] kBravoBotMacAddresses = {};
