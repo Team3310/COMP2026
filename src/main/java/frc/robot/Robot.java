@@ -339,12 +339,19 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
+    robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    Paths.loadPaths(currentAlliance);
+    var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
+    if (selectedAuto.requiresPathLoading()) {
+      Paths.loadPaths(currentAlliance);
+    }
+    robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
 
     autonomousCommand = robotContainer.getAutonomousCommand();
     // schedule the autonomous command (example)
@@ -364,6 +371,7 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+    robotContainer.getVision().setVisionEnabled(true);
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

@@ -223,6 +223,10 @@ public class RobotContainer {
     return turretAimManager;
   }
 
+  public Vision getVision() {
+    return vision;
+  }
+
   public AutonomousChooser getAutonomousChooser() {
     return autonomousChooser;
   }

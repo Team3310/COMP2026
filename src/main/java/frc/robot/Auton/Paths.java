@@ -34,49 +34,55 @@ public class Paths {
   public static boolean loaded;
 
   public static void loadPaths(Alliance alliance) {
-    loaded = false;
+    loaded = true;
     if (alliance == Alliance.Blue) {
 
-      forward2m = loadPath("forward2m");
+      forward2m = loadPathForAlliance("forward2m", false);
 
-      depCycle = loadPath("DepLoop");
-      outCycle = loadPath("OutLoop");
-      hubCycle = loadPath("HubLoop");
+      depCycle = loadPathForAlliance("DepCycle", false);
+      outCycle = loadPathForAlliance("OutCycle", false);
+      hubCycle = loadPathForAlliance("HubCycle", false);
 
-      deptodep = loadPath("DepToDep");
-      outtoout = loadPath("OutToOut");
+      deptodep = loadPathForAlliance("DepToDep", false);
+      outtoout = loadPathForAlliance("OutToOut", false);
 
-      deptosstrenchcycle = loadPath("DepToSSTrenchCycle");
-      outtosstrenchcycle = loadPath("OutToSSTrenchCycle");
+      deptosstrenchcycle = loadPathForAlliance("DepToSSTrenchCycle", false);
+      outtosstrenchcycle = loadPathForAlliance("OutToSSTrenchCycle", false);
 
-      deptoout = loadPath("DepToOut");
-      outtodep = loadPath("OutToDep");
+      deptoout = loadPathForAlliance("DepToOut", false);
+      outtodep = loadPathForAlliance("OutToDep", false);
 
-      hubtodep = loadPath("HubToDep");
-      hubtoout = loadPath("HubToOut");
-
-      loaded = true;
+      hubtodep = loadPathForAlliance("HubToDep", false);
+      hubtoout = loadPathForAlliance("HubToOut", false);
     } else {
 
-      forward2m = loadPath("forward2m"); // dont flip for this one
+      forward2m = loadPathForAlliance("forward2m", false); // dont flip for this one
 
-      depCycle = loadPath("DepLoop").flipPath();
-      outCycle = loadPath("OutLoop").flipPath();
-      hubCycle = loadPath("HubLoop").flipPath();
+      depCycle = loadPathForAlliance("DepCycle", true);
+      outCycle = loadPathForAlliance("OutCycle", true);
+      hubCycle = loadPathForAlliance("HubCycle", true);
 
-      deptodep = loadPath("DepToDep").flipPath();
-      outtoout = loadPath("OutToOut").flipPath();
+      deptodep = loadPathForAlliance("DepToDep", true);
+      outtoout = loadPathForAlliance("OutToOut", true);
 
-      deptosstrenchcycle = loadPath("DepToSSTrenchCycle").flipPath();
-      outtosstrenchcycle = loadPath("OutToSSTrenchCycle").flipPath();
+      deptosstrenchcycle = loadPathForAlliance("DepToSSTrenchCycle", true);
+      outtosstrenchcycle = loadPathForAlliance("OutToSSTrenchCycle", true);
 
-      deptoout = loadPath("DepToOut").flipPath();
-      outtodep = loadPath("OutToDep").flipPath();
+      deptoout = loadPathForAlliance("DepToOut", true);
+      outtodep = loadPathForAlliance("OutToDep", true);
 
-      hubtodep = loadPath("HubToDep").flipPath();
-      hubtoout = loadPath("HubToOut").flipPath();
-      loaded = true;
+      hubtodep = loadPathForAlliance("HubToDep", true);
+      hubtoout = loadPathForAlliance("HubToOut", true);
     }
+  }
+
+  private static PathPlannerPath loadPathForAlliance(String name, boolean flip) {
+    PathPlannerPath path = loadPath(name);
+    if (path == null) {
+      loaded = false;
+      return null;
+    }
+    return flip ? path.flipPath() : path;
   }
 
   /** Load all paths from PathPlanner. */

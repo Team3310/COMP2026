@@ -108,6 +108,10 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean("Vision/ResetOnDisable", false);
   }
 
+  public void setVisionEnabled(boolean enabled) {
+    SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
+  }
+
   // -----------------------------------------------------------------------
   //  Periodic — runs every 20 ms
   // -----------------------------------------------------------------------
@@ -165,7 +169,6 @@ public class Vision extends SubsystemBase {
         boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
         if (resetOnDisable) {
           resetSeedState();
-  
           // Preserve existing seed state; log event for debugging.
           Logger.recordOutput("Vision/resetSkippedOnDisable", true);
         }
