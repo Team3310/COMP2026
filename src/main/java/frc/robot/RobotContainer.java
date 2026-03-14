@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.pathplanner.auto.NamedCommands;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
@@ -445,6 +446,15 @@ public class RobotContainer {
                     > Constants.DriveCommandConstants.kRotationCommandDeadband);
   }
 
+  private Command buildDuckOverrideCommand() {
+    return Commands.parallel(
+            hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
+        .alongWith(
+            Commands.startEnd(
+                () -> Robot.duckOverrideActive = true, () -> Robot.duckOverrideActive = false));
+  }
+
   private void configureButtonBindings() {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
@@ -569,11 +579,8 @@ public class RobotContainer {
         .toggleOnTrue(
             Commands.either(intakeRollers.intakeCommand(), Commands.none(), () -> Robot.inPit));
 
-    // left bumper = pit: outtake | normal: none
-    driver
-        .leftBumper()
-        .toggleOnTrue(
-            Commands.either(intakeRollers.outtakeCommand(), Commands.none(), () -> Robot.inPit));
+    // left bumper = pit: outtake | normal: hood duck override while held
+    driver.leftBumper().and(() -> Robot.inPit).toggleOnTrue(intakeRollers.outtakeCommand());
 
     // Driver pit controls: right trigger = shoot (both vertical feeders + both
     // floor rollers)
@@ -789,6 +796,9 @@ public class RobotContainer {
                 () -> Robot.inPit));
 
     if (flywheelLeft != null && hoodLeft != null) {
+      Trigger duckOverrideTrigger =
+          operator.povDown().or(driver.leftBumper().and(() -> !Robot.inPit));
+
       // D-Pad Up/Down: normal = flywheel + hood | pit = move both hoods to preset
       // degrees
       operator
@@ -804,27 +814,7 @@ public class RobotContainer {
                       hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   () -> Robot.inPit));
-      operator
-          .povDown()
-          .whileTrue(
-              Commands.either(
-                  // Pit: hold both hoods at the duck/stowed angle while held.
-                  Commands.parallel(
-                          hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                          hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
-                      .alongWith(
-                          Commands.startEnd(
-                              () -> Robot.duckOverrideActive = true,
-                              () -> Robot.duckOverrideActive = false)),
-                  // Normal: same hood override, without changing flywheel state.
-                  Commands.parallel(
-                          hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                          hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
-                      .alongWith(
-                          Commands.startEnd(
-                              () -> Robot.duckOverrideActive = true,
-                              () -> Robot.duckOverrideActive = false)),
-                  () -> Robot.inPit));
+      duckOverrideTrigger.whileTrue(buildDuckOverrideCommand());
       // Pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
       operator
           .povRight()
