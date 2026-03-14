@@ -518,7 +518,7 @@ public final class Constants {
 
     // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
     // NOTE: non-final so SmartDashboard can override at runtime.
-    public static double kTofSeconds = 0.85;
+    public static double kTofSeconds = 0.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();
