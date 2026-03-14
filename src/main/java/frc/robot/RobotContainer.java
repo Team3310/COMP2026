@@ -401,6 +401,16 @@ public class RobotContainer {
     SmartDashboard.putData("Roof Deploy", roof.setMaxCommand());
     SmartDashboard.putData("Roof Stow", roof.stowCommand());
 
+    // LED on/off buttons
+    SmartDashboard.putData(
+        "Lights ON",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.BOT_STATE))
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Lights OFF",
+        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.OFF))
+            .ignoringDisable(true));
+
     // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable
     // number widgets.
     // Robot.robotPeriodic() reads these back into the Constants each loop.

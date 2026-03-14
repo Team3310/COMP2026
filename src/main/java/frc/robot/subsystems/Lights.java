@@ -6,15 +6,19 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import org.littletonrobotics.junction.Logger;
 
 public class Lights extends SubsystemBase {
   private static Lights instance;
   private LightMode mode = LightMode.BOT_STATE; // Default mode
   private AddressableLED ledStrip;
   private AddressableLEDBuffer ledBuffer;
+  private final SendableChooser<Robot.BotState> lightModeChooser = new SendableChooser<>();
 
   public static Lights getInstance() {
     if (instance == null) {
@@ -33,6 +37,17 @@ public class Lights extends SubsystemBase {
     ledStrip.setColorOrder(AddressableLED.ColorOrder.kGRB);
     ledStrip.setData(ledBuffer);
     ledStrip.start();
+
+    // Build the color-preview dropdown for Elastic/SmartDashboard
+    lightModeChooser.setDefaultOption("SNOWBLOW (White)", Robot.BotState.SNOWBLOW);
+    lightModeChooser.addOption("COLLECT (Green)", Robot.BotState.COLLECT);
+    lightModeChooser.addOption("DEFENCEIN (Red)", Robot.BotState.DEFENCEIN);
+    lightModeChooser.addOption("DEFENCEOUT (Yellow)", Robot.BotState.DEFENCEOUT);
+    lightModeChooser.addOption("DEPLOY (Teal)", Robot.BotState.DEPLOY);
+    lightModeChooser.addOption("RETRACT (Orange)", Robot.BotState.RETRACT);
+    lightModeChooser.addOption("PIT (Off)", Robot.BotState.PIT);
+    SmartDashboard.putData("Light Color", lightModeChooser);
+
     register();
   }
 
@@ -65,15 +80,20 @@ public class Lights extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Read the dropdown selection to override which state color is displayed
+    Robot.BotState colorOverride = lightModeChooser.getSelected();
+    Logger.recordOutput("Lights/Mode", mode.name());
     switch (mode) {
       case BOT_STATE:
         if (Robot.inPit) {
           // Solid blue in pit mode
           LEDPattern.solid(new Color(0, 0, 255)).atBrightness(Percent.of(85)).applyTo(ledBuffer);
         } else {
-          // Color based on current robot state
+          // Color based on dropdown selection (defaults to current robot state)
+          Robot.BotState displayState =
+              (colorOverride != null) ? colorOverride : Robot.currentState;
           Color stateColor;
-          switch (Robot.currentState) {
+          switch (displayState) {
             case SNOWBLOW:
               stateColor = new Color(255, 255, 255); // White
               break;
@@ -98,6 +118,10 @@ public class Lights extends SubsystemBase {
               break;
           }
           LEDPattern.solid(stateColor).applyTo(ledBuffer);
+          Logger.recordOutput("Lights/StateColor", displayState.name());
+          Logger.recordOutput("Lights/R", stateColor.red * 255);
+          Logger.recordOutput("Lights/G", stateColor.green * 255);
+          Logger.recordOutput("Lights/B", stateColor.blue * 255);
         }
         ledStrip.setData(ledBuffer);
         break;
