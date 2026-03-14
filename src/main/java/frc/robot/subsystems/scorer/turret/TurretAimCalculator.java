@@ -83,10 +83,15 @@ public final class TurretAimCalculator {
   // (No circular dependency: Constants is a leaf class with only static finals.)
 
   // ---- Turret wrap-around state ----
-  // Tracks which 360° wrap the turret is on (0 or ±360).
-  // Added to the normalized [-180,+180] angle so the turret doesn't jump at ±180°.
-  // Flips only when the result actually hits ±220°.
-  private static double wrapOffset = 0.0;
+  // Tracks the last output angle so we can pick the closest 360° wrap each
+  // cycle.  This prevents the turret from snapping at ±180° and lets it use
+  // the full ±220° mechanical range before flipping.
+  private static double lastTurretDeg = 0.0;
+
+  // The turret flips to the other side when the commanded angle exceeds this
+  // threshold.  270° is well past the ±220° physical limit, so the turret uses
+  // its full range before wrapping.  A flip at +270 → +270−360 = −90° (safe).
+  private static final double FLIP_THRESHOLD = 270.0;
 
   /** Prevent instantiation. */
   private TurretAimCalculator() {}
@@ -227,35 +232,36 @@ public final class TurretAimCalculator {
 
     // ---- Wrap-around ----
     // The turret can physically travel ±220° from forward (440° total).
-    // atan2 gives [-180, +180] which always fits in [-220, +220].
-    // We track a wrapOffset (0 or ±360) so the turret doesn't jump at ±180°.
-    // When the tracked angle hits +220 we subtract 360 (→ ~-140).
-    // When the tracked angle hits -220 we add 360 (→ ~+140).
+    // atan2 gives [-180, +180] which hides the fact that the turret can
+    // smoothly pass through ±180°.  We pick the 360° wrap of the raw angle
+    // that is closest to the previous output, giving natural continuity.
+    // If that result exceeds ±FLIP_THRESHOLD (270°) we snap to the other
+    // side — the turret has gone as far as it can and must reverse.
 
     double turretDeg = Math.toDegrees(turretRad);
     double turretMax = Constants.ScorerConstants.kTurretMaxPositionUnits; // +220
     double turretMin = Constants.ScorerConstants.kTurretMinPositionUnits; // -220
 
-    // Normalize to [-180, +180]
-    turretDeg = turretDeg % 360.0;
-    if (turretDeg > 180.0) {
-      turretDeg -= 360.0;
-    } else if (turretDeg <= -180.0) {
-      turretDeg += 360.0;
-    }
+    // Normalize raw value to [-180, +180] as a clean starting point
+    turretDeg = Math.IEEEremainder(turretDeg, 360.0);
 
-    // Apply current wrap offset and flip if we hit a limit
-    turretDeg += wrapOffset;
-    if (turretDeg > turretMax) {
-      wrapOffset -= 360.0;
+    // Pick the 360° wrap closest to where the turret was last cycle.
+    // This lets the angle smoothly pass through ±180° without snapping.
+    while (turretDeg - lastTurretDeg > 180.0) turretDeg -= 360.0;
+    while (turretDeg - lastTurretDeg < -180.0) turretDeg += 360.0;
+
+    // If we've exceeded the flip threshold, snap to the other side.
+    if (turretDeg > FLIP_THRESHOLD) {
       turretDeg -= 360.0;
-    } else if (turretDeg < turretMin) {
-      wrapOffset += 360.0;
+    } else if (turretDeg < -FLIP_THRESHOLD) {
       turretDeg += 360.0;
     }
 
     // Final safety clamp (dead-band behind robot where neither wrap fits)
     turretDeg = Math.max(turretMin, Math.min(turretMax, turretDeg));
+
+    // Remember for next cycle
+    lastTurretDeg = turretDeg;
 
     // --- Vertical (hood) angle and feeder speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
