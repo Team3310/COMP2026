@@ -69,6 +69,6 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that stops the flywheel
    */
   public Command offCommand() {
-    return velocitySetpointCommand(() -> 0.0).withName("Flywheel Off");
+    return neutralCommand().withName("Flywheel Off");
   }
 }

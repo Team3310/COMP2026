@@ -382,6 +382,13 @@ public final class Constants {
     public static final double kDriverSnapAngleXDeg = 90.0;
     public static final double kDriverSnapAngleADeg = 180.0;
     public static final double kDriverSnapAngleBDeg = 270.0;
+
+    // ---- Hub-scoring drive slowdown ----
+    // When Robot.activeHub is true (scoring in hub), multiply translation
+    // and rotation speeds by these scalars for tighter control while shooting.
+    // 1.0 = full speed, 0.0 = stopped.
+    public static double kHubDriveScalar = 0.4;
+    public static double kHubTurnScalar = 0.3;
   }
   // #endregion
 
@@ -419,6 +426,11 @@ public final class Constants {
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 20.0;
+
+    // Turret command deadband — if the new aim command is within this many
+    // degrees of the previous command, hold the previous value.  Prevents the
+    // turret from chasing tiny jitter while shooting.
+    public static double kTurretDeadbandDeg = 0.5;
 
     // ---- Aim-ahead (lead) compensation ----
     // Phase delay (seconds) to compensate for sensor/processing pipeline latency.
@@ -518,7 +530,7 @@ public final class Constants {
 
     // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
     // NOTE: non-final so SmartDashboard can override at runtime.
-    public static double kTofSeconds = 0.85;
+    public static double kTofSeconds = 0.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

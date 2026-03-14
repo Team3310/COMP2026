@@ -236,6 +236,15 @@ public class Robot extends LoggedRobot {
       Constants.ScorerConstants.kPhaseDelaySeconds =
           SmartDashboard.getNumber(
               "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+      Constants.ScorerConstants.kTurretDeadbandDeg =
+          SmartDashboard.getNumber(
+              "SpeedTune/TurretDeadbandDeg", Constants.ScorerConstants.kTurretDeadbandDeg);
+      Constants.DriveCommandConstants.kHubDriveScalar =
+          SmartDashboard.getNumber(
+              "SpeedTune/HubDriveScalar", Constants.DriveCommandConstants.kHubDriveScalar);
+      Constants.DriveCommandConstants.kHubTurnScalar =
+          SmartDashboard.getNumber(
+              "SpeedTune/HubTurnScalar", Constants.DriveCommandConstants.kHubTurnScalar);
 
       // Vision filter-strength overrides
       Constants.VisionConstants.kMT2StdDevMultiplier =
@@ -522,15 +531,30 @@ public class Robot extends LoggedRobot {
     }
 
     if (inPit) {
-      double pitRpm =
-          robotContainer.pitFlywheelsEnabled ? Constants.ScorerConstants.kShootRPM : 0.0;
-      robotContainer.setDesiredFlywheelRpms(pitRpm, pitRpm);
+      if (robotContainer.pitFlywheelsEnabled) {
+        double pitRpm = Constants.ScorerConstants.kShootRPM;
+        CommandScheduler.getInstance()
+            .schedule(robotContainer.getFlywheelLeft().setRPMCommand(pitRpm));
+        CommandScheduler.getInstance()
+            .schedule(robotContainer.getFlywheelRight().setRPMCommand(pitRpm));
+      } else {
+        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+      }
     } else if (robotContainer.normalFlywheelsEnabled && shouldTrack(currentState)) {
-      robotContainer.setDesiredFlywheelRpms(
-          robotContainer.getTurretAimManager().getLeftFeederRPM(),
-          robotContainer.getTurretAimManager().getRightFeederRPM());
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelLeft()
+                  .setRPMCommand(robotContainer.getTurretAimManager().getLeftFeederRPM()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelRight()
+                  .setRPMCommand(robotContainer.getTurretAimManager().getRightFeederRPM()));
     } else {
-      robotContainer.setDesiredFlywheelRpms(0.0, 0.0);
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     }
   }
 

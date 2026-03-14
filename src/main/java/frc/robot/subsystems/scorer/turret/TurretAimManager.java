@@ -32,6 +32,12 @@ public class TurretAimManager extends SubsystemBase {
   // Cached latest result for external consumers
   private TurretAimCalculator.AimResult latestResult = null;
 
+  // ---- Turret command deadband state ----
+  // Holds the last output angle so small corrections below kTurretDeadbandDeg
+  // are suppressed, keeping the turret steady while shooting.
+  private double prevLeftTurretDeg = 0.0;
+  private double prevRightTurretDeg = 0.0;
+
   // ---- Simulated turret inertia state ----
   // Tracks where the turret *physically is* (with lag), vs. where the
   // calculator *wants* it to be (instant).  Used purely for AdvantageScope
@@ -180,10 +186,24 @@ public class TurretAimManager extends SubsystemBase {
             Math.min(ScorerConstants.kTurretMaxPositionUnits, simTurretAngleDeg));
 
     // Pack into IO inputs struct (auto-logged by AdvantageKit)
-    inputs.leftTurretAngleDeg = result.leftTurretDeg;
+    // Apply turret command deadband — if the new aim is within kTurretDeadbandDeg
+    // of the previous output, hold the previous value to suppress jitter.
+    double deadband = ScorerConstants.kTurretDeadbandDeg;
+    double outLeftTurret =
+        Math.abs(result.leftTurretDeg - prevLeftTurretDeg) < deadband
+            ? prevLeftTurretDeg
+            : result.leftTurretDeg;
+    double outRightTurret =
+        Math.abs(result.rightTurretDeg - prevRightTurretDeg) < deadband
+            ? prevRightTurretDeg
+            : result.rightTurretDeg;
+    prevLeftTurretDeg = outLeftTurret;
+    prevRightTurretDeg = outRightTurret;
+
+    inputs.leftTurretAngleDeg = outLeftTurret;
     inputs.leftHoodAngleDeg = result.leftHoodDeg;
     inputs.leftFeederRPM = result.leftFeederRPM;
-    inputs.rightTurretAngleDeg = result.rightTurretDeg;
+    inputs.rightTurretAngleDeg = outRightTurret;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
     inputs.rightFeederRPM = result.rightFeederRPM;
 
