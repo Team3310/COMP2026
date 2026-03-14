@@ -101,6 +101,11 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean(kVisionEnabledKey, true);
     SmartDashboard.putBoolean(kVisionSeededKey, false);
     SmartDashboard.putBoolean(kVisionSeedStableKey, false);
+    // Whether to reset the pre-match seed when transitioning back to disabled.
+    // Default false to preserve a previously-seeded pose when re-disabling
+    // (avoids choppy re-seeding after enable/disable cycles). Set true to
+    // force re-localization between matches / practice runs.
+    SmartDashboard.putBoolean("Vision/ResetOnDisable", false);
   }
 
   // -----------------------------------------------------------------------
@@ -152,10 +157,18 @@ public class Vision extends SubsystemBase {
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
-      // Reset pre-match seed when transitioning back to disabled (e.g., between
-      // practice matches) so the robot re-localizes from scratch.
+      // Reset pre-match seed when transitioning back to disabled only if the
+      // dashboard toggle is enabled. Older behavior always reset which caused
+      // re-seeding and visible jumps after enable→disable cycles. Default is
+      // false so a previously-seeded pose remains stable across brief toggles.
       if (isDisabled && !firstLoop) {
-        resetSeedState();
+        boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
+        if (resetOnDisable) {
+          resetSeedState();
+        } else {
+          // Preserve existing seed state; log event for debugging.
+          Logger.recordOutput("Vision/resetSkippedOnDisable", true);
+        }
       }
       wasDisabled = isDisabled;
       firstLoop = false;
