@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.lib.pathplanner.auto.NamedCommands;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
@@ -250,6 +251,14 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Register PathPlanner named commands (must be before any path loading)
+    NamedCommands.registerCommand(
+        "switchToCollect",
+        new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.COLLECT));
+    NamedCommands.registerCommand(
+        "switchToSnowblow",
+        new InstantCommand(() -> Robot.overrideState = Robot.OverrideState.SNOWBLOW));
+
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
     DriverReadout.addChoosers(autonomousChooser);
