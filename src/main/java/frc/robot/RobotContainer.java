@@ -532,6 +532,49 @@ public class RobotContainer {
         .finallyDo(() -> Robot.stateRefreshRequested = true);
   }
 
+  private Command buildPitCardinalDriveCommand(
+      double xMetersPerSecondScalar, double yMetersPerSecondScalar) {
+    return DriveCommands.joystickDrive(
+        drive, () -> xMetersPerSecondScalar, () -> yMetersPerSecondScalar, () -> 0.0);
+  }
+
+  private Command buildShootWhileHeldCommand() {
+    return Commands.parallel(
+        Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+        Commands.parallel(
+                flywheelLeft.setRPMCommand(() -> turretAimManager.getLeftFeederRPM()),
+                flywheelRight.setRPMCommand(() -> turretAimManager.getRightFeederRPM()))
+            .alongWith(
+                Commands.waitUntil(
+                        () -> {
+                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                          double leftErr =
+                              Math.abs(
+                                  flywheelLeft.getCurrentVelocity()
+                                      - turretAimManager.getLeftFeederRPM());
+                          double rightErr =
+                              Math.abs(
+                                  flywheelRight.getCurrentVelocity()
+                                      - turretAimManager.getRightFeederRPM());
+                          return leftErr < tolRPM && rightErr < tolRPM;
+                        })
+                    .andThen(
+                        Commands.parallel(
+                            verticalFeedLeft.verticalFeedIntakeCommand(),
+                            verticalFeedRight.verticalFeedIntakeCommand(),
+                            agitatorLeft.snowblowCommand(),
+                            agitatorRight.snowblowCommand())))
+            .finallyDo(
+                () -> {
+                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                  CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+                  CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                }));
+  }
+
   private void configureButtonBindings() {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
@@ -564,51 +607,11 @@ public class RobotContainer {
     // --- DRIVER BINDINGS
     // -----------------------------------------------------------------------
 
-    // Face buttons (pit): hold to snap to cardinal angles.
-    driver
-        .y()
-        .and(() -> Robot.inPit)
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () ->
-                    getDriverPerspectiveSnapAngle(
-                        Constants.DriveCommandConstants.kDriverSnapAngleYDeg)));
-    driver
-        .x()
-        .and(() -> Robot.inPit)
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () ->
-                    getDriverPerspectiveSnapAngle(
-                        Constants.DriveCommandConstants.kDriverSnapAngleXDeg)));
-    driver
-        .a()
-        .and(() -> Robot.inPit)
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () ->
-                    getDriverPerspectiveSnapAngle(
-                        Constants.DriveCommandConstants.kDriverSnapAngleADeg)));
-    driver
-        .b()
-        .and(() -> Robot.inPit)
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () ->
-                    getDriverPerspectiveSnapAngle(
-                        Constants.DriveCommandConstants.kDriverSnapAngleBDeg)));
+    // Face buttons (pit): hold to drive full-speed cardinals.
+    driver.y().and(() -> Robot.inPit).whileTrue(buildPitCardinalDriveCommand(1.0, 0.0));
+    driver.x().and(() -> Robot.inPit).whileTrue(buildPitCardinalDriveCommand(0.0, 1.0));
+    driver.a().and(() -> Robot.inPit).whileTrue(buildPitCardinalDriveCommand(-1.0, 0.0));
+    driver.b().and(() -> Robot.inPit).whileTrue(buildPitCardinalDriveCommand(0.0, -1.0));
 
     // Face buttons (normal): on release, snap to angle and keep holding until
     // driver commands
@@ -642,7 +645,18 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // Back: normal = set pose to behind Red Hub
+    // Back: pit = set pose to Blue right-of-hub scoring position, normal = set pose to behind Red
+    // Hub
+    driver
+        .back()
+        .and(() -> Robot.inPit)
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(new Translation2d(3.581, 4.039), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
     driver
         .back()
         .and(() -> !Robot.inPit)
@@ -654,55 +668,25 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // right bumper = pit: intake | normal: none
-    driver
-        .rightBumper()
-        .toggleOnTrue(
-            Commands.either(intakeRollers.intakeCommand(), Commands.none(), () -> Robot.inPit));
+    // right bumper = pit: jam-clear outtake override | normal: none
+    driver.rightBumper().and(() -> Robot.inPit).whileTrue(buildOperatorJamClearOverrideCommand());
 
-    // left bumper = pit: outtake | normal: hood duck override while held
-    driver.leftBumper().and(() -> Robot.inPit).toggleOnTrue(intakeRollers.outtakeCommand());
+    // left bumper = hood duck override while held in both modes
 
-    // Driver pit controls: right trigger = shoot (both vertical feeders + both
-    // floor rollers)
-    // normal: spit
-    driver
-        .rightTrigger()
-        .toggleOnTrue(
-            Commands.either(
-                Commands.parallel(
-                    agitatorLeft.snowblowCommand(),
-                    agitatorRight.snowblowCommand(),
-                    verticalFeedLeft.verticalFeedIntakeCommand(),
-                    verticalFeedRight.verticalFeedIntakeCommand()),
-                intakeRollers.outtakeCommand(),
-                () -> Robot.inPit));
+    // Driver pit controls: right trigger = intake while held, left trigger = shoot while held.
+    // Normal: right trigger = spit.
+    driver.rightTrigger().and(() -> Robot.inPit).whileTrue(intakeRollers.intakeCommand());
+    driver.rightTrigger().and(() -> !Robot.inPit).toggleOnTrue(intakeRollers.outtakeCommand());
 
-    driver
-        .leftTrigger()
-        .toggleOnTrue(
-            Commands.either(
-                Commands.parallel(
-                    agitatorLeft.offCommand(),
-                    agitatorRight.offCommand(),
-                    verticalFeedLeft.offCommand(),
-                    verticalFeedRight.offCommand()),
-                Commands.none(),
-                () -> Robot.inPit));
+    driver.leftTrigger().and(() -> Robot.inPit).whileTrue(buildShootWhileHeldCommand());
 
     driver
         .povDown()
+        .and(() -> !Robot.inPit)
         .onTrue(
-            Commands.either(
-                // Pit: hoods to 10 deg (stowed)
-                Commands.parallel(
-                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                // Normal: stow hoods.
-                Commands.parallel(
-                    hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-                    hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)),
-                () -> Robot.inPit));
+            Commands.parallel(
+                hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+                hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees)));
     // #endregion
 
     // #region Operator Controls
@@ -801,52 +785,7 @@ public class RobotContainer {
             () ->
                 Robot.currentState == Robot.BotState.DEFENCEOUT
                     || Robot.currentState == Robot.BotState.COLLECT)
-        .whileTrue(
-            Commands.startEnd(
-                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false));
-    operator
-        .rightTrigger()
-        .and(() -> !Robot.inPit)
-        .and(
-            () ->
-                Robot.currentState == Robot.BotState.DEFENCEOUT
-                    || Robot.currentState == Robot.BotState.COLLECT)
-        .whileTrue(
-            // Phase 1: spin flywheels to aim-manager RPM
-            Commands.parallel(
-                    flywheelLeft.setRPMCommand(() -> turretAimManager.getLeftFeederRPM()),
-                    flywheelRight.setRPMCommand(() -> turretAimManager.getRightFeederRPM()))
-                // Phase 2: once at speed, also run feeders + agitators
-                .alongWith(
-                    Commands.waitUntil(
-                            () -> {
-                              double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                              double leftErr =
-                                  Math.abs(
-                                      flywheelLeft.getCurrentVelocity()
-                                          - turretAimManager.getLeftFeederRPM());
-                              double rightErr =
-                                  Math.abs(
-                                      flywheelRight.getCurrentVelocity()
-                                          - turretAimManager.getRightFeederRPM());
-                              return leftErr < tolRPM && rightErr < tolRPM;
-                            })
-                        .andThen(
-                            Commands.parallel(
-                                verticalFeedLeft.verticalFeedIntakeCommand(),
-                                verticalFeedRight.verticalFeedIntakeCommand(),
-                                agitatorLeft.snowblowCommand(),
-                                agitatorRight.snowblowCommand())))
-                .finallyDo(
-                    () -> {
-                      // Turn everything off on release
-                      CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                      CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                      CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                    }));
+        .whileTrue(buildShootWhileHeldCommand());
 
     // Left Trigger:
     // Pit mode -> toggleOnTrue: vertical rollers off
@@ -871,8 +810,7 @@ public class RobotContainer {
         .whileTrue(buildOperatorJamClearOverrideCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
-      Trigger duckOverrideTrigger =
-          operator.povDown().or(driver.leftBumper().and(() -> !Robot.inPit));
+      Trigger duckOverrideTrigger = operator.povDown().or(driver.leftBumper());
 
       // D-Pad Up/Down: normal = flywheel + hood | pit = move both hoods to preset
       // degrees
