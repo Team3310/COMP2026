@@ -676,17 +676,16 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // right bumper = pit: jam-clear outtake override | normal: none
-    driver.rightBumper().and(() -> Robot.inPit).whileTrue(buildOperatorJamClearOverrideCommand());
+    // right bumper = jam-clear outtake override while held in both modes
+    driver.rightBumper().whileTrue(buildOperatorJamClearOverrideCommand());
 
     // left bumper = hood duck override while held in both modes
 
-    // Driver pit controls: right trigger = intake while held, left trigger = shoot while held.
-    // Normal: right trigger = spit.
-    driver.rightTrigger().and(() -> Robot.inPit).whileTrue(intakeRollers.intakeCommand());
-    driver.rightTrigger().and(() -> !Robot.inPit).toggleOnTrue(intakeRollers.outtakeCommand());
+    // right trigger = intake while held in both modes
+    driver.rightTrigger().whileTrue(intakeRollers.intakeCommand());
 
-    driver.leftTrigger().and(() -> Robot.inPit).whileTrue(buildShootWhileHeldCommand());
+    // left trigger = shoot while held in both modes
+    driver.leftTrigger().whileTrue(buildShootWhileHeldCommand());
 
     driver
         .povDown()
