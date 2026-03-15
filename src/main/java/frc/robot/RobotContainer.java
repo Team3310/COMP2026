@@ -4,6 +4,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
+import frc.lib.util.Util;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Lights;
@@ -485,11 +487,16 @@ public class RobotContainer {
             drive,
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
-            () -> Rotation2d.fromDegrees(targetAngleDeg))
+            () -> getDriverPerspectiveSnapAngle(targetAngleDeg))
         .until(
             () ->
                 Math.abs(driver.getRightX())
                     > Constants.DriveCommandConstants.kRotationCommandDeadband);
+  }
+
+  private Rotation2d getDriverPerspectiveSnapAngle(double blueFrameAngleDeg) {
+    Rotation2d targetAngle = Rotation2d.fromDegrees(blueFrameAngleDeg);
+    return Robot.currentAlliance == Alliance.Red ? Util.flipRedBlue(targetAngle) : targetAngle;
   }
 
   private Command buildDuckOverrideCommand() {
@@ -551,7 +558,8 @@ public class RobotContainer {
                 () -> -driver.getLeftY(),
                 () -> -driver.getLeftX(),
                 () ->
-                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleYDeg)));
+                    getDriverPerspectiveSnapAngle(
+                        Constants.DriveCommandConstants.kDriverSnapAngleYDeg)));
     driver
         .x()
         .and(() -> Robot.inPit)
@@ -561,7 +569,8 @@ public class RobotContainer {
                 () -> -driver.getLeftY(),
                 () -> -driver.getLeftX(),
                 () ->
-                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleXDeg)));
+                    getDriverPerspectiveSnapAngle(
+                        Constants.DriveCommandConstants.kDriverSnapAngleXDeg)));
     driver
         .a()
         .and(() -> Robot.inPit)
@@ -571,7 +580,8 @@ public class RobotContainer {
                 () -> -driver.getLeftY(),
                 () -> -driver.getLeftX(),
                 () ->
-                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleADeg)));
+                    getDriverPerspectiveSnapAngle(
+                        Constants.DriveCommandConstants.kDriverSnapAngleADeg)));
     driver
         .b()
         .and(() -> Robot.inPit)
@@ -581,7 +591,8 @@ public class RobotContainer {
                 () -> -driver.getLeftY(),
                 () -> -driver.getLeftX(),
                 () ->
-                    Rotation2d.fromDegrees(Constants.DriveCommandConstants.kDriverSnapAngleBDeg)));
+                    getDriverPerspectiveSnapAngle(
+                        Constants.DriveCommandConstants.kDriverSnapAngleBDeg)));
 
     // Face buttons (normal): on release, snap to angle and keep holding until
     // driver commands
