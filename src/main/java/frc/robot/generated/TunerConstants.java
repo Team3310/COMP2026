@@ -47,6 +47,7 @@ public class TunerConstants {
         break;
       case BRAVO:
         kCANBus1 = TunerConstantsBravo.kCANBus1;
+        kCANBus2 = TunerConstantsBravo.kCANBus1;
         kCANBusRio = TunerConstantsBravo.kCANBusRio;
         kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;
@@ -57,7 +58,9 @@ public class TunerConstants {
         break;
       case COMP:
         kCANBus1 = TunerConstantsBravo.kCANBus1;
-        kCANBus2 = TunerConstantsBravo.kCANBus2;
+        // Competition is still using the Bravo tuner fallback until a dedicated
+        // competition constants file exists.
+        kCANBus2 = TunerConstantsBravo.kCANBus1;
         kCANBusRio = TunerConstantsBravo.kCANBusRio;
         kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;

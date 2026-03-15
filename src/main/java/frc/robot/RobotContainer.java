@@ -516,6 +516,10 @@ public class RobotContainer {
         });
   }
 
+  private boolean isOperatorOuttakeOverrideAllowed() {
+    return Robot.currentState == Robot.BotState.DEFENCEOUT;
+  }
+
   private void configureButtonBindings() {
     // Flywheel defaults enforce desired mode behavior:
     // - Pit: off unless explicitly enabled.
@@ -848,19 +852,13 @@ public class RobotContainer {
           .whileTrue(intakeRollers.intakeCommand());
     }
 
-    // Left bumper = pit: retract intake | normal: outtake in defenseout
+    // Left bumper = pit: retract intake | normal: outtake override while held
+    operator.leftBumper().and(() -> Robot.inPit).onTrue(intakePivot.retractCommand());
+
     operator
         .leftBumper()
-        .onTrue(
-            Commands.either(
-                // Pit: retract intake
-                intakePivot.retractCommand(),
-                // Normal: outtake if in DEFENCEOUT state
-                Commands.either(
-                    intakeRollers.outtakeCommand(),
-                    Commands.none(),
-                    () -> Robot.currentState == Robot.BotState.DEFENCEOUT),
-                () -> Robot.inPit));
+        .and(() -> !Robot.inPit && isOperatorOuttakeOverrideAllowed())
+        .whileTrue(intakeRollers.outtakeCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
       Trigger duckOverrideTrigger =
