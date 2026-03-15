@@ -254,17 +254,20 @@ public final class Constants {
     // gyro heading for its constrained solve.
 
     // Require at least this many tags visible to accept a disabled-mode seed.
-    // 2 = multi-tag only (highest confidence).  Set to 1 if your starting
-    // position only has one tag in view, but beware of single-tag ambiguity.
-    public static final int kPreMatchMinTagCount = 2;
+    // 1 = accept single-tag results (the stddev multiplier already down-weights
+    //     noisy measurements so every observation helps converge the estimate).
+    public static final int kPreMatchMinTagCount = 1;
 
     // Maximum Limelight-reported XY std dev (meters) to accept a seed.
-    public static final double kPreMatchMaxStdDev = 0.5;
+    // Relaxed — the MT1 stddev multiplier (×10) already scales trust so even
+    // a noisy measurement is heavily down-weighted.  Let it contribute rather
+    // than discard it outright.
+    public static final double kPreMatchMaxStdDev = 5.0;
 
     // Maximum Limelight-reported yaw std dev (degrees) to accept a seed.
-    // MT1 yaw accuracy degrades with distance and single-tag ambiguity.
-    // Only trust the heading when MT1 is very confident.
-    public static final double kPreMatchMaxYawStdDevDeg = 5.0;
+    // Relaxed for the same reason — high-stddev yaw measurements are scaled
+    // by kMT1StdDevMultiplier and barely nudge the estimate.
+    public static final double kPreMatchMaxYawStdDevDeg = 50.0;
 
     // Limelight frame throttle while disabled. Higher values skip more frames
     // to reduce thermals during long disabled periods.
