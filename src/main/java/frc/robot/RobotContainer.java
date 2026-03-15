@@ -662,9 +662,17 @@ public class RobotContainer {
         .and(() -> !Robot.inPit)
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(new Translation2d(10.942, 4.042), Rotation2d.kZero)),
+                    () -> {
+                      Pose2d blueFrontHubPose =
+                          new Pose2d(new Translation2d(3.581, 4.039), Rotation2d.kZero);
+                      Pose2d targetPose =
+                          Robot.currentAlliance == Alliance.Red
+                              ? new Pose2d(
+                                  Util.flipRedBlue(blueFrontHubPose.getTranslation()),
+                                  Util.flipRedBlue(blueFrontHubPose.getRotation()))
+                              : blueFrontHubPose;
+                      drive.setPose(targetPose);
+                    },
                     drive)
                 .ignoringDisable(true));
 
