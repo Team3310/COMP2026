@@ -181,18 +181,11 @@ public class Vision extends SubsystemBase {
     // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
     // and MegaTag 2 has up-to-date yaw while enabled.
     // Pass yaw rate so the Limelight can predict orientation between NT updates.
-    // Use _NoFlush for all but the last camera to avoid redundant NT flushes.
+    // Flush after each camera so every Limelight receives its update immediately.
     double robotYawDeg = drive.getRotation().getDegrees();
     double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
-    for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      String name = VisionConstants.kCameraNames[i];
-      if (i < VisionConstants.kCameraNames.length - 1) {
-        LimelightHelpers.SetRobotOrientation_NoFlush(
-            name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
-      } else {
-        // Last camera — flush once to push all orientation updates together.
-        LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
-      }
+    for (String name : VisionConstants.kCameraNames) {
+      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
     }
 
     // While disabled, run pre-match pose seeding (strict filters, no pose-jump
