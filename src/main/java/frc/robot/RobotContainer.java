@@ -516,8 +516,20 @@ public class RobotContainer {
         });
   }
 
-  private boolean isOperatorOuttakeOverrideAllowed() {
-    return Robot.currentState == Robot.BotState.DEFENCEOUT;
+  private boolean isOperatorJamClearOverrideAllowed() {
+    return Robot.inPit
+        || Robot.currentState == Robot.BotState.DEFENCEOUT
+        || Robot.currentState == Robot.BotState.COLLECT;
+  }
+
+  private Command buildOperatorJamClearOverrideCommand() {
+    return Commands.parallel(
+            intakeRollers.outtakeCommand(),
+            agitatorLeft.reverseCommand(),
+            agitatorRight.reverseCommand(),
+            verticalFeedLeft.verticalFeedOuttakeCommand(),
+            verticalFeedRight.verticalFeedOuttakeCommand())
+        .finallyDo(() -> Robot.stateRefreshRequested = true);
   }
 
   private void configureButtonBindings() {
@@ -852,13 +864,11 @@ public class RobotContainer {
           .whileTrue(intakeRollers.intakeCommand());
     }
 
-    // Left bumper = pit: retract intake | normal: outtake override while held
-    operator.leftBumper().and(() -> Robot.inPit).onTrue(intakePivot.retractCommand());
-
+    // Left bumper = jam-clear override while held
     operator
         .leftBumper()
-        .and(() -> !Robot.inPit && isOperatorOuttakeOverrideAllowed())
-        .whileTrue(intakeRollers.outtakeCommand());
+        .and(this::isOperatorJamClearOverrideAllowed)
+        .whileTrue(buildOperatorJamClearOverrideCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
       Trigger duckOverrideTrigger =
