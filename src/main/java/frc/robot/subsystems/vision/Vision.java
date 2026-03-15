@@ -71,6 +71,7 @@ public class Vision extends SubsystemBase {
   // The cameras won't overheat during a few minutes of pre-match idle.
   private boolean wasDisabled = true; // assume starting disabled
   private boolean firstLoop = true; // push throttle on the very first periodic() call
+  private int lastIMUMode = -1; // track IMU mode to avoid spamming SetIMUMode every cycle
 
   // Pre-match pose seeding state.
   // The first accepted seed uses setPose() (hard reset); subsequent seeds use
@@ -194,18 +195,6 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // Publish each Limelight's raw MegaTag 2 Pose2d to SmartDashboard so the
-    // drive team can see what each camera is reporting in real time.
-    for (String camName : VisionConstants.kCameraNames) {
-      PoseEstimate raw = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(camName);
-      String key = "Vision/" + camName + "/";
-      if (raw != null && raw.tagCount > 0 && raw.pose != null) {
-        SmartDashboard.putString(key + "pose", raw.pose.toString());
-      } else {
-        SmartDashboard.putString(key + "pose", "No tags");
-      }
-    }
-
     // While disabled, run pre-match pose seeding (strict filters, no pose-jump
     // rejection) so the robot knows its field position before auto starts.
     // While enabled, run normal vision processing with all filters.
@@ -281,6 +270,14 @@ public class Vision extends SubsystemBase {
    */
   private void setIMUModes() {
     int mode = DriverStation.isDisabled() ? 1 : 4;
+    // Only push the IMU mode when it actually changes (or on the very first
+    // call).  Spamming SetIMUMode at 50 Hz can disrupt the Limelight's
+    // internal complementary filter and cause cameras to enter a bad state
+    // after a few minutes of play.
+    if (mode == lastIMUMode) {
+      return;
+    }
+    lastIMUMode = mode;
     for (String name : VisionConstants.kCameraNames) {
       LimelightHelpers.SetIMUMode(name, mode);
     }
@@ -312,6 +309,13 @@ public class Vision extends SubsystemBase {
 
     // 1. Read the MegaTag 2 pose estimate.
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+
+    // Publish raw (unfiltered) pose to SmartDashboard for the drive team.
+    if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
+      SmartDashboard.putString(prefix + "rawPose", estimate.pose.toString());
+    } else {
+      SmartDashboard.putString(prefix + "rawPose", "No tags");
+    }
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
