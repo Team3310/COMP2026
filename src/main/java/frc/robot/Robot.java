@@ -159,7 +159,7 @@ public class Robot extends LoggedRobot {
     // states.
     // If we are deploying or retracting, we want to stay in deploy or retract until
     // we are done.
-    if (inPit) {
+    if (inPit && !robotContainer.pitOperatorMirrorsNormalMode) {
       currentState = BotState.PIT;
     } else if (!deploying && !retracting) {
       switch (overrideState) {
@@ -544,7 +544,7 @@ public class Robot extends LoggedRobot {
 
     // Flywheel control in pit mode only — normal-mode flywheels are now
     // commanded by the operator right trigger (spin-up → feed sequence).
-    if (inPit) {
+    if (inPit && !robotContainer.pitOperatorMirrorsNormalMode) {
       if (robotContainer.pitFlywheelsEnabled) {
         double pitRpm = Constants.ScorerConstants.kShootRPM;
         CommandScheduler.getInstance()
@@ -562,7 +562,9 @@ public class Robot extends LoggedRobot {
 
   // #region state methods
   private boolean shouldTrack(BotState state) {
-    return !inPit && state != BotState.DEFENCEIN && state != BotState.PIT;
+    return (robotContainer.pitOperatorMirrorsNormalMode || !inPit)
+        && state != BotState.DEFENCEIN
+        && state != BotState.PIT;
   }
 
   public static boolean shouldLimitHomeZoneDrive() {

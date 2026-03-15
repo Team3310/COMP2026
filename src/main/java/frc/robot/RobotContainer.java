@@ -264,6 +264,9 @@ public class RobotContainer {
   // teleop).
   public boolean pitFlywheelsEnabled = false;
   public boolean normalFlywheelsEnabled = true;
+  // Keep pit mode as a distinct path, but default operator pit behavior to mirror normal mode.
+  public boolean pitOperatorMirrorsNormalMode = true;
+  public boolean pitManualTurretEnabled = false;
   private double desiredLeftFlywheelRpm = 0.0;
   private double desiredRightFlywheelRpm = 0.0;
 
@@ -517,7 +520,7 @@ public class RobotContainer {
   }
 
   private boolean isOperatorJamClearOverrideAllowed() {
-    return Robot.inPit
+    return isUsingLegacyPitOperatorMode()
         || Robot.currentState == Robot.BotState.DEFENCEOUT
         || Robot.currentState == Robot.BotState.COLLECT;
   }
@@ -530,6 +533,10 @@ public class RobotContainer {
             verticalFeedLeft.verticalFeedOuttakeCommand(),
             verticalFeedRight.verticalFeedOuttakeCommand())
         .finallyDo(() -> Robot.stateRefreshRequested = true);
+  }
+
+  private boolean isUsingLegacyPitOperatorMode() {
+    return Robot.inPit && !pitOperatorMirrorsNormalMode;
   }
 
   private Command buildPitCardinalDriveCommand(
@@ -708,6 +715,7 @@ public class RobotContainer {
           turretLeft.dutyCycleCommand(
               () -> {
                 if (!Robot.inPit) return 0.0;
+                if (!pitManualTurretEnabled) return 0.0;
                 double x = operator.getLeftX();
                 double y = operator.getLeftY();
                 if (Math.sqrt(x * x + y * y) < 0.5) return 0.0;
@@ -729,6 +737,7 @@ public class RobotContainer {
           turretRight.dutyCycleCommand(
               () -> {
                 if (!Robot.inPit) return 0.0;
+                if (!pitManualTurretEnabled) return 0.0;
                 double x = operator.getRightX();
                 double y = operator.getRightY();
                 if (Math.sqrt(x * x + y * y) < 0.5) return 0.0;
@@ -744,50 +753,50 @@ public class RobotContainer {
     }
 
     if (agitatorRight != null && agitatorLeft != null) {
-      // Y = pit: shooter rollers on | normal: snowblow state
+      // Y = pit legacy: shooter rollers on | normal and mirrored pit: snowblow state
       operator
           .y()
           .onTrue(
               Commands.either(
                   Commands.runOnce(() -> pitFlywheelsEnabled = true),
                   buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW),
-                  () -> Robot.inPit));
+                  this::isUsingLegacyPitOperatorMode));
     }
 
-    // X = pit: shooter rollers off | normal: defenceout state
+    // X = pit legacy: shooter rollers off | normal and mirrored pit: defenceout state
     operator
         .x()
         .onTrue(
             Commands.either(
                 Commands.runOnce(() -> pitFlywheelsEnabled = false),
                 buildOverrideStateCommand(Robot.OverrideState.DEFENCEOUT),
-                () -> Robot.inPit));
+                this::isUsingLegacyPitOperatorMode));
 
-    // B = pit: floors on | normal: collect state
+    // B = pit legacy: floors on | normal and mirrored pit: collect state
     operator
         .b()
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
                 buildOverrideStateCommand(Robot.OverrideState.COLLECT),
-                () -> Robot.inPit));
+                this::isUsingLegacyPitOperatorMode));
 
-    // A = pit: floors off | normal: defencein state
+    // A = pit legacy: floors off | normal and mirrored pit: defencein state
     operator
         .a()
         .toggleOnTrue(
             Commands.either(
                 Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
                 buildOverrideStateCommand(Robot.OverrideState.DEFENCEIN),
-                () -> Robot.inPit));
+                this::isUsingLegacyPitOperatorMode));
 
     // Right Trigger:
-    // Pit mode -> toggle vertical feed rollers on/off.
-    // Normal mode -> spin flywheels to TurretAimManager RPM, wait for at-speed,
-    //                then engage vertical feeders + agitators. All off on release.
+    // Pit legacy -> toggle vertical feed rollers on/off.
+    // Normal mode and mirrored pit -> spin flywheels to TurretAimManager RPM, wait for at-speed,
+    // then engage vertical feeders + agitators. All off on release.
     operator
         .rightTrigger()
-        .and(() -> !Robot.inPit)
+        .and(() -> !isUsingLegacyPitOperatorMode())
         .and(
             () ->
                 Robot.currentState == Robot.BotState.DEFENCEOUT
@@ -795,18 +804,21 @@ public class RobotContainer {
         .whileTrue(buildShootWhileHeldCommand());
 
     // Left Trigger:
-    // Pit mode -> toggleOnTrue: vertical rollers off
-    // Normal mode -> whileTrue: intake on only while held in DEFENCEOUT
+    // Pit legacy -> toggleOnTrue: vertical rollers off
+    // Normal mode and mirrored pit -> whileTrue: intake on only while held in DEFENCEOUT
     if (verticalFeedRight != null && verticalFeedLeft != null) {
       operator
           .leftTrigger()
-          .and(() -> Robot.inPit)
+          .and(this::isUsingLegacyPitOperatorMode)
           .toggleOnTrue(
               Commands.parallel(verticalFeedLeft.offCommand(), verticalFeedRight.offCommand()));
 
       operator
           .leftTrigger()
-          .and(() -> !Robot.inPit && Robot.currentState == Robot.BotState.DEFENCEOUT)
+          .and(
+              () ->
+                  !isUsingLegacyPitOperatorMode()
+                      && Robot.currentState == Robot.BotState.DEFENCEOUT)
           .whileTrue(intakeRollers.intakeCommand());
     }
 
@@ -819,23 +831,20 @@ public class RobotContainer {
     if (flywheelLeft != null && hoodLeft != null) {
       Trigger duckOverrideTrigger = operator.povDown().or(driver.leftBumper());
 
-      // D-Pad Up/Down: normal = flywheel + hood | pit = move both hoods to preset
-      // degrees
+      // D-Pad Up/Down: same in normal and mirrored pit. Legacy pit keeps old preset behavior.
       operator
           .povUp()
           .onTrue(
               Commands.either(
-                  // Pit: hoods to max (live from dashboard)
                   Commands.parallel(
                       hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
-                  // Normal: flywheel on + hood up (live from dashboard)
                   Commands.parallel(
                       hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
-                  () -> Robot.inPit));
+                  this::isUsingLegacyPitOperatorMode));
       duckOverrideTrigger.whileTrue(buildDuckOverrideCommand());
-      // Pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
+      // Legacy pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
       operator
           .povRight()
           .onTrue(
@@ -843,7 +852,7 @@ public class RobotContainer {
                   Commands.parallel(
                       hoodLeft.setDegreesCommand(25.0), hoodRight.setDegreesCommand(25.0)),
                   Commands.none(),
-                  () -> Robot.inPit));
+                  this::isUsingLegacyPitOperatorMode));
       operator
           .povLeft()
           .onTrue(
@@ -851,7 +860,7 @@ public class RobotContainer {
                   Commands.parallel(
                       hoodLeft.setDegreesCommand(20.0), hoodRight.setDegreesCommand(20.0)),
                   Commands.none(),
-                  () -> Robot.inPit));
+                  this::isUsingLegacyPitOperatorMode));
     }
     // #endregion
   }
