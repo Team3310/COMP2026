@@ -414,18 +414,25 @@ public final class Constants {
     public static final double kDriverSnapAngleADeg = 180.0;
     public static final double kDriverSnapAngleBDeg = 270.0;
 
-    // ---- Hub-scoring drive slowdown ----
-    // When Robot.activeHub is true (scoring in hub), multiply translation
-    // and rotation speeds by these scalars for tighter control while shooting.
-    // 1.0 = full speed, 0.0 = stopped.
-    public static double kHubDriveScalar = 0.4;
-    public static double kHubTurnScalar = 0.3;
+    // The old activeHub-based drive slowdown is intentionally commented out.
+    // Teleop drive mode selection now keys off alliance home zone + shooting,
+    // not FMS hub state.
+    // public static double kHubDriveScalar = 0.4;
+    // public static double kHubTurnScalar = 0.3;
 
-    // While snowblowing in the home zone, soften drive response so the chassis
-    // does not accelerate or rotate too aggressively.
-    public static double kSnowblowHomeDriveScalar = 0.5;
-    public static double kSnowblowHomeMaxAccelMetersPerSec2 = 1.5;
-    public static double kSnowblowHomeTurnScalar = 0.45;
+    // Normal teleop drive profile. These are driver-facing chassis limits, not
+    // the drivetrain's physical module-speed ceiling.
+    public static double kNormalMaxLinearSpeedMps = 6.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 10.0;
+    public static double kNormalMaxLinearAccelMetersPerSec2 = 4.0;
+    public static double kNormalMaxAngularAccelRadPerSec2 = 14.0;
+
+    // Home-scoring drive profile. Applies only while the robot is in its home
+    // zone and the shoot command is being held.
+    public static double kHomeScoringMaxLinearSpeedMps = 2.8;
+    public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
+    public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 1.75;
+    public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
   }
   // #endregion
 

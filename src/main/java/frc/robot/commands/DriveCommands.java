@@ -35,6 +35,8 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
+  private static final double LOOP_PERIOD_SECONDS = 0.02;
+
   private DriveCommands() {}
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
@@ -50,6 +52,91 @@ public class DriveCommands {
     return new Pose2d(Translation2d.kZero, linearDirection)
         .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))
         .getTranslation();
+  }
+
+  private static boolean isHomeScoringDriveModeActive() {
+    return Robot.shouldLimitHomeZoneDrive();
+  }
+
+  private static double getActiveMaxLinearSpeedMetersPerSec() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearSpeedMps
+        : Constants.DriveCommandConstants.kNormalMaxLinearSpeedMps;
+  }
+
+  private static double getActiveMaxAngularSpeedRadPerSec() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularSpeedRadPerSec
+        : Constants.DriveCommandConstants.kNormalMaxAngularSpeedRadPerSec;
+  }
+
+  private static double getActiveMaxLinearAccelMetersPerSec2() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearAccelMetersPerSec2
+        : Constants.DriveCommandConstants.kNormalMaxLinearAccelMetersPerSec2;
+  }
+
+  private static double getActiveMaxAngularAccelRadPerSec2() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularAccelRadPerSec2
+        : Constants.DriveCommandConstants.kNormalMaxAngularAccelRadPerSec2;
+  }
+
+  private static Translation2d limitTranslationVelocity(
+      Translation2d currentVelocity,
+      Translation2d targetVelocity,
+      double maxLinearAccelMetersPerSec2) {
+    double maxVelocityDelta = maxLinearAccelMetersPerSec2 * LOOP_PERIOD_SECONDS;
+    Translation2d deltaVelocity = targetVelocity.minus(currentVelocity);
+    double deltaMagnitude = deltaVelocity.getNorm();
+    if (deltaMagnitude > maxVelocityDelta && deltaMagnitude > 1e-9) {
+      return currentVelocity.plus(deltaVelocity.times(maxVelocityDelta / deltaMagnitude));
+    }
+    return targetVelocity;
+  }
+
+  private static double limitAngularVelocity(
+      double currentOmegaRadPerSec, double targetOmegaRadPerSec, double maxAngularAccelRadPerSec2) {
+    double maxOmegaDelta = maxAngularAccelRadPerSec2 * LOOP_PERIOD_SECONDS;
+    return currentOmegaRadPerSec
+        + MathUtil.clamp(
+            targetOmegaRadPerSec - currentOmegaRadPerSec, -maxOmegaDelta, maxOmegaDelta);
+  }
+
+  private static ChassisSpeeds buildLimitedFieldRelativeSpeeds(
+      Translation2d linearVelocityInput,
+      double targetOmegaRadPerSec,
+      double[] previousCommandedVxMetersPerSecond,
+      double[] previousCommandedVyMetersPerSecond,
+      double[] previousCommandedOmegaRadPerSec) {
+    Translation2d targetTranslationVelocity =
+        linearVelocityInput.times(getActiveMaxLinearSpeedMetersPerSec());
+    Translation2d currentTranslationVelocity =
+        new Translation2d(
+            previousCommandedVxMetersPerSecond[0], previousCommandedVyMetersPerSecond[0]);
+    Translation2d limitedTranslationVelocity =
+        limitTranslationVelocity(
+            currentTranslationVelocity,
+            targetTranslationVelocity,
+            getActiveMaxLinearAccelMetersPerSec2());
+
+    double limitedOmegaRadPerSec =
+        limitAngularVelocity(
+            previousCommandedOmegaRadPerSec[0],
+            MathUtil.clamp(
+                targetOmegaRadPerSec,
+                -getActiveMaxAngularSpeedRadPerSec(),
+                getActiveMaxAngularSpeedRadPerSec()),
+            getActiveMaxAngularAccelRadPerSec2());
+
+    previousCommandedVxMetersPerSecond[0] = limitedTranslationVelocity.getX();
+    previousCommandedVyMetersPerSecond[0] = limitedTranslationVelocity.getY();
+    previousCommandedOmegaRadPerSec[0] = limitedOmegaRadPerSec;
+
+    return new ChassisSpeeds(
+        previousCommandedVxMetersPerSecond[0],
+        previousCommandedVyMetersPerSecond[0],
+        previousCommandedOmegaRadPerSec[0]);
   }
 
   /**
@@ -71,6 +158,7 @@ public class DriveCommands {
     boolean[] headingHoldActive = new boolean[] {false};
     double[] previousCommandedVxMetersPerSecond = new double[] {0.0};
     double[] previousCommandedVyMetersPerSecond = new double[] {0.0};
+    double[] previousCommandedOmegaRadPerSec = new double[] {0.0};
 
     return Commands.run(
             () -> {
@@ -94,7 +182,7 @@ public class DriveCommands {
                 headingHoldActive[0] = false;
                 omega =
                     Math.copySign(omegaInput * omegaInput, omegaInput)
-                        * drive.getMaxAngularSpeedRadPerSec();
+                        * getActiveMaxAngularSpeedRadPerSec();
               } else {
                 // Delay hold engagement until measured yaw rate settles to avoid snap-back after
                 // spins.
@@ -115,26 +203,26 @@ public class DriveCommands {
                       MathUtil.clamp(
                           headingHoldController.calculate(
                               drive.getRotation().getRadians(), headingHoldSetpointRad[0]),
-                          -drive.getMaxAngularSpeedRadPerSec(),
-                          drive.getMaxAngularSpeedRadPerSec());
+                          -getActiveMaxAngularSpeedRadPerSec(),
+                          getActiveMaxAngularSpeedRadPerSec());
                 }
               }
 
               // Convert to field relative speeds & send command
-              // Slow down translation and rotation while scoring in hub for tighter control.
-              double driveScale =
-                  Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
-              double turnScale =
-                  Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
-
-              double targetVxMetersPerSecond =
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
-              double targetVyMetersPerSecond =
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * driveScale;
-
+              // The previous activeHub-based drive slowdown is intentionally left commented out.
+              // Teleop drive mode selection now depends on alliance home zone + shooting instead of
+              // FMS hub state.
+              // double driveScale =
+              //     Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
+              // double turnScale =
+              //     Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
               ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      targetVxMetersPerSecond, targetVyMetersPerSecond, omega * turnScale);
+                  buildLimitedFieldRelativeSpeeds(
+                      linearVelocity,
+                      omega,
+                      previousCommandedVxMetersPerSecond,
+                      previousCommandedVyMetersPerSecond,
+                      previousCommandedOmegaRadPerSec);
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;
@@ -153,6 +241,7 @@ public class DriveCommands {
               headingHoldActive[0] = true;
               previousCommandedVxMetersPerSecond[0] = 0.0;
               previousCommandedVyMetersPerSecond[0] = 0.0;
+              previousCommandedOmegaRadPerSec[0] = 0.0;
             });
   }
 
@@ -177,6 +266,9 @@ public class DriveCommands {
                 Constants.DriveCommandConstants.kAngleProfileMaxVelocityRadPerSec,
                 Constants.DriveCommandConstants.kAngleProfileMaxAccelerationRadPerSec2));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
+    double[] previousCommandedVxMetersPerSecond = new double[] {0.0};
+    double[] previousCommandedVyMetersPerSecond = new double[] {0.0};
+    double[] previousCommandedOmegaRadPerSec = new double[] {0.0};
 
     // Construct command
     return Commands.run(
@@ -200,10 +292,12 @@ public class DriveCommands {
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
+                  buildLimitedFieldRelativeSpeeds(
+                      linearVelocity,
+                      omega,
+                      previousCommandedVxMetersPerSecond,
+                      previousCommandedVyMetersPerSecond,
+                      previousCommandedOmegaRadPerSec);
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;
@@ -217,7 +311,13 @@ public class DriveCommands {
             drive)
 
         // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+        .beforeStarting(
+            () -> {
+              angleController.reset(drive.getRotation().getRadians());
+              previousCommandedVxMetersPerSecond[0] = 0.0;
+              previousCommandedVyMetersPerSecond[0] = 0.0;
+              previousCommandedOmegaRadPerSec[0] = 0.0;
+            });
   }
 
   /**

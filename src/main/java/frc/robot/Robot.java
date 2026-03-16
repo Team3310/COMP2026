@@ -152,7 +152,9 @@ public class Robot extends LoggedRobot {
 
     updateZone();
 
-    // Update activeHub based on match time / override flag
+    // activeHub is still updated here because the broader robot state machine
+    // still references it, but teleop drive slowdown no longer depends on
+    // FMS/hub state.
     updateHub();
 
     // This basically says if we are not deploying or retracting, then we can change
@@ -255,12 +257,15 @@ public class Robot extends LoggedRobot {
       Constants.ScorerConstants.kTurretDeadbandDeg =
           SmartDashboard.getNumber(
               "SpeedTune/TurretDeadbandDeg", Constants.ScorerConstants.kTurretDeadbandDeg);
-      Constants.DriveCommandConstants.kHubDriveScalar =
-          SmartDashboard.getNumber(
-              "SpeedTune/HubDriveScalar", Constants.DriveCommandConstants.kHubDriveScalar);
-      Constants.DriveCommandConstants.kHubTurnScalar =
-          SmartDashboard.getNumber(
-              "SpeedTune/HubTurnScalar", Constants.DriveCommandConstants.kHubTurnScalar);
+      // The old activeHub-based drive slowdown tuning is intentionally
+      // commented out. Teleop drive mode selection now keys off alliance home
+      // zone + shooting instead of FMS hub state.
+      // Constants.DriveCommandConstants.kHubDriveScalar =
+      //     SmartDashboard.getNumber(
+      //         "SpeedTune/HubDriveScalar", Constants.DriveCommandConstants.kHubDriveScalar);
+      // Constants.DriveCommandConstants.kHubTurnScalar =
+      //     SmartDashboard.getNumber(
+      //         "SpeedTune/HubTurnScalar", Constants.DriveCommandConstants.kHubTurnScalar);
 
       // Vision filter-strength overrides
       Constants.VisionConstants.kMT2StdDevMultiplier =
@@ -579,7 +584,7 @@ public class Robot extends LoggedRobot {
   }
 
   public static boolean shouldLimitHomeZoneDrive() {
-    return (currentState == BotState.SNOWBLOW || shootButtonHeld)
+    return shootButtonHeld
         && ((currentAlliance == Alliance.Blue && currentZone == Zone.BLUE)
             || (currentAlliance == Alliance.Red && currentZone == Zone.RED));
   }
