@@ -14,6 +14,6 @@ public class DepCycle1 extends AutonCommandBase {
         new Pose2d(
             FieldConstants.StartingPosition.BLUEDEP.getTranslation(), Rotation2d.fromDegrees(180)));
 
-    this.addCommands(followPathAndSnowblow(Paths.depCycle));
+    this.addCommands(followPathAndSnowblow(Paths.DepCycle));
   }
 }

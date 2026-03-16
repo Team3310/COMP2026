@@ -11,6 +11,6 @@ public class DepToSSTrench1 extends AutonCommandBase {
 
     this.addCommands(
         new SequentialCommandGroup(
-            followPath(Paths.depToSSTrench), followPathAndSnowblow(Paths.trenchToDepo)));
+            followPath(Paths.DepToSSTrench), followPathAndSnowblow(Paths.TrenchToDepo)));
   }
 }

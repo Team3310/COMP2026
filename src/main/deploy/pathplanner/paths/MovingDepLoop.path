@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5494772727272723,
-        "y": 7.240420454545455
+        "x": 3.4361022727272723,
+        "y": 7.425943181818181
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.845265438049543,
-        "y": 7.891529595017719
+        "x": 6.731890438049543,
+        "y": 8.077052322290445
       },
       "isLocked": false,
       "linkedName": "DepStart"
@@ -80,12 +80,12 @@
     },
     {
       "anchor": {
-        "x": 3.5494772727272723,
-        "y": 7.240420454545455
+        "x": 3.4361022727272723,
+        "y": 7.425943181818181
       },
       "prevControl": {
-        "x": 2.174858112534216,
-        "y": 5.274100475432543
+        "x": 2.061483112534216,
+        "y": 5.459623202705269
       },
       "nextControl": null,
       "isLocked": false,
@@ -114,22 +114,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.5,
+    "maxVelocity": 5.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
-    "nominalVoltage": 12.0,
+    "nominalVoltage": 10.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 4.0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 4.0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

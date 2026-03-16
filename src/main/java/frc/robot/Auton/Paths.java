@@ -14,45 +14,50 @@ public class Paths {
   // Individual paths (loaded from .path files)
   public static PathPlannerPath forward2m;
 
-  public static PathPlannerPath hubCycle;
-  public static PathPlannerPath depCycle;
-  public static PathPlannerPath outCycle;
+  public static PathPlannerPath HubCycle;
+  public static PathPlannerPath DepCycle;
+  public static PathPlannerPath OutCycle;
 
-  public static PathPlannerPath outToOut;
-  public static PathPlannerPath depToDep;
+  public static PathPlannerPath OutToOut;
+  public static PathPlannerPath DepToDep;
 
-  public static PathPlannerPath depToSSTrench;
-  public static PathPlannerPath outToSSTrench;
-  public static PathPlannerPath trenchToDepo;
+  public static PathPlannerPath DepToSSTrench;
+  public static PathPlannerPath OutToSSTrench;
+  public static PathPlannerPath TrenchToDepo;
 
-  public static PathPlannerPath depToOut;
-  public static PathPlannerPath outToDep;
+  public static PathPlannerPath DepToOut;
+  public static PathPlannerPath OutToDep;
 
-  public static PathPlannerPath hubToDep;
-  public static PathPlannerPath hubToOut;
+  public static PathPlannerPath HubToDep;
+  public static PathPlannerPath HubToOut;
+
+  public static PathPlannerPath DepSnowShoot;
+  public static PathPlannerPath OutSnowShoot;
 
   public static boolean loaded;
 
   /**
-   * Load all paths from PathPlanner path files. Alliance flipping is handled automatically by
+   * Load all paths from PathPlanner path files. Alliance flipping is handled automatially by
    * AutoBuilder.followPath() at runtime, so no manual flip needed here.
    */
   public static void loadPaths() {
     loaded = true;
 
     forward2m = loadPath("forward2m");
-    depCycle = loadPath("DepCycle");
-    outCycle = loadPath("OutCycle");
-    hubCycle = loadPath("HubCycle");
-    depToDep = loadPath("DepToDep");
-    outToOut = loadPath("OutToOut");
-    depToSSTrench = loadPath("DepToSSTrench");
-    outToSSTrench = loadPath("OutToSSTrench");
-    trenchToDepo = loadPath("TrenchToDepo");
-    depToOut = loadPath("DepToOut");
-    outToDep = loadPath("OutToDep");
-    hubToDep = loadPath("HubToDep");
-    hubToOut = loadPath("HubToOut");
+    DepCycle = loadPath("DepCycle");
+    OutCycle = loadPath("OutCycle");
+    HubCycle = loadPath("HubCycle");
+    DepToDep = loadPath("DepToDep");
+    OutToOut = loadPath("OutToOut");
+    DepToSSTrench = loadPath("DepToSSTrench");
+    OutToSSTrench = loadPath("OutToSSTrench");
+    TrenchToDepo = loadPath("TrenchToDepo");
+    DepToOut = loadPath("DepToOut");
+    OutToDep = loadPath("OutToDep");
+    HubToDep = loadPath("HubToDep");
+    HubToOut = loadPath("HubToOut");
+    DepSnowShoot = loadPath("DepSnowShoot");
+    OutSnowShoot = loadPath("OutSnowShoot");
   }
 
   /** Load a single path from a PathPlanner .path file. */
