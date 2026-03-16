@@ -32,8 +32,8 @@ public class TunerConstantsPractice {
           .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
-  // Paul changed kP from 0.1 to 0.8 and kV from .124 to .144 since we are now 10V
-  // limited.
+  // Paul changed kP from 0.1 to 0.8 and kV from .124 to .144 for the current
+  // voltage-limited drive configuration.
   private static final Slot0Configs driveGains =
       new Slot0Configs().withKP(2.0).withKI(0.0).withKD(0).withKS(0).withKV(0.144);
 
@@ -73,7 +73,7 @@ public class TunerConstantsPractice {
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Amps.of(40))
                   .withStatorCurrentLimitEnable(true))
-          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(10).withPeakReverseVoltage(-10));
+          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));
   ;
   private static final TalonFXConfiguration steerInitialConfigs =
       new TalonFXConfiguration()
@@ -85,7 +85,7 @@ public class TunerConstantsPractice {
                   // stator current limit to help avoid brownouts without impacting performance.
                   .withStatorCurrentLimit(Amps.of(40))
                   .withStatorCurrentLimitEnable(true))
-          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(10).withPeakReverseVoltage(-10));
+          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));
 
   private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
@@ -97,10 +97,10 @@ public class TunerConstantsPractice {
   public static final CANBus kCANBus2 = new CANBus("Default Name", "./logs/example.hoot");
   public static final CANBus kCANBusRio = new CANBus("Default Name", "./logs/example.hoot");
 
-  // Theoretical free speed (m/s) at 10 V applied output (virtual voltage
+  // Theoretical free speed (m/s) at 12 V applied output (virtual voltage
   // compensation cap);
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(7.0);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(7.37);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot

@@ -47,7 +47,7 @@ public final class Constants {
   public static final boolean kIsPracticeBot = currentBot == Bot.PRACTICE;
 
   // Global motor voltage limit applied to all TalonFX motors
-  public static final double kMotorPeakVoltage = 10.0;
+  public static final double kMotorPeakVoltage = 12.0;
 
   // Field dimensions for 2026 Reefscape
   public static final double kFieldLengthMeters = 16.54;
