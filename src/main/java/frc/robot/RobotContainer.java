@@ -597,13 +597,9 @@ public class RobotContainer {
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
-        flywheelLeft
-            .setRPMCommand(this::getDesiredLeftFlywheelRpm)
-            .withName("Flywheel Left Maintain RPM (default)"));
+        flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(
-        flywheelRight
-            .setRPMCommand(this::getDesiredRightFlywheelRpm)
-            .withName("Flywheel Right Maintain RPM (default)"));
+        flywheelRight.offCommand().withName("Flywheel Right Neutral (default)"));
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(

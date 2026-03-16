@@ -555,6 +555,17 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
+    } else if (currentState == BotState.SNOWBLOW) {
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelLeft()
+                  .setRPMCommand(() -> robotContainer.getTurretAimManager().getLeftFeederRPM()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getFlywheelRight()
+                  .setRPMCommand(() -> robotContainer.getTurretAimManager().getRightFeederRPM()));
     }
   }
 
@@ -616,6 +627,8 @@ public class Robot extends LoggedRobot {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
     deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
@@ -627,6 +640,8 @@ public class Robot extends LoggedRobot {
 
     // Retract intake to prevent damage, and stop all motors to save battery.
     retract();
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
@@ -649,6 +664,8 @@ public class Robot extends LoggedRobot {
   private void defenseOut() {
     deploy();
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
