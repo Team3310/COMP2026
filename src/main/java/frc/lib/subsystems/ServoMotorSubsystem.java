@@ -16,11 +16,15 @@ import org.littletonrobotics.junction.Logger;
  */
 public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends MotorIO>
     extends SubsystemBase {
+  private static final int LATENCY_LOG_INTERVAL = 25; // ~2 Hz at a 20 ms main loop
+
   protected U io;
   protected T inputs;
   protected double positionSetpointUnits = 0.0;
 
   protected ServoMotorSubsystemConfig conf;
+  private int latencyLogCounter = 0;
+  private String lastLoggedCommandName = "";
 
   public ServoMotorSubsystem(ServoMotorSubsystemConfig config, T inputs, U io) {
     super(config.name);
@@ -37,11 +41,18 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     double timestamp = RobotTime.getTimestampSeconds();
     io.readInputs(inputs);
     Logger.processInputs(getName(), inputs);
-    Logger.recordOutput(
-        getName() + "/latencyPeriodicSec", RobotTime.getTimestampSeconds() - timestamp);
-    Logger.recordOutput(
-        getName() + "/currentCommand",
-        (getCurrentCommand() == null) ? "Default" : getCurrentCommand().getName());
+    if (++latencyLogCounter >= LATENCY_LOG_INTERVAL) {
+      latencyLogCounter = 0;
+      Logger.recordOutput(
+          getName() + "/latencyPeriodicSec", RobotTime.getTimestampSeconds() - timestamp);
+    }
+
+    String currentCommandName =
+        (getCurrentCommand() == null) ? "Default" : getCurrentCommand().getName();
+    if (!currentCommandName.equals(lastLoggedCommandName)) {
+      Logger.recordOutput(getName() + "/currentCommand", currentCommandName);
+      lastLoggedCommandName = currentCommandName;
+    }
   }
 
   protected void setMotionMagicConfig(MotionMagicConfigs config) {

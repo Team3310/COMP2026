@@ -16,7 +16,10 @@ import frc.robot.Constants;
  * <p>Design sheet: CAN 12, gear ratio 5.454545:1, range 0→145°, 40A stator.
  */
 public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
+
   public MotorIO motorIO;
+  private int dashboardCounter = 0;
 
   public IntakePivot(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -68,7 +71,9 @@ public class IntakePivot extends ServoMotorSubsystem<MotorInputsAutoLogged, Moto
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Intake Position", getCurrentPosition());
+    if (++dashboardCounter % DASHBOARD_INTERVAL == 0) {
+      SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
+    }
     super.periodic();
   }
 }

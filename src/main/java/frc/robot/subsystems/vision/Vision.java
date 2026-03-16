@@ -63,7 +63,7 @@ public class Vision extends SubsystemBase {
   // functionality — all filtering, processing, and pose injection still run
   // every single cycle.
   private int logCounter = 0;
-  private static final int LOG_INTERVAL = 5; // Log every 5th cycle (~10 Hz)
+  private static final int LOG_INTERVAL = 10; // Log every 10th cycle (~5 Hz)
 
   // Thermal throttle — skip frames while disabled to keep cameras cool.
   // Per Limelight docs (LDS §13): 100–200 while disabled, 0 while enabled.

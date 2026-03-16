@@ -23,9 +23,12 @@ import org.littletonrobotics.junction.Logger;
  * </ul>
  */
 public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
+
   public MotorIO motorIO;
   private static final String SNOWBLOW_RPM_KEY = "Agitator/SnowblowRPM";
   private static final String COLLECT_RPM_KEY = "Agitator/CollectRPM";
+  private int dashboardCounter = 0;
 
   public Agitator(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -86,19 +89,26 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   public void periodic() {
     super.periodic();
 
+    if (++dashboardCounter % DASHBOARD_INTERVAL != 0) {
+      return;
+    }
+
+    String dashboardPrefix = getName() + "/";
+
     // Log current velocity in RPM to SmartDashboard
-    SmartDashboard.putNumber("Agitator/CurrentRPM", rpsToRpm(inputs.velocityUnitsPerSecond));
-    SmartDashboard.putNumber("Agitator/CurrentRPS", inputs.velocityUnitsPerSecond);
-    SmartDashboard.putNumber("Agitator/AppliedVolts", inputs.appliedVolts);
-    SmartDashboard.putNumber("Agitator/StatorCurrent", inputs.currentStatorAmps);
-    SmartDashboard.putNumber("Agitator/SupplyCurrent", inputs.currentSupplyAmps);
-    SmartDashboard.putBoolean("Agitator/SubsystemActive", true);
+    SmartDashboard.putNumber(
+        dashboardPrefix + "CurrentRPM", rpsToRpm(inputs.velocityUnitsPerSecond));
+    SmartDashboard.putNumber(dashboardPrefix + "CurrentRPS", inputs.velocityUnitsPerSecond);
+    SmartDashboard.putNumber(dashboardPrefix + "AppliedVolts", inputs.appliedVolts);
+    SmartDashboard.putNumber(dashboardPrefix + "StatorCurrent", inputs.currentStatorAmps);
+    SmartDashboard.putNumber(dashboardPrefix + "SupplyCurrent", inputs.currentSupplyAmps);
+    SmartDashboard.putBoolean(dashboardPrefix + "SubsystemActive", true);
 
     // Debug: Log if motor is being driven
     if (Math.abs(inputs.appliedVolts) > 0.1) {
-      SmartDashboard.putString("Agitator/Status", "MOTOR ACTIVE");
+      SmartDashboard.putString(dashboardPrefix + "Status", "MOTOR ACTIVE");
     } else {
-      SmartDashboard.putString("Agitator/Status", "IDLE");
+      SmartDashboard.putString(dashboardPrefix + "Status", "IDLE");
     }
   }
 

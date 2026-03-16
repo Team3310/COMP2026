@@ -25,6 +25,8 @@ import org.littletonrobotics.junction.Logger;
  * frc.robot.subsystems.scorer.hood.Hood} subsystems when you're ready.
  */
 public class TurretAimManager extends SubsystemBase {
+  private static final int LOG_INTERVAL = 5; // ~10 Hz at a 20 ms main loop
+
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> speedsSupplier;
   private final TurretAimIOInputsAutoLogged inputs = new TurretAimIOInputsAutoLogged();
@@ -44,6 +46,7 @@ public class TurretAimManager extends SubsystemBase {
   // visualisation — the logged ghost Pose2d rotates with realistic inertia.
   private double simTurretAngleDeg = 0.0; // current simulated turret angle
   private double prevTimestamp = -1.0; // for dt calculation
+  private int logCounter = 0;
 
   /**
    * @param poseSupplier Supplies the robot's current field pose (usually {@code drive::getPose}).
@@ -57,6 +60,12 @@ public class TurretAimManager extends SubsystemBase {
 
   @Override
   public void periodic() {
+    logCounter++;
+    boolean shouldLog = logCounter >= LOG_INTERVAL;
+    if (shouldLog) {
+      logCounter = 0;
+    }
+
     Pose2d pose = poseSupplier.get();
     char alliance = getAllianceChar();
     ChassisSpeeds robotSpeeds = speedsSupplier.get();
@@ -221,47 +230,50 @@ public class TurretAimManager extends SubsystemBase {
     // Log with AdvantageKit so values appear in AdvantageScope under "TurretAim/"
     Logger.processInputs("TurretAim", inputs);
 
-    // Also log the six key values at the top level for quick graphing
-    Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
-    Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
-    Logger.recordOutput("TurretAim/LeftFeederRPM", result.leftFeederRPM);
-    Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
-    Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
-    Logger.recordOutput("TurretAim/RightFeederRPM", result.rightFeederRPM);
-    Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
+    if (shouldLog) {
+      // Also log the six key values at the top level for quick graphing
+      Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
+      Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
+      Logger.recordOutput("TurretAim/LeftFeederRPM", result.leftFeederRPM);
+      Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
+      Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
+      Logger.recordOutput("TurretAim/RightFeederRPM", result.rightFeederRPM);
+      Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
 
-    // ---- TOF aim-ahead logging ----
-    Logger.recordOutput("TurretAim/ConvergedTofSeconds", convergedTof);
-    Logger.recordOutput("TurretAim/PhaseDelaySeconds", phaseDelay);
-    Logger.recordOutput("TurretAim/PhaseCorrectedPose", phaseCorrectedPose);
-    Logger.recordOutput("TurretAim/PredictedPose", predictedPose);
-    Logger.recordOutput("TurretAim/FieldVelocityMps", Math.hypot(fieldVx, fieldVy));
-    Logger.recordOutput("TurretAim/Home", home);
+      // ---- TOF aim-ahead logging ----
+      Logger.recordOutput("TurretAim/ConvergedTofSeconds", convergedTof);
+      Logger.recordOutput("TurretAim/PhaseDelaySeconds", phaseDelay);
+      Logger.recordOutput("TurretAim/PhaseCorrectedPose", phaseCorrectedPose);
+      Logger.recordOutput("TurretAim/PredictedPose", predictedPose);
+      Logger.recordOutput("TurretAim/FieldVelocityMps", Math.hypot(fieldVx, fieldVy));
+      Logger.recordOutput("TurretAim/Home", home);
 
-    // ---- Instant aim line (where calculator WANTS to aim) ----
-    Translation2d targetXY = result.target;
-    double dx = targetXY.getX() - pose.getX();
-    double dy = targetXY.getY() - pose.getY();
-    Rotation2d bearing = new Rotation2d(Math.atan2(dy, dx));
+      // ---- Instant aim line (where calculator WANTS to aim) ----
+      Translation2d targetXY = result.target;
+      double dx = targetXY.getX() - pose.getX();
+      double dy = targetXY.getY() - pose.getY();
+      Rotation2d bearing = new Rotation2d(Math.atan2(dy, dx));
 
-    Pose2d[] aimLine =
-        new Pose2d[] {new Pose2d(pose.getTranslation(), bearing), new Pose2d(targetXY, bearing)};
-    Logger.recordOutput("TurretAim/AimLine", aimLine);
+      Pose2d[] aimLine =
+          new Pose2d[] {new Pose2d(pose.getTranslation(), bearing), new Pose2d(targetXY, bearing)};
+      Logger.recordOutput("TurretAim/AimLine", aimLine);
 
-    // Target ghost on the field (instant)
-    Logger.recordOutput("TurretAim/TargetPose", new Pose2d(targetXY, bearing));
+      // Target ghost on the field (instant)
+      Logger.recordOutput("TurretAim/TargetPose", new Pose2d(targetXY, bearing));
 
-    // ---- Simulated turret ghost (with inertia) ----
-    // Pose2d at the robot position whose rotation = robotHeading + simTurretAngle.
-    // 0° turret = facing robot front, so the ghost spins on the robot.
-    Rotation2d simFieldBearing = pose.getRotation().plus(Rotation2d.fromDegrees(simTurretAngleDeg));
-    Logger.recordOutput(
-        "TurretAim/SimTurretPose", new Pose2d(pose.getTranslation(), simFieldBearing));
+      // ---- Simulated turret ghost (with inertia) ----
+      // Pose2d at the robot position whose rotation = robotHeading + simTurretAngle.
+      // 0° turret = facing robot front, so the ghost spins on the robot.
+      Rotation2d simFieldBearing =
+          pose.getRotation().plus(Rotation2d.fromDegrees(simTurretAngleDeg));
+      Logger.recordOutput(
+          "TurretAim/SimTurretPose", new Pose2d(pose.getTranslation(), simFieldBearing));
 
-    // Also log the raw sim angle for graphing alongside the commanded angle
-    Logger.recordOutput("TurretAim/SimTurretAngleDeg", simTurretAngleDeg);
-    Logger.recordOutput("TurretAim/CommandedTurretAngleDeg", targetAngleDeg);
-    Logger.recordOutput("TurretAim/LockedOn", isLockedOn());
+      // Also log the raw sim angle for graphing alongside the commanded angle
+      Logger.recordOutput("TurretAim/SimTurretAngleDeg", simTurretAngleDeg);
+      Logger.recordOutput("TurretAim/CommandedTurretAngleDeg", targetAngleDeg);
+      Logger.recordOutput("TurretAim/LockedOn", isLockedOn());
+    }
   }
 
   // ---- Accessors for other subsystems ----

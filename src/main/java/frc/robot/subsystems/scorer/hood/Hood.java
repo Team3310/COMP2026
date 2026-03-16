@@ -8,7 +8,10 @@ import java.util.function.DoubleSupplier;
 
 /** The {@code Hood} controls the pivoting mechanism of the robot's launcher hood. */
 public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
+
   public MotorIO motorIO;
+  private int dashboardCounter = 0;
 
   public Hood(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -63,7 +66,9 @@ public class Hood extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Hood Position", getCurrentPosition());
+    if (++dashboardCounter % DASHBOARD_INTERVAL == 0) {
+      SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
+    }
     super.periodic();
   }
 }

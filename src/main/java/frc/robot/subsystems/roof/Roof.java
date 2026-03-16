@@ -13,7 +13,10 @@ import java.util.function.DoubleSupplier;
  * <p>The motor is connected directly to the roboRIO CAN bus (not the CANivore).
  */
 public class Roof extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
+  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
+
   public MotorIO motorIO;
+  private int dashboardCounter = 0;
 
   public Roof(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -68,7 +71,9 @@ public class Roof extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Roof Position", getCurrentPosition());
+    if (++dashboardCounter % DASHBOARD_INTERVAL == 0) {
+      SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
+    }
     super.periodic();
   }
 }

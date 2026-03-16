@@ -201,20 +201,6 @@ public class Robot extends LoggedRobot {
 
     track();
 
-    // logging
-    SmartDashboard.putBoolean("inPit", inPit);
-    SmartDashboard.putString("currentState", "" + currentState);
-    SmartDashboard.putString("overrideState", "" + overrideState);
-    SmartDashboard.putString("robotX", "" + robotX);
-    SmartDashboard.putString("robotY", "" + robotY);
-    SmartDashboard.putString("robotOrient", "" + robotOrient);
-    SmartDashboard.putString("currentZone", "" + currentZone);
-    SmartDashboard.putBoolean("activeHub", activeHub);
-    SmartDashboard.putBoolean("hubOverride", hubOverride);
-    SmartDashboard.putBoolean("duckOverrideActive", duckOverrideActive);
-    SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
-    SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
-    SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
     // Read speed/vision tuning overrides at ~5 Hz instead of 50 Hz to reduce NT traffic
     if (dashboardReadCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       Constants.AgitatorConstants.kFloorRollerSnowblowRPM =
@@ -295,6 +281,7 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putString("currentAlliance", "" + currentAlliance);
       SmartDashboard.putBoolean("activeHub", activeHub);
       SmartDashboard.putBoolean("hubOverride", hubOverride);
+      SmartDashboard.putBoolean("duckOverrideActive", duckOverrideActive);
       SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
       SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
       SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
