@@ -24,6 +24,7 @@ public class Paths {
   public static PathPlannerPath DepToSSTrench;
   public static PathPlannerPath OutToSSTrench;
   public static PathPlannerPath TrenchToDepo;
+  public static PathPlannerPath TrenchToOut;
 
   public static PathPlannerPath DepToOut;
   public static PathPlannerPath OutToDep;
@@ -33,6 +34,7 @@ public class Paths {
 
   public static PathPlannerPath DepSnowShoot;
   public static PathPlannerPath OutSnowShoot;
+
 
   public static boolean loaded;
 
@@ -58,6 +60,7 @@ public class Paths {
     HubToOut = loadPath("HubToOut");
     DepSnowShoot = loadPath("DepSnowShoot");
     OutSnowShoot = loadPath("OutSnowShoot");
+    TrenchToOut = loadPath("TrenchToOut");
   }
 
   /** Load a single path from a PathPlanner .path file. */
