@@ -2,10 +2,16 @@ package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Dep.DepCycle1;
+import frc.robot.Auton.Dep.DepToDep;
+import frc.robot.Auton.Dep.DepToOut;
 import frc.robot.Auton.Dep.DepToSSTrench1;
 import frc.robot.Auton.Out.OutToSSTrench1;
 import frc.robot.Auton.Out.OutCycle1;
+import frc.robot.Auton.Out.OutToDep;
+import frc.robot.Auton.Out.OutToOut;
 import frc.robot.Auton.Hub.HubCycle1;
+import frc.robot.Auton.Hub.HubToDep;
+import frc.robot.Auton.Hub.HubToOut;
 import frc.robot.Auton.Forward2m;
 import frc.robot.Auton.OneAuton;
 import frc.robot.RobotContainer;
@@ -20,7 +26,13 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         .addOption(AutonomousMode.DEPSSTRENCH1)
         .addOption(AutonomousMode.OUT_CYCLE1)
         .addOption(AutonomousMode.OUTSSTRENCH1)
-        .addOption(AutonomousMode.HUB_CYCLE1);
+        .addOption(AutonomousMode.HUB_CYCLE1)
+        .addOption(AutonomousMode.DEP_TO_DEP)
+        .addOption(AutonomousMode.DEP_TO_OUT)
+        .addOption(AutonomousMode.OUT_TO_DEP)
+        .addOption(AutonomousMode.OUT_TO_OUT)
+        .addOption(AutonomousMode.HUB_TO_OUT)
+        .addOption(AutonomousMode.HUB_TO_DEP);
   }
 
   public AutonCommandBase getCommand() {
@@ -39,7 +51,13 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     DEPSSTRENCH1("depo to ss trench1"),
     OUT_CYCLE1("out cycle"),
     OUTSSTRENCH1("out to ss trench1"),
-    HUB_CYCLE1("hub cycle");
+    HUB_CYCLE1("hub cycle"),
+    DEP_TO_DEP("depo to depo"),
+    DEP_TO_OUT("depo to out"),
+    OUT_TO_DEP("out to depo"),
+    OUT_TO_OUT("out to out"),
+    HUB_TO_OUT("hub to out"),
+    HUB_TO_DEP("hub to depo");
 
     private String name = "";
 
@@ -66,6 +84,18 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new OutToSSTrench1(RobotContainer.getInstance());
         case HUB_CYCLE1:
           return new HubCycle1(RobotContainer.getInstance());
+        case DEP_TO_DEP:
+          return new DepToDep(RobotContainer.getInstance());
+        case DEP_TO_OUT:
+          return new DepToOut(RobotContainer.getInstance());
+        case OUT_TO_DEP:
+          return new OutToDep(RobotContainer.getInstance());
+        case OUT_TO_OUT:
+          return new OutToOut(RobotContainer.getInstance());
+        case HUB_TO_OUT:
+          return new HubToOut(RobotContainer.getInstance());
+        case HUB_TO_DEP:
+          return new HubToDep(RobotContainer.getInstance());
         default:
           return new OneAuton(RobotContainer.getInstance());
       }
