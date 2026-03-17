@@ -5,15 +5,15 @@ import frc.robot.Auton.Dep.DepCycle1;
 import frc.robot.Auton.Dep.DepToDep;
 import frc.robot.Auton.Dep.DepToOut;
 import frc.robot.Auton.Dep.DepToSSTrench1;
-import frc.robot.Auton.Out.OutToSSTrench1;
-import frc.robot.Auton.Out.OutCycle1;
-import frc.robot.Auton.Out.OutToDep;
-import frc.robot.Auton.Out.OutToOut;
+import frc.robot.Auton.Forward2m;
 import frc.robot.Auton.Hub.HubCycle1;
 import frc.robot.Auton.Hub.HubToDep;
 import frc.robot.Auton.Hub.HubToOut;
-import frc.robot.Auton.Forward2m;
 import frc.robot.Auton.OneAuton;
+import frc.robot.Auton.Out.OutCycle1;
+import frc.robot.Auton.Out.OutToDep;
+import frc.robot.Auton.Out.OutToOut;
+import frc.robot.Auton.Out.OutToSSTrench1;
 import frc.robot.RobotContainer;
 
 public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousMode> {
@@ -79,7 +79,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         case DEPSSTRENCH1:
           return new DepToSSTrench1(RobotContainer.getInstance());
         case OUT_CYCLE1:
-        return new OutCycle1(RobotContainer.getInstance());
+          return new OutCycle1(RobotContainer.getInstance());
         case OUTSSTRENCH1:
           return new OutToSSTrench1(RobotContainer.getInstance());
         case HUB_CYCLE1:

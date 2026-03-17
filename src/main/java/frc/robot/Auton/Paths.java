@@ -35,7 +35,6 @@ public class Paths {
   public static PathPlannerPath DepSnowShoot;
   public static PathPlannerPath OutSnowShoot;
 
-
   public static boolean loaded;
 
   /**

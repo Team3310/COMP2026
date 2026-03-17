@@ -760,10 +760,10 @@ public final class Constants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
     public static final double kIntakePivotDeployDegrees = 145.0;
+    public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
     public static final double kIntakeDutyCycleExhaust = -0.75;
-
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
@@ -864,7 +864,7 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kFloorRollerSnowblowRPM = 2000.0; // RPM at output (increased for testing)
+    public static double kFloorRollerSnowblowRPM = 4000.0; // RPM at output (increased for testing)
     public static double kFloorRollerCollectRPM =
         500.0; // RPM while intaking (Decreased for Collect mode)
     public static double kFloorRollerReverseRPM =
@@ -877,7 +877,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting

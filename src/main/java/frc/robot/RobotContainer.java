@@ -502,13 +502,14 @@ public class RobotContainer {
     return Robot.currentAlliance == Alliance.Red ? Util.flipRedBlue(targetAngle) : targetAngle;
   }
 
-  private Command buildDuckOverrideCommand() {
+  private Command buildCrossOverrideCommand() {
     return Commands.parallel(
             hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
-            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees))
+            hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodMinDegrees),
+            intakePivot.setDegreesCommand(Constants.IntakeConstants.kHeadButtDegrees))
         .alongWith(
             Commands.startEnd(
-                () -> Robot.duckOverrideActive = true, () -> Robot.duckOverrideActive = false));
+                () -> Robot.crossOverrideActive = true, () -> Robot.crossOverrideActive = false));
   }
 
   private Command buildOverrideStateCommand(Robot.OverrideState overrideState) {
@@ -589,7 +590,7 @@ public class RobotContainer {
     // Flywheels off when:
     //  - Pit mode and pitFlywheelsEnabled is false
     //  - Normal mode and normalFlywheelsEnabled is false
-    //  - DEFENCEIN (hood at min / "duck" - do not shoot)]
+    //  - DEFENCEIN (hood at min / "cross" - do not shoot)]
 
     // Hood defaults: continuously hold the last-commanded position via motion
     // magic.  Without this the base-class neutral command takes over as soon as a
@@ -682,7 +683,7 @@ public class RobotContainer {
     // right bumper = jam-clear outtake override while held in both modes
     driver.rightBumper().whileTrue(buildOperatorJamClearOverrideCommand());
 
-    // left bumper = hood duck override while held in both modes
+    // left bumper = hood cross override while held in both modes
 
     // right trigger = intake while held in both modes
     driver.rightTrigger().whileTrue(intakeRollers.intakeCommand());
@@ -825,7 +826,7 @@ public class RobotContainer {
         .whileTrue(buildOperatorJamClearOverrideCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
-      Trigger duckOverrideTrigger = operator.povDown().or(driver.leftBumper());
+      Trigger crossOverrideTrigger = operator.povDown().or(driver.leftBumper());
 
       // D-Pad Up/Down: same in normal and mirrored pit. Legacy pit keeps old preset behavior.
       operator
@@ -839,7 +840,7 @@ public class RobotContainer {
                       hoodLeft.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees),
                       hoodRight.setDegreesCommand(() -> Constants.ScorerConstants.kHoodMaxDegrees)),
                   this::isUsingLegacyPitOperatorMode));
-      duckOverrideTrigger.whileTrue(buildDuckOverrideCommand());
+      crossOverrideTrigger.whileTrue(buildCrossOverrideCommand());
       // Legacy pit: D-Pad Right = hoods to 25 deg, D-Pad Left = hoods to 20 deg
       operator
           .povRight()
