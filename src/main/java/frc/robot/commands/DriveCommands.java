@@ -36,6 +36,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double LOOP_PERIOD_SECONDS = 0.02;
+  private static final double VELOCITY_EPSILON = 1e-9;
 
   private DriveCommands() {}
 
@@ -82,22 +83,49 @@ public class DriveCommands {
         : Constants.DriveCommandConstants.kNormalMaxAngularAccelRadPerSec2;
   }
 
+  private static double getActiveMaxLinearDecelMetersPerSec2() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearDecelMetersPerSec2
+        : Constants.DriveCommandConstants.kNormalMaxLinearDecelMetersPerSec2;
+  }
+
+  private static double getActiveMaxAngularDecelRadPerSec2() {
+    return isHomeScoringDriveModeActive()
+        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularDecelRadPerSec2
+        : Constants.DriveCommandConstants.kNormalMaxAngularDecelRadPerSec2;
+  }
+
   private static Translation2d limitTranslationVelocity(
       Translation2d currentVelocity,
       Translation2d targetVelocity,
-      double maxLinearAccelMetersPerSec2) {
-    double maxVelocityDelta = maxLinearAccelMetersPerSec2 * LOOP_PERIOD_SECONDS;
+      double maxLinearAccelMetersPerSec2,
+      double maxLinearDecelMetersPerSec2) {
     Translation2d deltaVelocity = targetVelocity.minus(currentVelocity);
     double deltaMagnitude = deltaVelocity.getNorm();
-    if (deltaMagnitude > maxVelocityDelta && deltaMagnitude > 1e-9) {
+    boolean isBraking =
+        currentVelocity.getNorm() > VELOCITY_EPSILON
+            && deltaVelocity.getX() * currentVelocity.getX()
+                    + deltaVelocity.getY() * currentVelocity.getY()
+                < 0.0;
+    double maxVelocityDelta =
+        (isBraking ? maxLinearDecelMetersPerSec2 : maxLinearAccelMetersPerSec2)
+            * LOOP_PERIOD_SECONDS;
+    if (deltaMagnitude > maxVelocityDelta && deltaMagnitude > VELOCITY_EPSILON) {
       return currentVelocity.plus(deltaVelocity.times(maxVelocityDelta / deltaMagnitude));
     }
     return targetVelocity;
   }
 
   private static double limitAngularVelocity(
-      double currentOmegaRadPerSec, double targetOmegaRadPerSec, double maxAngularAccelRadPerSec2) {
-    double maxOmegaDelta = maxAngularAccelRadPerSec2 * LOOP_PERIOD_SECONDS;
+      double currentOmegaRadPerSec,
+      double targetOmegaRadPerSec,
+      double maxAngularAccelRadPerSec2,
+      double maxAngularDecelRadPerSec2) {
+    boolean isBraking =
+        Math.abs(currentOmegaRadPerSec) > VELOCITY_EPSILON
+            && (targetOmegaRadPerSec - currentOmegaRadPerSec) * currentOmegaRadPerSec < 0.0;
+    double maxOmegaDelta =
+        (isBraking ? maxAngularDecelRadPerSec2 : maxAngularAccelRadPerSec2) * LOOP_PERIOD_SECONDS;
     return currentOmegaRadPerSec
         + MathUtil.clamp(
             targetOmegaRadPerSec - currentOmegaRadPerSec, -maxOmegaDelta, maxOmegaDelta);
@@ -118,7 +146,8 @@ public class DriveCommands {
         limitTranslationVelocity(
             currentTranslationVelocity,
             targetTranslationVelocity,
-            getActiveMaxLinearAccelMetersPerSec2());
+            getActiveMaxLinearAccelMetersPerSec2(),
+            getActiveMaxLinearDecelMetersPerSec2());
 
     double limitedOmegaRadPerSec =
         limitAngularVelocity(
@@ -127,7 +156,8 @@ public class DriveCommands {
                 targetOmegaRadPerSec,
                 -getActiveMaxAngularSpeedRadPerSec(),
                 getActiveMaxAngularSpeedRadPerSec()),
-            getActiveMaxAngularAccelRadPerSec2());
+            getActiveMaxAngularAccelRadPerSec2(),
+            getActiveMaxAngularDecelRadPerSec2());
 
     previousCommandedVxMetersPerSecond[0] = limitedTranslationVelocity.getX();
     previousCommandedVyMetersPerSecond[0] = limitedTranslationVelocity.getY();
