@@ -9,6 +9,7 @@ import frc.lib.limelight.LimelightHelpers;
 import frc.lib.limelight.LimelightHelpers.PoseEstimate;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -118,6 +119,11 @@ public class Vision extends SubsystemBase {
   // -----------------------------------------------------------------------
   @Override
   public void periodic() {
+    // Skip all vision processing while in pit mode.
+    if (Robot.inPit) {
+      return;
+    }
+
     // Rate-limit logging — increment counter and decide if this is a log cycle.
     // All processing and injection still runs every cycle; only Logger output is gated.
     logCounter++;
