@@ -424,15 +424,19 @@ public final class Constants {
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 6.0;
     public static double kNormalMaxAngularSpeedRadPerSec = 10.0;
-    public static double kNormalMaxLinearAccelMetersPerSec2 = 4.0;
-    public static double kNormalMaxAngularAccelRadPerSec2 = 14.0;
+    public static double kNormalMaxLinearAccelMetersPerSec2 = 10.0;
+    public static double kNormalMaxAngularAccelRadPerSec2 = 24.0;
+    public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
+    public static double kNormalMaxAngularDecelRadPerSec2 = 45.0;
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
     public static double kHomeScoringMaxLinearSpeedMps = 2.8;
     public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
-    public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 1.75;
+    public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 4.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
+    public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
+    public static double kHomeScoringMaxAngularDecelRadPerSec2 = 45.0;
   }
   // #endregion
 
