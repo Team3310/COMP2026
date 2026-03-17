@@ -268,6 +268,12 @@ public class Robot extends LoggedRobot {
               "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
       Constants.ScorerConstants.kTurretOffsetDegrees =
           SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
+      Constants.ScorerConstants.kLeftTurretOffset =
+          SmartDashboard.getNumber(
+              "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
+      Constants.ScorerConstants.kRightTurretOffset =
+          SmartDashboard.getNumber(
+              "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
     }
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
@@ -521,7 +527,18 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    if (shouldTrack(currentState) && !crossOverrideActive) {
+    if (inPit && !crossOverrideActive) {
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getHoodLeft()
+                  .setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getHoodRight()
+                  .setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees));
+    } else if (shouldTrack(currentState) && !crossOverrideActive) {
       CommandScheduler.getInstance()
           .schedule(
               robotContainer
@@ -548,16 +565,18 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
     } else if (currentState == BotState.SNOWBLOW) {
+      double leftTargetRpm =
+          inPit
+              ? Constants.ScorerConstants.kShootRPM
+              : robotContainer.getTurretAimManager().getLeftFeederRPM();
+      double rightTargetRpm =
+          inPit
+              ? Constants.ScorerConstants.kShootRPM
+              : robotContainer.getTurretAimManager().getRightFeederRPM();
       CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelLeft()
-                  .setRPMCommand(() -> robotContainer.getTurretAimManager().getLeftFeederRPM()));
+          .schedule(robotContainer.getFlywheelLeft().setRPMCommand(leftTargetRpm));
       CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getFlywheelRight()
-                  .setRPMCommand(() -> robotContainer.getTurretAimManager().getRightFeederRPM()));
+          .schedule(robotContainer.getFlywheelRight().setRPMCommand(rightTargetRpm));
     }
   }
 

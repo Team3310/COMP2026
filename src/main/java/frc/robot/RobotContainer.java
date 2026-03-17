@@ -452,6 +452,8 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     SmartDashboard.putNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
+    SmartDashboard.putNumber("left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
+    SmartDashboard.putNumber("right turret offset", Constants.ScorerConstants.kRightTurretOffset);
 
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
@@ -547,23 +549,30 @@ public class RobotContainer {
   }
 
   private Command buildShootWhileHeldCommand() {
+    java.util.function.DoubleSupplier leftTargetRpm =
+        () ->
+            Robot.inPit ? Constants.ScorerConstants.kShootRPM : turretAimManager.getLeftFeederRPM();
+    java.util.function.DoubleSupplier rightTargetRpm =
+        () ->
+            Robot.inPit
+                ? Constants.ScorerConstants.kShootRPM
+                : turretAimManager.getRightFeederRPM();
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
-                flywheelLeft.setRPMCommand(() -> turretAimManager.getLeftFeederRPM()),
-                flywheelRight.setRPMCommand(() -> turretAimManager.getRightFeederRPM()))
+                flywheelLeft.setRPMCommand(leftTargetRpm),
+                flywheelRight.setRPMCommand(rightTargetRpm))
             .alongWith(
                 Commands.waitUntil(
                         () -> {
                           double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
                           double leftErr =
                               Math.abs(
-                                  flywheelLeft.getCurrentVelocity()
-                                      - turretAimManager.getLeftFeederRPM());
+                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
                           double rightErr =
                               Math.abs(
                                   flywheelRight.getCurrentVelocity()
-                                      - turretAimManager.getRightFeederRPM());
+                                      - rightTargetRpm.getAsDouble());
                           return leftErr < tolRPM && rightErr < tolRPM;
                         })
                     .andThen(
