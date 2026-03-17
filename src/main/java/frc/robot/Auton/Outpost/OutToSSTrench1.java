@@ -1,4 +1,4 @@
-package frc.robot.Auton.Out;
+package frc.robot.Auton.Outpost;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Auton.AutonCommandBase;

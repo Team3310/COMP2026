@@ -10,10 +10,10 @@ import frc.robot.Auton.Hub.HubCycle1;
 import frc.robot.Auton.Hub.HubToDep;
 import frc.robot.Auton.Hub.HubToOut;
 import frc.robot.Auton.OneAuton;
-import frc.robot.Auton.Out.OutCycle1;
-import frc.robot.Auton.Out.OutToDep;
-import frc.robot.Auton.Out.OutToOut;
-import frc.robot.Auton.Out.OutToSSTrench1;
+import frc.robot.Auton.Outpost.OutCycle1;
+import frc.robot.Auton.Outpost.OutToDep;
+import frc.robot.Auton.Outpost.OutToOut;
+import frc.robot.Auton.Outpost.OutToSSTrench1;
 import frc.robot.RobotContainer;
 
 public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousMode> {
