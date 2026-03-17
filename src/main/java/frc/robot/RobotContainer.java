@@ -440,6 +440,8 @@ public class RobotContainer {
     SmartDashboard.putNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
     SmartDashboard.putNumber(
         "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+    SmartDashboard.putNumber(
+        "SpeedTune/ReleaseDelaySeconds", Constants.ScorerConstants.kReleaseDelaySeconds);
 
     // Vision filter-strength tuning — multipliers for the Limelight std devs
     // fed into the WPILib pose estimator.  >1.0 = smoother, <1.0 = snappier.

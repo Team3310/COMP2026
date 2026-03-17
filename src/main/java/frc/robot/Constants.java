@@ -488,6 +488,10 @@ public final class Constants {
     // Pose2d.exp(Twist2d) before any TOF-based prediction.  Typical: 0.02–0.05s.
     public static double kPhaseDelaySeconds = 0.03;
 
+    // Time from issuing the shot command until the ball actually leaves the shooter.
+    // This is distinct from the ball's time-of-flight after release.
+    public static double kReleaseDelaySeconds = 0.12;
+
     // Maximum iterations for TOF ↔ distance convergence loop.
     // The time-of-flight depends on distance, which changes with the lookahead
     // offset, which depends on TOF — a circular dependency solved by iteration.
@@ -597,7 +601,7 @@ public final class Constants {
 
     // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
     // NOTE: non-final so SmartDashboard can override at runtime.
-    public static double kTofSeconds = 0.0;
+    public static double kTofSeconds = 1.71;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();

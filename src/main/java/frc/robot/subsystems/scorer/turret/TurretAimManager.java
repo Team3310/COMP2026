@@ -85,11 +85,21 @@ public class TurretAimManager extends SubsystemBase {
                 robotSpeeds.omegaRadiansPerSecond * phaseDelay));
 
     // ================================================================
-    // Step 2: Initial aim calculation (at phase-corrected pose, no TOF lead yet)
+    // Step 2: Predict the pose at ball release time
     // ================================================================
+    // Phase delay compensates sensing/estimation latency. Release delay covers
+    // the time between deciding to fire and the ball actually leaving the robot.
+    double releaseDelay = ScorerConstants.kReleaseDelaySeconds;
+    Pose2d releasePose =
+        phaseCorrectedPose.exp(
+            new Twist2d(
+                robotSpeeds.vxMetersPerSecond * releaseDelay,
+                robotSpeeds.vyMetersPerSecond * releaseDelay,
+                robotSpeeds.omegaRadiansPerSecond * releaseDelay));
+
     // We need this first pass to determine (a) the target location and (b)
     // whether we're in hub mode (home=true) so we know if TOF lead applies.
-    TurretAimCalculator.AimResult initialResult = TurretAimCalculator.calculate(phaseCorrectedPose);
+    TurretAimCalculator.AimResult initialResult = TurretAimCalculator.calculate(releasePose);
 
     // ================================================================
     // Step 3: Iterative TOF-based aim-ahead convergence
@@ -104,9 +114,9 @@ public class TurretAimManager extends SubsystemBase {
     // Only hub shots use TOF lead.  Pass/lob shots aim at a large landing zone,
     // so lead is unnecessary (TOF returns 0 for non-home zones).
 
-    // Compute field-relative velocity from robot-relative ChassisSpeeds
-    double cosH = phaseCorrectedPose.getRotation().getCos();
-    double sinH = phaseCorrectedPose.getRotation().getSin();
+    // Compute field-relative velocity at the release heading.
+    double cosH = releasePose.getRotation().getCos();
+    double sinH = releasePose.getRotation().getSin();
     double fieldVx = robotSpeeds.vxMetersPerSecond * cosH - robotSpeeds.vyMetersPerSecond * sinH;
     double fieldVy = robotSpeeds.vxMetersPerSecond * sinH + robotSpeeds.vyMetersPerSecond * cosH;
 
@@ -120,9 +130,9 @@ public class TurretAimManager extends SubsystemBase {
                 + Constants.ScorerConstants.kRightShooterYOffsetMeters)
             / 2.0;
 
-    // Shooter position in field space (from phase-corrected pose)
+    // Shooter position in field space at release.
     Translation2d shooterField =
-        TurretAimCalculator.robotToField(phaseCorrectedPose, midShooterX, midShooterY);
+        TurretAimCalculator.robotToField(releasePose, midShooterX, midShooterY);
     Translation2d target = initialResult.target;
     boolean home = initialResult.home;
 
@@ -144,25 +154,24 @@ public class TurretAimManager extends SubsystemBase {
     }
 
     // ================================================================
-    // Step 4: Final aim calculation at the predicted pose
+    // Step 4: Final ballistic compensation
     // ================================================================
-    // Build the predicted robot pose by offsetting position by velocity × TOF
-    // and heading by omega × TOF from the phase-corrected pose.
-    Pose2d predictedPose;
+    // Translate the release pose by field velocity × TOF so the aim accounts
+    // for the robot's translational carry during flight. Keep the release
+    // heading — continued robot rotation after launch does not rotate the ball.
+    Pose2d ballisticPose;
     if (convergedTof > 0.0) {
-      predictedPose =
+      ballisticPose =
           new Pose2d(
-              phaseCorrectedPose.getX() + fieldVx * convergedTof,
-              phaseCorrectedPose.getY() + fieldVy * convergedTof,
-              phaseCorrectedPose
-                  .getRotation()
-                  .plus(Rotation2d.fromRadians(robotSpeeds.omegaRadiansPerSecond * convergedTof)));
+              releasePose.getX() + fieldVx * convergedTof,
+              releasePose.getY() + fieldVy * convergedTof,
+              releasePose.getRotation());
     } else {
-      predictedPose = phaseCorrectedPose;
+      ballisticPose = releasePose;
     }
 
-    // Run the aim calculator on the PREDICTED pose
-    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(predictedPose);
+    // Run the aim calculator on the ballistically compensated pose.
+    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(ballisticPose);
     latestResult = result;
 
     // ---- Simulated turret inertia ----
@@ -243,8 +252,10 @@ public class TurretAimManager extends SubsystemBase {
       // ---- TOF aim-ahead logging ----
       Logger.recordOutput("TurretAim/ConvergedTofSeconds", convergedTof);
       Logger.recordOutput("TurretAim/PhaseDelaySeconds", phaseDelay);
+      Logger.recordOutput("TurretAim/ReleaseDelaySeconds", releaseDelay);
       Logger.recordOutput("TurretAim/PhaseCorrectedPose", phaseCorrectedPose);
-      Logger.recordOutput("TurretAim/PredictedPose", predictedPose);
+      Logger.recordOutput("TurretAim/ReleasePose", releasePose);
+      Logger.recordOutput("TurretAim/BallisticPose", ballisticPose);
       Logger.recordOutput("TurretAim/FieldVelocityMps", Math.hypot(fieldVx, fieldVy));
       Logger.recordOutput("TurretAim/Home", home);
 

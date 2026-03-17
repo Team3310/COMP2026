@@ -240,6 +240,9 @@ public class Robot extends LoggedRobot {
       Constants.ScorerConstants.kPhaseDelaySeconds =
           SmartDashboard.getNumber(
               "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
+      Constants.ScorerConstants.kReleaseDelaySeconds =
+          SmartDashboard.getNumber(
+              "SpeedTune/ReleaseDelaySeconds", Constants.ScorerConstants.kReleaseDelaySeconds);
       Constants.ScorerConstants.kTurretDeadbandDeg =
           SmartDashboard.getNumber(
               "SpeedTune/TurretDeadbandDeg", Constants.ScorerConstants.kTurretDeadbandDeg);
