@@ -437,7 +437,6 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
     SmartDashboard.putNumber("SpeedTune/HoodMaxDegrees", Constants.ScorerConstants.kHoodMaxDegrees);
-    SmartDashboard.putNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
     SmartDashboard.putNumber(
         "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
     SmartDashboard.putNumber(
@@ -553,12 +552,14 @@ public class RobotContainer {
   private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm =
         () ->
-            Robot.inPit ? Constants.ScorerConstants.kShootRPM : turretAimManager.getLeftFeederRPM();
+            Robot.inPit
+                ? Constants.ScorerConstants.kShootRPM
+                : turretAimManager.getLeftFlywheelRPM();
     java.util.function.DoubleSupplier rightTargetRpm =
         () ->
             Robot.inPit
                 ? Constants.ScorerConstants.kShootRPM
-                : turretAimManager.getRightFeederRPM();
+                : turretAimManager.getRightFlywheelRPM();
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(

@@ -39,10 +39,8 @@ import java.util.Comparator;
  * </ul>
  */
 public final class TurretAimCalculator {
-  private static final double[][] SORTED_HUB_TABLE =
-      sortTableByDistance(Constants.ScorerConstants.kHubTable);
-  private static final double[][] SORTED_PASS_TABLE =
-      sortTableByDistance(Constants.ScorerConstants.kPassTable);
+  private static final double[][] SORTED_SHOOT_TABLE =
+      sortTableByDistance(Constants.ScorerConstants.kShootTable);
 
   /** Immutable result of a single aim calculation for both scorers. */
   public static class AimResult {
@@ -50,14 +48,14 @@ public final class TurretAimCalculator {
     public final double leftTurretDeg;
     /** Left hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double leftHoodDeg;
-    /** Left vertical-feeder speed in RPM (0 = off). */
-    public final double leftFeederRPM;
+    /** Left flywheel speed in RPM. */
+    public final double leftFlywheelRPM;
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
     /** Right hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double rightHoodDeg;
-    /** Right vertical-feeder speed in RPM (0 = off). */
-    public final double rightFeederRPM;
+    /** Right flywheel speed in RPM. */
+    public final double rightFlywheelRPM;
 
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
@@ -68,18 +66,18 @@ public final class TurretAimCalculator {
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
-        double leftFeederRPM,
+        double leftFlywheelRPM,
         double rightTurretDeg,
         double rightHoodDeg,
-        double rightFeederRPM,
+        double rightFlywheelRPM,
         Translation2d target,
         boolean home) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
-      this.leftFeederRPM = leftFeederRPM;
+      this.leftFlywheelRPM = leftFlywheelRPM;
       this.rightTurretDeg = rightTurretDeg;
       this.rightHoodDeg = rightHoodDeg;
-      this.rightFeederRPM = rightFeederRPM;
+      this.rightFlywheelRPM = rightFlywheelRPM;
       this.target = target;
       this.home = home;
     }
@@ -175,20 +173,17 @@ public final class TurretAimCalculator {
   // ====================================================================
 
   /**
-   * Estimate the ball's time-of-flight in seconds for a hub shot at the given distance.
+   * Estimate the ball's time-of-flight in seconds for a shot at the given distance.
    *
-   * <p>Interpolates from the TOF column (column 3) of {@link Constants.ScorerConstants#kHubTable}.
-   * Returns 0 if not in hub-scoring mode (pass/lob shots don't use aim-ahead lead).
+   * <p>Interpolates from the TOF column (column 3) of {@link
+   * Constants.ScorerConstants#kShootTable}.
    *
    * @param distance Horizontal distance in meters from shooter to target.
    * @param home true when in own-alliance zone (hub scoring); false for pass mode.
-   * @return Estimated flight time in seconds, or 0 if not in hub mode.
+   * @return Estimated flight time in seconds.
    */
   public static double estimateTimeOfFlight(double distance, boolean home) {
-    if (!home) {
-      return 0.0; // No lead for pass/lob shots
-    }
-    return Constants.ScorerConstants.kTofSeconds;
+    return interpolateTable(SORTED_SHOOT_TABLE, distance, 3);
   }
 
   /**
@@ -263,15 +258,13 @@ public final class TurretAimCalculator {
     // Remember for next cycle
     lastTurretDeg = turretDeg;
 
-    // --- Vertical (hood) angle and feeder speed via lookup table ---
+    // --- Vertical (hood) angle and flywheel speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
     double hoodDeg;
-    double feederRPM;
+    double flywheelRPM;
 
-    double[][] table = home ? SORTED_HUB_TABLE : SORTED_PASS_TABLE;
-
-    hoodDeg = interpolateTable(table, horizontalDist, 1); // column 1 = hood
-    feederRPM = interpolateTable(table, horizontalDist, 2); // column 2 = feeder
+    hoodDeg = interpolateTable(SORTED_SHOOT_TABLE, horizontalDist, 1); // column 1 = hood
+    flywheelRPM = interpolateTable(SORTED_SHOOT_TABLE, horizontalDist, 2); // column 2 = flywheel
 
     // Clamp hood to physical limits
     hoodDeg =
@@ -280,7 +273,7 @@ public final class TurretAimCalculator {
             Constants.ScorerConstants.kHoodMinDegrees,
             Constants.ScorerConstants.kHoodMaxDegrees);
 
-    return new double[] {turretDeg, hoodDeg, feederRPM};
+    return new double[] {turretDeg, hoodDeg, flywheelRPM};
   }
 
   /**
@@ -292,8 +285,8 @@ public final class TurretAimCalculator {
    *
    * @param table 2-D array where each row is {distance, ...values...}.
    * @param distance The horizontal distance to look up.
-   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 = feeder,
-   *     3 = TOF).
+   * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 =
+   *     flywheel, 3 = TOF).
    * @return The interpolated value.
    */
   public static double interpolateTable(double[][] table, double distance, int valueColumn) {

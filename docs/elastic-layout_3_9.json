@@ -575,14 +575,14 @@
             }
           },
           {
-            "title": "LeftFeederRPM",
+            "title": "LeftFlywheelRPM",
             "x": 768.0,
             "y": 512.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/TurretAim/LeftFeederRPM",
+              "topic": "/AdvantageKit/TurretAim/LeftFlywheelRPM",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -617,14 +617,14 @@
             }
           },
           {
-            "title": "RightFeederRPM",
+            "title": "RightFlywheelRPM",
             "x": 768.0,
             "y": 640.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/TurretAim/RightFeederRPM",
+              "topic": "/AdvantageKit/TurretAim/RightFlywheelRPM",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -931,14 +931,14 @@
             }
           },
           {
-            "title": "LeftFeederRPM",
+            "title": "LeftFlywheelRPM",
             "x": 1664.0,
             "y": 768.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/TurretAim/LeftFeederRPM",
+              "topic": "/AdvantageKit/TurretAim/LeftFlywheelRPM",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -973,14 +973,14 @@
             }
           },
           {
-            "title": "RightFeederRPM",
+            "title": "RightFlywheelRPM",
             "x": 1664.0,
             "y": 640.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/TurretAim/RightFeederRPM",
+              "topic": "/AdvantageKit/TurretAim/RightFlywheelRPM",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false

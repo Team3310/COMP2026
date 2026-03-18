@@ -530,12 +530,10 @@ public final class Constants {
     //
     // Column 0: distance (meters) — horizontal distance from shooter to target
     // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — flywheel speed
-    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
-    //           Used for aim-ahead: the turret leads the target by velocity × TOF.
-    // Column 4: vertical feeder speed (RPM)
+    // Column 2: flywheel speed (RPM)
+    // Column 3: time of flight (seconds)
     // Table order no longer matters. TurretAimCalculator sorts a copied version at runtime.
-    public static final double[][] kHubTable = {
+    public static final double[][] kShootTable = {
       // Prior mixed-angle data kept for reference:
       // {1.2, 5.05, 2600.0, 0.0, 2000.0},
       // {1.4, 5.05, 2700.0, 0.0, 2000.0},
@@ -547,92 +545,61 @@ public final class Constants {
       // <= 2.5 m: hood fixed at 5 deg
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
-      // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {1.219, 4.5, 3833, 0.0, 2000.0},
-      {1.524, 5.6, 3839, 0.0, 2000.0},
-      {1.829, 6.7, 3847.0, 0.0, 2000.0},
-      {2.134, 7.8, 3857.0, 0.0, 2000.0},
-      {2.438, 8.9, 3867.0, 0.0, 2000.0},
-      {2.743, 10.0, 3879, 0.0, 2000.0},
-      {3.048, 11.0, 3893, 0.0, 2000.0},
-      {3.353, 12.1, 3908.0, 0.0, 2000.0},
-      {3.658, 13.2, 3924.0, 0.0, 2000.0},
-      {3.962, 14.2, 3942, 0.0, 2000.0},
-      {4.267, 15.3, 3961, 0.0, 2000.0},
-      {4.572, 16.3, 3981.0, 0.0, 3000.0},
-      {4.877, 17.3, 4003.0, 0.0, 2000.0},
-      {5.182, 18.3, 4026.0, 0.0, 2000.0},
-      {5.486, 19.3, 4050.0, 0.0, 2000.0},
-      {5.791, 20.3, 4075.0, 0.0, 2000.0},
-      {6.096, 21.3, 4102.0, 0.0, 2000.0},
-      {6.401, 22.3, 4129.0, 0.0, 2000.0},
-      {6.706, 23.2, 4158.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
-      {7.010, 24.2, 4188.0, 0.0, 2000.0},
-      {7.315, 25.1, 4219.0, 0.0, 3000.0},
-      {7.620, 26.0, 4251.0, 0.0, 2000.0},
-      {7.925, 26.9, 4284.0, 0.0, 2000.0},
-      {8.230, 27.8, 4319.0, 0.0, 2000.0},
-      {8.534, 28.6, 4354.0, 0.0, 2000.0},
-      {8.839, 29.5, 4390.0, 0.0, 2000.0},
-      {9.144, 30.3, 4427.0, 0.0, 2000.0},
-      {9.449, 31.2, 4465.0, 0.0, 2000.0},
-      {9.754, 32.0, 4504.0, 0.0, 2000.0},
-      {10.058, 32.8, 4544.0, 0.0, 2000.0},
-      {10.363, 33.6, 4585.0, 0.0, 2000.0},
-      {10.668, 34.3, 4627.0, 0.0, 2000.0},
-      {10.973, 35.0, 4671.0, 0.0, 2000.0},
-      {11.278, 35.0, 4730.0, 0.0, 2000.0},
-      {11.582, 35.0, 4788.0, 0.0, 2000.0},
-      {11.887, 35.0, 4845.0, 0.0, 2000.0},
-      {12.192, 35.0, 4902.0, 0.0, 2000.0},
-      {12.497, 35.0, 4957.0, 0.0, 2000.0},
-      {12.802, 35.0, 5013.0, 0.0, 2000.0},
-      {13.106, 35.0, 5068.0, 0.0, 2000.0},
-      {13.411, 35.0, 5122.0, 0.0, 2000.0},
-      {13.716, 35.0, 5175.0, 0.0, 2000.0},
-      {14.021, 35.0, 5228.0, 0.0, 2000.0},
-      {14.326, 35.0, 5281.0, 0.0, 2000.0},
-      {14.630, 35.0, 5333.0, 0.0, 2000.0},
-      {14.935, 35.0, 5385.0, 0.0, 2000.0},
-      {15.240, 35.0, 5436.0, 0.0, 2000.0},
-      {15.545, 35.0, 5486.0, 0.0, 2000.0},
-      {15.850, 35.0, 5536.0, 0.0, 2000.0},
-      {16.154, 35.0, 5586.0, 0.0, 2000.0},
-    };
-
-    // Landing (pass/lob) — lob to a landing zone on our side of the field.
-    // Stays closer to vertical (lower hood values) for hang time / height.
-    //
-    // Column 0: distance (meters) — horizontal distance from shooter to target
-    // Column 1: hood angle (degrees from vertical) — 10°=steep arc, 35°=flat shot
-    // Column 2: feeder speed (RPM) — flywheel speed
-    // Column 3: time of flight (seconds) — ESTIMATE, needs real measurement
-    public static final double[][] kPassTable = {
-      // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est) }
-      {3.517, 12.0, 3700.0, 0.55},
-      {3.56, 9.5, 3600.0, 0.56},
-      {4.06, 10.2, 3500.0, 0.60},
-      {4.46, 12.3, 3600.0, 0.63},
-      {4.69, 9.8, 4000.0, 0.65},
-      {6.10, 12.0, 4200.0, 0.80},
-      // {6.29, 12.0, 4000.0, 0.82}, // RPM drops vs 6.10 m row — needs retest
-      {6.30, 12.0, 4200.0, 0.82},
-      // {6.30, 12.0, 4900.0, 0.82}, // duplicate distance, RPM jumps 700 — needs retest
-      {6.79, 15.0, 4600.0, 0.86},
-      {6.80, 12.0, 4900.0, 0.86},
-      {8.12, 20.0, 5200.0, 1.00},
-      // {8.60, 19.0, 4900.0, 1.02}, // hood & RPM both lower than 8.12 m — needs retest
-      // {8.62, 15.0, 5200.0, 1.02}, // hood angle drops from 20° at 8.12 m — needs retest
-      {8.90, 21.0, 5000.0, 1.05},
-      {15.59, 35.0, 6300.0, 1.60},
+      // { distance_m, hoodDeg, flywheelRPM, tofSeconds }
+      {1.219, 4.5, 3833, 1.71},
+      {1.524, 5.6, 3839, 1.71},
+      {1.829, 6.7, 3847.0, 1.71},
+      {2.134, 7.8, 3857.0, 1.71},
+      {2.438, 8.9, 3867.0, 1.71},
+      {2.743, 10.0, 3879, 1.71},
+      {3.048, 11.0, 3893, 1.71},
+      {3.353, 12.1, 3908.0, 1.71},
+      {3.658, 13.2, 3924.0, 1.71},
+      {3.962, 14.2, 3942, 1.71},
+      {4.267, 15.3, 3961, 1.71},
+      {4.572, 16.3, 3981.0, 1.71},
+      {4.877, 17.3, 4003.0, 1.71},
+      {5.182, 18.3, 4026.0, 1.71},
+      {5.486, 19.3, 4050.0, 1.71},
+      {5.791, 20.3, 4075.0, 1.71},
+      {6.096, 21.3, 4102.0, 1.71},
+      {6.401, 22.3, 4129.0, 1.71},
+      {6.706, 23.2, 4158.0, 1.71},
+      {7.010, 24.2, 4188.0, 1.71},
+      {7.315, 25.1, 4219.0, 1.71},
+      {7.620, 26.0, 4251.0, 1.71},
+      {7.925, 26.9, 4284.0, 1.71},
+      {8.230, 27.8, 4319.0, 1.71},
+      {8.534, 28.6, 4354.0, 1.71},
+      {8.839, 29.5, 4390.0, 1.71},
+      {9.144, 30.3, 4427.0, 1.71},
+      {9.449, 31.2, 4465.0, 1.71},
+      {9.754, 32.0, 4504.0, 1.71},
+      {10.058, 32.8, 4544.0, 1.71},
+      {10.363, 33.6, 4585.0, 1.71},
+      {10.668, 34.3, 4627.0, 1.71},
+      {10.973, 35.0, 4671.0, 1.71},
+      {11.278, 35.0, 4730.0, 1.71},
+      {11.582, 35.0, 4788.0, 1.71},
+      {11.887, 35.0, 4845.0, 1.71},
+      {12.192, 35.0, 4902.0, 1.71},
+      {12.497, 35.0, 4957.0, 1.71},
+      {12.802, 35.0, 5013.0, 1.71},
+      {13.106, 35.0, 5068.0, 1.71},
+      {13.411, 35.0, 5122.0, 1.71},
+      {13.716, 35.0, 5175.0, 1.71},
+      {14.021, 35.0, 5228.0, 1.71},
+      {14.326, 35.0, 5281.0, 1.71},
+      {14.630, 35.0, 5333.0, 1.71},
+      {14.935, 35.0, 5385.0, 1.71},
+      {15.240, 35.0, 5436.0, 1.71},
+      {15.545, 35.0, 5486.0, 1.71},
+      {15.850, 35.0, 5536.0, 1.71},
+      {16.154, 35.0, 5586.0, 1.71},
     };
 
     // Default feeder speed when stowing (turret idle / trench zone).
     public static final double kFeederStowRPM = 0.0;
-
-    // Dashboard-tunable time of flight (seconds).  Used for aim-ahead lead.
-    // NOTE: non-final so SmartDashboard can override at runtime.
-    public static double kTofSeconds = 1.71;
   }
 
   public static final ServoMotorSubsystemConfig kLeftHoodConfig = new ServoMotorSubsystemConfig();
@@ -916,7 +883,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting

@@ -235,8 +235,6 @@ public class Robot extends LoggedRobot {
       Constants.ScorerConstants.kTurretMaxPositionUnits =
           SmartDashboard.getNumber(
               "SpeedTune/TurretMaxDegrees", Constants.ScorerConstants.kTurretMaxPositionUnits);
-      Constants.ScorerConstants.kTofSeconds =
-          SmartDashboard.getNumber("SpeedTune/TofSeconds", Constants.ScorerConstants.kTofSeconds);
       Constants.ScorerConstants.kPhaseDelaySeconds =
           SmartDashboard.getNumber(
               "SpeedTune/PhaseDelaySeconds", Constants.ScorerConstants.kPhaseDelaySeconds);
@@ -571,11 +569,11 @@ public class Robot extends LoggedRobot {
       double leftTargetRpm =
           inPit
               ? Constants.ScorerConstants.kShootRPM
-              : robotContainer.getTurretAimManager().getLeftFeederRPM();
+              : robotContainer.getTurretAimManager().getLeftFlywheelRPM();
       double rightTargetRpm =
           inPit
               ? Constants.ScorerConstants.kShootRPM
-              : robotContainer.getTurretAimManager().getRightFeederRPM();
+              : robotContainer.getTurretAimManager().getRightFlywheelRPM();
       CommandScheduler.getInstance()
           .schedule(robotContainer.getFlywheelLeft().setRPMCommand(leftTargetRpm));
       CommandScheduler.getInstance()

@@ -220,10 +220,10 @@ public class TurretAimManager extends SubsystemBase {
 
     inputs.leftTurretAngleDeg = outLeftTurret;
     inputs.leftHoodAngleDeg = result.leftHoodDeg;
-    inputs.leftFeederRPM = result.leftFeederRPM;
+    inputs.leftFlywheelRPM = result.leftFlywheelRPM;
     inputs.rightTurretAngleDeg = outRightTurret;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
-    inputs.rightFeederRPM = result.rightFeederRPM;
+    inputs.rightFlywheelRPM = result.rightFlywheelRPM;
 
     inputs.allianceColor = String.valueOf(alliance);
 
@@ -243,10 +243,10 @@ public class TurretAimManager extends SubsystemBase {
       // Also log the six key values at the top level for quick graphing
       Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
       Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
-      Logger.recordOutput("TurretAim/LeftFeederRPM", result.leftFeederRPM);
+      Logger.recordOutput("TurretAim/LeftFlywheelRPM", result.leftFlywheelRPM);
       Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
       Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
-      Logger.recordOutput("TurretAim/RightFeederRPM", result.rightFeederRPM);
+      Logger.recordOutput("TurretAim/RightFlywheelRPM", result.rightFlywheelRPM);
       Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
 
       // ---- TOF aim-ahead logging ----
@@ -312,12 +312,12 @@ public class TurretAimManager extends SubsystemBase {
     return inputs.rightHoodAngleDeg;
   }
 
-  public double getLeftFeederRPM() {
-    return inputs.leftFeederRPM;
+  public double getLeftFlywheelRPM() {
+    return inputs.leftFlywheelRPM;
   }
 
-  public double getRightFeederRPM() {
-    return inputs.rightFeederRPM;
+  public double getRightFlywheelRPM() {
+    return inputs.rightFlywheelRPM;
   }
 
   /** Returns the simulated (lagged) turret angle in degrees, for visualization. */

@@ -15,14 +15,14 @@ public interface TurretAimIO {
     public double leftTurretAngleDeg = 0.0;
     /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double leftHoodAngleDeg = 10.0;
-    /** Left vertical-feeder speed in RPM (0 = off). */
-    public double leftFeederRPM = 0.0;
+    /** Left flywheel speed in RPM. */
+    public double leftFlywheelRPM = 0.0;
 
     public double rightTurretAngleDeg = 0.0;
     /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double rightHoodAngleDeg = 10.0;
-    /** Right vertical-feeder speed in RPM (0 = off). */
-    public double rightFeederRPM = 0.0;
+    /** Right flywheel speed in RPM. */
+    public double rightFlywheelRPM = 0.0;
 
     // ---- Debug / diagnostics ----
     /** Current zone: "OWN_ALLIANCE", "NEUTRAL", or "OPPONENT". */
