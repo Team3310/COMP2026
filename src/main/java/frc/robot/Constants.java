@@ -392,7 +392,8 @@ public final class Constants {
 
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
-    public static final double kAngleHoldKp = 3.0; //was 5.0. PDC put it to 3 on 3-18 before practice
+    public static final double kAngleHoldKp =
+        3.0; // was 5.0. PDC put it to 3 on 3-18 before practice
     public static final double kAngleHoldKd = 0.4;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
@@ -985,14 +986,14 @@ public final class Constants {
 
   // #region Roof Subsystem
   public static final class RoofConstants {
-    // Position limits in degrees
-    public static final double kRoofStowedDegrees = 0.0;
-    public static final double kRoofMinDegrees = 0.0;
-    public static final double kRoofMaxDegrees = 90.0;
+    // Linear travel limits in inches. The roof starts at the top hard-stop on boot.
+    public static final double kRoofMinHeightInches = 0.0;
+    public static final double kRoofMaxHeightInches = 6.1;
+    public static final double kRoofStartupHeightInches = kRoofMaxHeightInches;
 
-    // Gear ratio: rotor rotations per output degree
-    // TODO: update with actual mechanical gear ratio
-    public static final double kRoofUnitToRotorRatio = 1.0 / 360.0; // 1:1 placeholder
+    // Output inches traveled per motor rotor revolution:
+    // pulley circumference * pulley revs per motor rev.
+    public static final double kRoofUnitToRotorRatio = Math.PI * 0.75 * (10.0 / 36.0);
 
     public static final double kRoofMomentOfInertia = 0.5; // kg·m² for sim
   }
@@ -1004,8 +1005,8 @@ public final class Constants {
     kRoofConfig.talonCANID = new CANDeviceId(30, CanBusNames.superstructureFor(30));
 
     kRoofConfig.unitToRotorRatio = RoofConstants.kRoofUnitToRotorRatio;
-    kRoofConfig.kMaxPositionUnits = RoofConstants.kRoofMaxDegrees;
-    kRoofConfig.kMinPositionUnits = RoofConstants.kRoofMinDegrees;
+    kRoofConfig.kMaxPositionUnits = RoofConstants.kRoofMaxHeightInches;
+    kRoofConfig.kMinPositionUnits = RoofConstants.kRoofMinHeightInches;
     kRoofConfig.momentOfInertia = RoofConstants.kRoofMomentOfInertia;
 
     // PID — tune on robot
@@ -1023,7 +1024,7 @@ public final class Constants {
     kRoofConfig.fxConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         kRoofConfig.kMinPositionUnits / kRoofConfig.unitToRotorRatio;
 
-    kRoofConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    kRoofConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRoofConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;

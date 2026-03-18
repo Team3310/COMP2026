@@ -7,8 +7,8 @@ import frc.robot.Constants;
 import java.util.function.DoubleSupplier;
 
 /**
- * The {@code Roof} subsystem controls a single servo motor on the robot's roof mechanism. It uses
- * Motion Magic position control via the shared {@link ServoMotorSubsystem} base class.
+ * The {@code Roof} subsystem controls the linear roof mechanism in inches of travel. It uses Motion
+ * Magic position control via the shared {@link ServoMotorSubsystem} base class.
  *
  * <p>The motor is connected directly to the roboRIO CAN bus (not the CANivore).
  */
@@ -21,8 +21,8 @@ public class Roof extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
   public Roof(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
-    this.setCurrentPosition(Constants.RoofConstants.kRoofStowedDegrees);
-    this.positionSetpointUnits = Constants.RoofConstants.kRoofStowedDegrees;
+    this.setCurrentPosition(Constants.RoofConstants.kRoofStartupHeightInches);
+    this.positionSetpointUnits = Constants.RoofConstants.kRoofStartupHeightInches;
   }
 
   /**
@@ -37,42 +37,42 @@ public class Roof extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
             .ignoringDisable(true));
   }
 
-  // -------------------- Position Control Commands --------------------
+  // -------------------- Height Control Commands --------------------
 
   /**
-   * Command to move the roof to a fixed position in degrees.
+   * Command to move the roof to a fixed linear height in inches.
    *
-   * @param position target position in degrees
+   * @param heightInches target roof height in inches
    * @return Motion Magic position command
    */
-  public Command setDegreesCommand(double position) {
-    return motionMagicSetpointCommand(() -> position).withName("Roof Set Degrees");
+  public Command setHeightInchesCommand(double heightInches) {
+    return motionMagicSetpointCommand(() -> heightInches).withName("Roof Set Height Inches");
   }
 
   /**
-   * Command to continuously track a supplied position in degrees.
+   * Command to continuously track a supplied linear height in inches.
    *
-   * @param position supplier providing the target position in degrees
+   * @param heightInches supplier providing the target roof height in inches
    * @return Motion Magic position command
    */
-  public Command setDegreesCommand(DoubleSupplier position) {
-    return motionMagicSetpointCommand(position).withName("Roof Track Degrees");
+  public Command setHeightInchesCommand(DoubleSupplier heightInches) {
+    return motionMagicSetpointCommand(heightInches).withName("Roof Track Height Inches");
   }
 
-  /** Command to move the roof to its maximum position. */
-  public Command setMaxCommand() {
-    return motionMagicSetpointCommand(() -> Constants.RoofConstants.kRoofMaxDegrees);
+  /** Command to move the roof to its maximum height. */
+  public Command setMaxHeightCommand() {
+    return motionMagicSetpointCommand(() -> Constants.RoofConstants.kRoofMaxHeightInches);
   }
 
-  /** Command to stow the roof (move to minimum/stowed position). */
-  public Command stowCommand() {
-    return motionMagicSetpointCommand(() -> Constants.RoofConstants.kRoofStowedDegrees);
+  /** Command to move the roof to its minimum height. */
+  public Command setMinHeightCommand() {
+    return motionMagicSetpointCommand(() -> Constants.RoofConstants.kRoofMinHeightInches);
   }
 
   @Override
   public void periodic() {
     if (++dashboardCounter % DASHBOARD_INTERVAL == 0) {
-      SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
+      SmartDashboard.putNumber(getName() + "/HeightInches", getCurrentPosition());
     }
     super.periodic();
   }

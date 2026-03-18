@@ -403,8 +403,8 @@ public class RobotContainer {
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
 
-    SmartDashboard.putData("Roof Deploy", roof.setMaxCommand());
-    SmartDashboard.putData("Roof Stow", roof.stowCommand());
+    SmartDashboard.putData("Roof Deploy", roof.setMaxHeightCommand());
+    SmartDashboard.putData("Roof Stow", roof.setMinHeightCommand());
 
     // LED on/off buttons
     SmartDashboard.putData(
