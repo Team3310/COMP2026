@@ -191,7 +191,7 @@ public class Vision extends SubsystemBase {
     double robotYawDeg = drive.getRotation().getDegrees();
     double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
     for (String name : VisionConstants.kCameraNames) {
-      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
+      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 
     // While disabled, run pre-match pose seeding (strict filters, no pose-jump
