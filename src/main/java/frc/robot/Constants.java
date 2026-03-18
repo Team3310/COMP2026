@@ -430,8 +430,8 @@ public final class Constants {
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 6.0;
     public static double kNormalMaxAngularSpeedRadPerSec = 10.0;
-    public static double kNormalMaxLinearAccelMetersPerSec2 = 10.0;
-    public static double kNormalMaxAngularAccelRadPerSec2 = 24.0;
+    public static double kNormalMaxLinearAccelMetersPerSec2 = 12.0;
+    public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
     public static double kNormalMaxAngularDecelRadPerSec2 = 45.0;
 
