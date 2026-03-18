@@ -107,7 +107,7 @@ public final class TurretAimCalculator {
    * @return An {@link AimResult} with six values (L/R turret, hood, feeder) plus debug info.
    */
   public static AimResult calculate(Pose2d robotPose) {
-    boolean isBlue = (Robot.currentAlliance == Alliance.Blue);
+    boolean isBlue = (Robot.getEffectiveAlliance() == Alliance.Blue);
 
     FieldConstants.Zone zone = Robot.currentZone;
 

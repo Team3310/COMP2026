@@ -5,13 +5,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.ScorerConstants;
 import frc.robot.Constants.SimPhysicsConstants;
+import frc.robot.Robot;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -338,11 +338,8 @@ public class TurretAimManager extends SubsystemBase {
 
   // ---- Helpers ----
 
-  /**
-   * Returns 'B' or 'R' based on DriverStation alliance data. Defaults to 'B' if unknown (sim
-   * startup).
-   */
+  /** Returns 'B' or 'R' based on the active alliance used for field logic. */
   private static char getAllianceChar() {
-    return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 'R' : 'B';
+    return Robot.getEffectiveAlliance() == Alliance.Red ? 'R' : 'B';
   }
 }

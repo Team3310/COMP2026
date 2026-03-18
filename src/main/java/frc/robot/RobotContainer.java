@@ -258,6 +258,8 @@ public class RobotContainer {
   // Controllers
   private final CommandXboxController driver = new CommandXboxController(1);
   private final CommandXboxController operator = new CommandXboxController(0);
+  private static final Pose2d kPitAssumedPose =
+      new Pose2d(new Translation2d(3.581, 4.039), Rotation2d.kZero);
   // Flywheel enable policy:
   // - Pit mode: controlled by pitFlywheelsEnabled via operator/dashboard toggles.
   // - Normal mode: controlled by normalFlywheelsEnabled (default true for auto +
@@ -285,27 +287,17 @@ public class RobotContainer {
     // #region Dashboard Buttons
     SmartDashboard.putData(
         "enterPitMode",
-        new InstantCommand(
+        Commands.runOnce(
             () -> {
               Robot.inPit = true;
-              pitFlywheelsEnabled = false;
-              Robot.currentState = Robot.BotState.PIT;
-              Robot.overrideState = Robot.OverrideState.OFF;
-              Robot.stateRefreshRequested = true;
-              Robot.deploying = false;
-              Robot.retracting = false;
-              CommandScheduler.getInstance().cancelAll();
-            }));
+              drive.setPose(kPitAssumedPose);
+            },
+            drive));
     SmartDashboard.putData(
         "exitPitMode",
-        new InstantCommand(
+        Commands.runOnce(
             () -> {
               Robot.inPit = false;
-              Robot.overrideState = Robot.OverrideState.ON;
-              Robot.stateRefreshRequested = true;
-              Robot.deploying = false;
-              Robot.retracting = false;
-              CommandScheduler.getInstance().cancelAll();
             }));
 
     SmartDashboard.putData("intake", intakeRollers.intakeCommand());
@@ -550,16 +542,8 @@ public class RobotContainer {
   }
 
   private Command buildShootWhileHeldCommand() {
-    java.util.function.DoubleSupplier leftTargetRpm =
-        () ->
-            Robot.inPit
-                ? Constants.ScorerConstants.kShootRPM
-                : turretAimManager.getLeftFlywheelRPM();
-    java.util.function.DoubleSupplier rightTargetRpm =
-        () ->
-            Robot.inPit
-                ? Constants.ScorerConstants.kShootRPM
-                : turretAimManager.getRightFlywheelRPM();
+    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
+    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         roof.setMinHeightCommand(),
@@ -670,12 +654,7 @@ public class RobotContainer {
         .back()
         .and(() -> Robot.inPit)
         .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(new Translation2d(3.581, 4.039), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
+            Commands.runOnce(() -> drive.setPose(kPitAssumedPose), drive).ignoringDisable(true));
     driver
         .back()
         .and(() -> !Robot.inPit)

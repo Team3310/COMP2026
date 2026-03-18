@@ -184,9 +184,10 @@ public class Robot extends LoggedRobot {
         case ON:
         default:
           // Automated State Machine
-          if (currentZone == Zone.BLUE && currentAlliance == Alliance.Blue && !(activeHub)) {
+          Alliance effectiveAlliance = getEffectiveAlliance();
+          if (currentZone == Zone.BLUE && effectiveAlliance == Alliance.Blue && !(activeHub)) {
             currentState = BotState.COLLECT;
-          } else if (currentZone == Zone.RED && currentAlliance == Alliance.Red && !(activeHub)) {
+          } else if (currentZone == Zone.RED && effectiveAlliance == Alliance.Red && !(activeHub)) {
             currentState = BotState.COLLECT;
           } else {
             currentState = BotState.SNOWBLOW;
@@ -280,6 +281,8 @@ public class Robot extends LoggedRobot {
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       SmartDashboard.putBoolean("inPit", inPit);
+      SmartDashboard.putBoolean("PitMode/Active", inPit);
+      SmartDashboard.putString("PitMode/Status", inPit ? "IN PIT" : "NORMAL");
       SmartDashboard.putString("currentState", "" + currentState);
       SmartDashboard.putString("overrideState", "" + overrideState);
       SmartDashboard.putNumber("robotX", robotX);
@@ -373,6 +376,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    inPit = false;
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
@@ -529,18 +533,7 @@ public class Robot extends LoggedRobot {
             robotContainer
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    if (inPit && !crossOverrideActive) {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getHoodLeft()
-                  .setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getHoodRight()
-                  .setDegreesCommand(Constants.ScorerConstants.kHoodMaxDegrees));
-    } else if (shouldTrack(currentState) && !crossOverrideActive) {
+    if (shouldTrack(currentState) && !crossOverrideActive) {
       CommandScheduler.getInstance()
           .schedule(
               robotContainer
@@ -567,14 +560,8 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
     } else if (currentState == BotState.SNOWBLOW) {
-      double leftTargetRpm =
-          inPit
-              ? Constants.ScorerConstants.kShootRPM
-              : robotContainer.getTurretAimManager().getLeftFlywheelRPM();
-      double rightTargetRpm =
-          inPit
-              ? Constants.ScorerConstants.kShootRPM
-              : robotContainer.getTurretAimManager().getRightFlywheelRPM();
+      double leftTargetRpm = robotContainer.getTurretAimManager().getLeftFlywheelRPM();
+      double rightTargetRpm = robotContainer.getTurretAimManager().getRightFlywheelRPM();
       CommandScheduler.getInstance()
           .schedule(robotContainer.getFlywheelLeft().setRPMCommand(leftTargetRpm));
       CommandScheduler.getInstance()
@@ -593,8 +580,12 @@ public class Robot extends LoggedRobot {
 
   public static boolean shouldLimitHomeZoneDrive() {
     return shootButtonHeld
-        && ((currentAlliance == Alliance.Blue && currentZone == Zone.BLUE)
-            || (currentAlliance == Alliance.Red && currentZone == Zone.RED));
+        && ((getEffectiveAlliance() == Alliance.Blue && currentZone == Zone.BLUE)
+            || (getEffectiveAlliance() == Alliance.Red && currentZone == Zone.RED));
+  }
+
+  public static Alliance getEffectiveAlliance() {
+    return inPit ? Alliance.Blue : currentAlliance;
   }
 
   private void onStateEntered(BotState state) {
