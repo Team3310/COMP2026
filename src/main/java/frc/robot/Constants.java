@@ -38,8 +38,9 @@ public final class Constants {
   };
   // TODO: Fill in the bravo roboRIO MAC once it is known from logs.
   public static final String[] kBravoBotMacAddresses = {};
-  // TODO: Fill in the comp roboRIO MAC once it is known from logs.
-  public static final String[] kCompBotMacAddresses = {};
+  public static final String[] kCompBotMacAddresses = {
+    "12:2C:57:6C:7E:04", "DB:2B:7E:E6:11:0B", "00:80:2F:36:FE:54"
+  };
 
   // Auto-detect the robot from the local roboRIO MAC address. Unknown MACs fall back to PRACTICE.
   public static final Bot currentBot = detectCurrentBot();
@@ -1081,7 +1082,7 @@ public final class Constants {
       return Bot.COMP;
     }
 
-    return Bot.COMP;
+    return Bot.PRACTICE;
   }
 
   public static boolean hasMacAddress(final String macAddress) {
