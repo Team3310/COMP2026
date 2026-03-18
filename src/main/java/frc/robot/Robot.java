@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.Paths;
@@ -626,6 +627,7 @@ public class Robot extends LoggedRobot {
 
     // Deploy intake to snowblow, and run motors to snowblow.
     deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
@@ -639,6 +641,7 @@ public class Robot extends LoggedRobot {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
     deploy();
+    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
@@ -650,8 +653,14 @@ public class Robot extends LoggedRobot {
 
   private void defenseIn() {
 
-    // Retract intake to prevent damage, and stop all motors to save battery.
-    retract();
+    // Raise the roof before retracting the intake to avoid mechanism interference.
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getRoof()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.RoofConstants.kRoofMaxHeightInches, 0.25)
+                .andThen(Commands.runOnce(this::retract)));
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
@@ -676,6 +685,7 @@ public class Robot extends LoggedRobot {
   private void defenseOut() {
     deploy();
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
+    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());

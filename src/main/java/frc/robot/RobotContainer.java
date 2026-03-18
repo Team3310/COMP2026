@@ -562,6 +562,7 @@ public class RobotContainer {
                 : turretAimManager.getRightFlywheelRPM();
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+        roof.setMinHeightCommand(),
         Commands.parallel(
                 flywheelLeft.setRPMCommand(leftTargetRpm),
                 flywheelRight.setRPMCommand(rightTargetRpm))
@@ -592,6 +593,7 @@ public class RobotContainer {
                   CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                  Robot.stateRefreshRequested = true;
                 }));
   }
 
@@ -609,6 +611,7 @@ public class RobotContainer {
     // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
+    roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
         flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(
