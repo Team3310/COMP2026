@@ -57,22 +57,25 @@ public class TunerConstants {
         BackRight = TunerConstantsBravo.BackRight;
         break;
       case COMP:
-        kCANBus1 = TunerConstantsBravo.kCANBus1;
-        // Competition is still using the Bravo tuner fallback until a dedicated
-        // competition constants file exists.
-        kCANBus2 = TunerConstantsBravo.kCANBus1;
-        kCANBusRio = TunerConstantsBravo.kCANBusRio;
-        kSpeedAt12Volts = TunerConstantsBravo.kSpeedAt12Volts;
-        DrivetrainConstants = TunerConstantsBravo.DrivetrainConstants;
-        FrontLeft = TunerConstantsBravo.FrontLeft;
-        FrontRight = TunerConstantsBravo.FrontRight;
-        BackLeft = TunerConstantsBravo.BackLeft;
-        BackRight = TunerConstantsBravo.BackRight;
+        // Competition bot — 2 CANivores + RIO bus, each with a unique name.
+        kCANBus1 = TunerConstantsComp.kCANBus1;
+        kCANBus2 = TunerConstantsComp.kCANBus2;
+        kCANBusRio = TunerConstantsComp.kCANBusRio;
+        kSpeedAt12Volts = TunerConstantsComp.kSpeedAt12Volts;
+        DrivetrainConstants = TunerConstantsComp.DrivetrainConstants;
+        FrontLeft = TunerConstantsComp.FrontLeft;
+        FrontRight = TunerConstantsComp.FrontRight;
+        BackLeft = TunerConstantsComp.BackLeft;
+        BackRight = TunerConstantsComp.BackRight;
         break;
       case PRACTICE:
+        // Practice bot — single CANivore. All 3 facade fields point to the
+        // same kCANBus1 object so only one CANBus instance exists.
+        // Routing in CanBusNames.superstructureFor() also returns kCANBus1
+        // for all devices on non-COMP bots.
         kCANBus1 = TunerConstantsPractice.kCANBus1;
-        kCANBus2 = TunerConstantsPractice.kCANBus2;
-        kCANBusRio = TunerConstantsPractice.kCANBusRio;
+        kCANBus2 = TunerConstantsPractice.kCANBus1; // same object — no second bus
+        kCANBusRio = TunerConstantsPractice.kCANBus1; // same object — no RIO bus
         kSpeedAt12Volts = TunerConstantsPractice.kSpeedAt12Volts;
         DrivetrainConstants = TunerConstantsPractice.DrivetrainConstants;
         FrontLeft = TunerConstantsPractice.FrontLeft;
@@ -80,16 +83,6 @@ public class TunerConstants {
         BackLeft = TunerConstantsPractice.BackLeft;
         BackRight = TunerConstantsPractice.BackRight;
         break;
-        // Add more cases here for additional robots:
-        // case COMPETITION:
-        //   kCANBus1 = TunerConstantsCompetition.kCANBus1;
-        //   kCANBus2 = TunerConstantsCompetition.kCANBus2;
-        //   DrivetrainConstants = TunerConstantsCompetition.DrivetrainConstants;
-        //   FrontLeft = TunerConstantsCompetition.FrontLeft;
-        //   FrontRight = TunerConstantsCompetition.FrontRight;
-        //   BackLeft = TunerConstantsCompetition.BackLeft;
-        //   BackRight = TunerConstantsCompetition.BackRight;
-        //   break;
       default:
         throw new IllegalStateException("Unknown bot: " + Constants.currentBot);
     }

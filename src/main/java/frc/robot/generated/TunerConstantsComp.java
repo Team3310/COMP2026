@@ -90,7 +90,7 @@ public class TunerConstantsComp {
   // CANivore #2 "Right": Intake (12-13), Floor/Vert/Turret/Hood/Shooter (20-22, 25-29)
   public static final CANBus kCANBus1 = new CANBus("Default Name", "./logs/canivore1.hoot");
   public static final CANBus kCANBus2 = new CANBus("Right", "./logs/canivore2.hoot");
-  public static final CANBus kCANBusRio = new CANBus("", "./logs/rio.hoot");
+  public static final CANBus kCANBusRio = new CANBus("rio", "./logs/rio.hoot");
 
   // Theoretical free speed (m/s) at 12 V applied output
   // This needs to be tuned to your individual robot

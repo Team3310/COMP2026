@@ -82,6 +82,11 @@ public final class Constants {
     public static final String KCANBUS1_STRING = TunerConstants.kCANBus1.getName();
     public static final String kRio = TunerConstants.kCANBusRio.getName();
 
+    /**
+     * Returns the CAN bus name for a superstructure device. On the comp bot devices are split
+     * across kCANBus1, kCANBus2, and kCANBusRio. On the practice bot everything routes to kCANBus1
+     * — the other bus objects exist but are never used.
+     */
     public static String superstructureFor(int deviceId) {
       if (currentBot != Bot.COMP) {
         return KCANBUS1_STRING;
@@ -89,7 +94,7 @@ public final class Constants {
 
       return switch (deviceId) {
         case 12, 13, 20, 21, 22, 25, 26, 27, 28, 29 -> TunerConstants.kCANBus2.getName();
-        case 30 -> TunerConstants.kCANBusRio.getName();
+        case 30 -> kRio;
         default -> KCANBUS1_STRING;
       };
     }
@@ -1076,7 +1081,7 @@ public final class Constants {
       return Bot.COMP;
     }
 
-    return Bot.PRACTICE;
+    return Bot.COMP;
   }
 
   public static boolean hasMacAddress(final String macAddress) {

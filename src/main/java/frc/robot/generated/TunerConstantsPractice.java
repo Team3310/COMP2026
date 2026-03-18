@@ -91,11 +91,14 @@ public class TunerConstantsPractice {
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
   private static final Pigeon2Configuration pigeonConfigs = null;
 
-  // CAN bus that the devices are located on;
-  // All swerve devices must share the same CAN bus
-  public static final CANBus kCANBus1 = new CANBus("Default Name", "./logs/example.hoot");
-  public static final CANBus kCANBus2 = new CANBus("Default Name", "./logs/example.hoot");
-  public static final CANBus kCANBusRio = new CANBus("Default Name", "./logs/example.hoot");
+  // CAN bus — practice bot has a single CANivore ("Default Name").
+  // kCANBus2 and kCANBusRio are given unique placeholder names so we never
+  // create multiple CANBus objects with the same name string. The routing
+  // logic in Constants.CanBusNames.superstructureFor() ignores these for
+  // non-COMP bots and routes everything through kCANBus1.
+  public static final CANBus kCANBus1 = new CANBus("Default Name", "./logs/canivore1.hoot");
+  public static final CANBus kCANBus2 = new CANBus("Right", "./logs/unused2.hoot");
+  public static final CANBus kCANBusRio = new CANBus("rio", "./logs/unused_rio.hoot");
 
   // Theoretical free speed (m/s) at 12 V applied output (virtual voltage
   // compensation cap);
