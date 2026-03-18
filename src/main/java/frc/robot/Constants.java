@@ -4,7 +4,6 @@
 // Use of this source code is governed by a BSD
 // license that can be found in the LICENSE file
 // at the root directory of this project.
-// I am the coolest person on earth, next to john doe
 package frc.robot;
 
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
@@ -543,30 +542,56 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds (est), verticalRPM }
-      {1.2, 5.0, 3100.0, 0.0, 2000.0},
-      {1.4, 5.0, 3200.0, 0.0, 2000.0},
-      {1.6, 5.0, 3500.0, 0.0, 2000.0},
-      {2.1, 5.0, 3600.0, 0.0, 2000.0},
-      {2.5, 5.0, 3800.0, 0.0, 2000.0},
-      // {2.9, 12.47, 3400, 0.0, 2000.0},
-      // {3.12, 10.41, 3700, 0.0, 2000.0},
-      // {3.15, 10.66, 3500.0, 0.0, 2000.0},
-      // {3.20, 9.87, 3700.0, 0.0, 2000.0},
-      // {3.6, 10.41, 3700, 0.0, 2000.0},
-      // {3.8, 10.41, 3800, 0.0, 2000.0},
-      // {4.37, 10.85, 4000.0, 0.0, 3000.0},
-      // {4.5, 12.47, 3900.0, 0.0, 2000.0},
-      // {4.67, 12.47, 4400.0, 0.0, 2000.0},
-      {3.0, 10.0, 4000.0, 0.0, 2000.0},
-      {3.5, 10.0, 4250.0, 0.0, 2000.0},
-      {4.0, 10.0, 4350.0, 0.0, 2000.0},
-      {4.5, 10.0, 4450.0, 0.0, 2000.0},
-      // {4.82, 12.86, 4300.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
-      // {5.247, 12.47, 4000.0, 0.0, 2000.0},
-      // {5.31, 12.82, 4100.0, 0.0, 3000.0},
-      {5.0, 12.0, 4300.0, 0.0, 2000.0},
-      {5.5, 12.0, 4700.0, 0.0, 2000.0},
-      {6.0, 12.0, 4900.0, 0.0, 2000.0},
+      {1.219, 4.5, 3833, 0.0, 2000.0},
+      {1.524, 5.6, 3839, 0.0, 2000.0},
+      {1.829, 6.7, 3847.0, 0.0, 2000.0},
+      {2.134, 7.8, 3857.0, 0.0, 2000.0},
+      {2.438, 8.9, 3867.0, 0.0, 2000.0},
+      {2.743, 10.0, 3879, 0.0, 2000.0},
+      {3.048, 11.0, 3893, 0.0, 2000.0},
+      {3.353, 12.1, 3908.0, 0.0, 2000.0},
+      {3.658, 13.2, 3924.0, 0.0, 2000.0},
+      {3.962, 14.2, 3942, 0.0, 2000.0},
+      {4.267, 15.3, 3961, 0.0, 2000.0},
+      {4.572, 16.3, 3981.0, 0.0, 3000.0},
+      {4.877, 17.3, 4003.0, 0.0, 2000.0},
+      {5.182, 18.3, 4026.0, 0.0, 2000.0},
+      {5.486, 19.3, 4050.0, 0.0, 2000.0},
+      {5.791, 20.3, 4075.0, 0.0, 2000.0},
+      {6.096, 21.3, 4102.0, 0.0, 2000.0},
+      {6.401, 22.3, 4129.0, 0.0, 2000.0},
+      {6.706, 23.2, 4158.0, 0.70, 2000.0}, // verticalRPM drops vs 4.37 m — needs retest
+      {7.010, 24.2, 4188.0, 0.0, 2000.0},
+      {7.315, 25.1, 4219.0, 0.0, 3000.0},
+      {7.620, 26.0, 4251.0, 0.0, 2000.0},
+      {7.925, 26.9, 4284.0, 0.0, 2000.0},
+      {8.230, 27.8, 4319.0, 0.0, 2000.0},
+      {8.534, 28.6, 4354.0, 0.0, 2000.0},
+      {8.839, 29.5, 4390.0, 0.0, 2000.0},
+      {9.144, 30.3, 4427.0, 0.0, 2000.0},
+      {9.449, 31.2, 4465.0, 0.0, 2000.0},
+      {9.754, 32.0, 4504.0, 0.0, 2000.0},
+      {10.058, 32.8, 4544.0, 0.0, 2000.0},
+      {10.363, 33.6, 4585.0, 0.0, 2000.0},
+      {10.668, 34.3, 4627.0, 0.0, 2000.0},
+      {10.973, 35.0, 4671.0, 0.0, 2000.0},
+      {11.278, 35.0, 4730.0, 0.0, 2000.0},
+      {11.582, 35.0, 4788.0, 0.0, 2000.0},
+      {11.887, 35.0, 4845.0, 0.0, 2000.0},
+      {12.192, 35.0, 4902.0, 0.0, 2000.0},
+      {12.497, 35.0, 4957.0, 0.0, 2000.0},
+      {12.802, 35.0, 5013.0, 0.0, 2000.0},
+      {13.106, 35.0, 5068.0, 0.0, 2000.0},
+      {13.411, 35.0, 5122.0, 0.0, 2000.0},
+      {13.716, 35.0, 5175.0, 0.0, 2000.0},
+      {14.021, 35.0, 5228.0, 0.0, 2000.0},
+      {14.326, 35.0, 5281.0, 0.0, 2000.0},
+      {14.630, 35.0, 5333.0, 0.0, 2000.0},
+      {14.935, 35.0, 5385.0, 0.0, 2000.0},
+      {15.240, 35.0, 5436.0, 0.0, 2000.0},
+      {15.545, 35.0, 5486.0, 0.0, 2000.0},
+      {15.850, 35.0, 5536.0, 0.0, 2000.0},
+      {16.154, 35.0, 5586.0, 0.0, 2000.0},
     };
 
     // Landing (pass/lob) — lob to a landing zone on our side of the field.
@@ -739,7 +764,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -758,7 +783,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
   }
 
   // #endregion
