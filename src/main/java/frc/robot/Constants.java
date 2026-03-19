@@ -767,7 +767,7 @@ public final class Constants {
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
-    public static final double kIntakePivotDeployDegrees = 145.0;
+    public static final double kIntakePivotDeployDegrees = 150.0;
     public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
