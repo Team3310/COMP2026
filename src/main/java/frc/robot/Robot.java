@@ -80,6 +80,7 @@ public class Robot extends LoggedRobot {
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
   public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
   private BotState lastAppliedState = null;
+  private Command snowblowGateCommand = null;
 
   // Dashboard read rate-limiting — tuning values don't need 50 Hz updates.
   // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
@@ -628,6 +629,12 @@ public class Robot extends LoggedRobot {
   }
 
   private void onStateEntered(BotState state) {
+    // Cancel the snowblow turret-gate loop so it stops re-scheduling
+    // agitator/vertical-feed commands after we leave SNOWBLOW.
+    if (snowblowGateCommand != null) {
+      snowblowGateCommand.cancel();
+      snowblowGateCommand = null;
+    }
     switch (state) {
       case SNOWBLOW:
         snowblow();
@@ -662,37 +669,33 @@ public class Robot extends LoggedRobot {
     // Gate agitators and vertical feeds on turret position — off while the turret flips.
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
-    CommandScheduler.getInstance()
-        .schedule(
-            Commands.run(
-                    () -> {
-                      if (robotContainer.isTurretOnTarget()) {
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                robotContainer
-                                    .getVerticalFeedLeft()
-                                    .customVelocityCommand(feedRpm));
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                robotContainer
-                                    .getVerticalFeedRight()
-                                    .customVelocityCommand(feedRpm));
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getAgitatorRight().snowblowCommand());
-                      } else {
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getVerticalFeedLeft().offCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getVerticalFeedRight().offCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getAgitatorLeft().offCommand());
-                        CommandScheduler.getInstance()
-                            .schedule(robotContainer.getAgitatorRight().offCommand());
-                      }
-                    })
-                .ignoringDisable(false));
+    snowblowGateCommand =
+        Commands.run(
+                () -> {
+                  if (robotContainer.isTurretOnTarget()) {
+                    CommandScheduler.getInstance()
+                        .schedule(
+                            robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
+                    CommandScheduler.getInstance()
+                        .schedule(
+                            robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getAgitatorRight().snowblowCommand());
+                  } else {
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getVerticalFeedLeft().offCommand());
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getVerticalFeedRight().offCommand());
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getAgitatorLeft().offCommand());
+                    CommandScheduler.getInstance()
+                        .schedule(robotContainer.getAgitatorRight().offCommand());
+                  }
+                })
+            .ignoringDisable(false);
+    CommandScheduler.getInstance().schedule(snowblowGateCommand);
   }
 
   private void collect() {
