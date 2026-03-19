@@ -284,7 +284,9 @@ public class Vision extends SubsystemBase {
    * </ul>
    */
   private void setIMUModes() {
-    int mode = 4;
+    // Mode 1 (External Seed) while disabled for pre-match heading calibration.
+    // Mode 4 (Internal + External Assist) while enabled for match play.
+    int mode = DriverStation.isDisabled() ? 1 : 4;
     // Only push the IMU mode when it actually changes (or on the very first
     // call).  Spamming SetIMUMode at 50 Hz can disrupt the Limelight's
     // internal complementary filter and cause cameras to enter a bad state
@@ -487,8 +489,8 @@ public class Vision extends SubsystemBase {
 
     String prefix = "Vision/" + cameraName + "/";
 
-    // 1. Read the MegaTag 2 pose estimate.
-    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+    // 1. Read the MegaTag 1 pose estimate (full 6-DOF including rotation).
+    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
