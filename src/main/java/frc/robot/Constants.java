@@ -548,17 +548,17 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds }
-      {1.219, 4.5, 3833, 1.5},
-      {1.524, 5.6, 3839, 1.5},
-      {1.829, 6.7, 3847.0, 1.5},
-      {2.134, 7.8, 3857.0, 1.5},
-      {2.438, 8.9, 3867.0, 1.5},
-      {2.743, 10.0, 3879, 1.5},
-      {3.048, 11.0, 3893, 1.5},
-      {3.353, 12.1, 3908.0, 1.5},
-      {3.658, 13.2, 3924.0, 1.5},
-      {3.962, 14.2, 3942, 1.5},
-      {4.267, 15.3, 3961, 1.5},
+      {1.219, 4.5, 3600, 1.5},
+      {1.524, 5.6, 3700, 1.5},
+      {1.829, 6.7, 3800.0, 1.5},
+      {2.134, 7.8, 4000.0, 1.5},
+      {2.438, 8.9, 4050.0, 1.5},
+      {2.743, 10.0, 4100.0, 1.5},
+      {3.048, 11.0, 4150.0, 1.5},
+      {3.353, 12.1, 4200.0, 1.5},
+      {3.658, 13.2, 4250.0, 1.5},
+      {3.962, 14.2, 4300.0, 1.5},
+      {4.267, 15.3, 4350.0, 1.5},
       {4.572, 16.3, 4400.0, 1.5},
       {4.877, 17.3, 4450.0, 1.5},
       {5.182, 18.3, 4500.0, 1.5},
@@ -796,7 +796,7 @@ public final class Constants {
         new CANDeviceId(13, CanBusNames.superstructureFor(13)); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
-        (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
+        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
 
     kIntakeRollerConfig.fxConfig.Slot0.kP = 2.0; // Increased from 0.5
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
