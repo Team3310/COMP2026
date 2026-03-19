@@ -556,10 +556,10 @@ public final class Constants {
       {1.219, 5.0, 3600, 1.5, 1000.0},
       {1.524, 5.6, 3700, 1.5, 1200.0},
       {1.829, 6.7, 3800.0, 1.5, 1500.0},
-      {2.134, 7.8, 4000.0, 1.5, 2000.0},
-      {2.438, 8.9, 4050.0, 1.5, 2500.0},
+      {2.134, 7.8, 4000.0, 1.5, 3000.0},
+      {2.438, 8.9, 4050.0, 1.5, 3000.0},
       {2.743, 10.0, 4100.0, 1.5, 3000.0},
-      {3.048, 11.0, 4150.0, 1.5, 3500.0},
+      {3.048, 11.0, 4150.0, 1.5, 4000.0},
       {3.353, 12.1, 4400.0, 1.5, 4000.0},
       {3.658, 13.2, 4450.0, 1.5, 4000.0},
       {3.962, 14.2, 4500.0, 1.5, 4000.0},
@@ -772,7 +772,7 @@ public final class Constants {
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
-    public static final double kIntakePivotDeployDegrees = 160.0;
+    public static final double kIntakePivotDeployDegrees = 150.0;
     public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
@@ -786,7 +786,7 @@ public final class Constants {
     public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
 
-    public static final double kIntakePivotToleranceRadians = 0.01;
+    public static final double kIntakePivotToleranceRadians = 0.03;
     public static final double kIntakeRollerRadius = 0.0269875; // in m
 
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
@@ -853,7 +853,7 @@ public final class Constants {
             (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
-    kIntakePivotConfig.kMaxPositionUnits = 170.0; // degrees (fully deployed)
+    kIntakePivotConfig.kMaxPositionUnits = 160.0; // degrees (fully deployed)
     kIntakePivotConfig.kMinPositionUnits = 0.0; // degrees (fully stowed)
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
