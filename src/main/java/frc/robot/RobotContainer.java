@@ -556,6 +556,7 @@ public class RobotContainer {
                 Commands.waitUntil(
                         () -> {
                           double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                          double hoodTolDeg = Constants.ScorerConstants.kHoodDegreesTolerance;
                           double leftErr =
                               Math.abs(
                                   flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
@@ -563,8 +564,18 @@ public class RobotContainer {
                               Math.abs(
                                   flywheelRight.getCurrentVelocity()
                                       - rightTargetRpm.getAsDouble());
+                          double leftHoodErr =
+                              Math.abs(
+                                  hoodLeft.getCurrentPosition()
+                                      - hoodLeft.getPositionSetpointUnits());
+                          double rightHoodErr =
+                              Math.abs(
+                                  hoodRight.getCurrentPosition()
+                                      - hoodRight.getPositionSetpointUnits());
                           return leftErr < tolRPM
                               && rightErr < tolRPM
+                              && leftHoodErr < hoodTolDeg
+                              && rightHoodErr < hoodTolDeg
                               && turretAimManager.isLockedOn();
                         })
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))

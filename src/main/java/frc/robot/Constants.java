@@ -454,6 +454,7 @@ public final class Constants {
     public static double kReverseShootRPM = -5700.0;
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */
     public static final double kFlywheelRPMTolerance = 200.0;
+    public static final double kHoodDegreesTolerance = 1.5;
 
     public static final double kHoodStowedDegrees = 5.0; // degrees from vertical
     public static double kHoodMaxDegrees =
@@ -742,7 +743,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -761,7 +762,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
   }
 
   // #endregion
@@ -943,7 +944,7 @@ public final class Constants {
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
