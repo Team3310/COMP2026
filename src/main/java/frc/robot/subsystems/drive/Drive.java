@@ -181,13 +181,18 @@ public class Drive extends SubsystemBase {
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
+    double[] gyroSampleTimestamps = gyroInputs.odometryYawTimestamps;
     int gyroSampleCount = gyroInputs.odometryYawPositions.length;
     Logger.recordOutput("Drive/Odometry/ModuleSampleCount", sampleTimestamps.length);
     Logger.recordOutput("Drive/Odometry/GyroSampleCount", gyroSampleCount);
     Logger.recordOutput(
+        "Drive/Odometry/GyroTimestampSampleMismatch",
+        gyroInputs.connected && gyroSampleTimestamps.length != gyroSampleCount);
+    Logger.recordOutput(
         "Drive/Odometry/GyroSampleMismatch",
         gyroInputs.connected && gyroSampleCount != sampleTimestamps.length);
     int sampleCount = sampleTimestamps.length;
+    int gyroSampleIndex = 0;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
       SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
@@ -204,10 +209,16 @@ public class Drive extends SubsystemBase {
 
       // Update gyro angle
       if (gyroInputs.connected) {
-        // Prefer the time-aligned gyro sample, but fall back to the latest yaw
-        // if the gyro queue is shorter than the module queues.
-        rawGyroRotation =
-            i < gyroSampleCount ? gyroInputs.odometryYawPositions[i] : gyroInputs.yawPosition;
+        // Use the most recent gyro sample at or before this module sample time.
+        // If none are available, fall back to the earliest queued sample, then
+        // finally the latest gyro reading.
+        if (gyroSampleCount > 0) {
+          gyroSampleIndex =
+              selectGyroSampleIndex(sampleTimestamps[i], gyroSampleTimestamps, gyroSampleIndex);
+          rawGyroRotation = gyroInputs.odometryYawPositions[gyroSampleIndex];
+        } else {
+          rawGyroRotation = gyroInputs.yawPosition;
+        }
       } else {
         // Use the angle delta from the kinematics and module deltas
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
@@ -220,6 +231,20 @@ public class Drive extends SubsystemBase {
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+  }
+
+  private static int selectGyroSampleIndex(
+      double sampleTimestamp, double[] gyroSampleTimestamps, int currentIndex) {
+    if (gyroSampleTimestamps.length == 0) {
+      return 0;
+    }
+
+    int index = Math.min(currentIndex, gyroSampleTimestamps.length - 1);
+    while (index + 1 < gyroSampleTimestamps.length
+        && gyroSampleTimestamps[index + 1] <= sampleTimestamp) {
+      index++;
+    }
+    return index;
   }
 
   /**
