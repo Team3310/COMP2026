@@ -8,7 +8,7 @@ import frc.robot.RobotContainer;
 
 public class OutToSSTrench1 extends AutonCommandBase {
   public OutToSSTrench1(RobotContainer robotContainer) {
-    super(robotContainer, Rotation2d.fromDegrees(180.0));
+    super(robotContainer, Rotation2d.fromDegrees(90.0));
 
     this.addCommands(
         new SequentialCommandGroup(
