@@ -44,6 +44,7 @@ public class Paths {
    * AutoBuilder.followPath() at runtime, so no manual flip needed here.
    */
   public static void loadPaths() {
+    if (loaded) return;
     loaded = true;
 
     forward2m = loadPath("forward2m");

@@ -22,6 +22,7 @@ import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.subsystems.Lights;
+import frc.robot.util.choosers.AutonomousChooser;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -60,6 +61,8 @@ public class Robot extends LoggedRobot {
   // Variables
 
   private Command autonomousCommand;
+  private AutonCommandBase cachedAutoCommand;
+  private AutonomousChooser.AutonomousMode cachedAutoMode;
   private RobotContainer robotContainer;
 
   public static boolean inPit = false;
@@ -375,6 +378,15 @@ public class Robot extends LoggedRobot {
   public void disabledPeriodic() {
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
+    if (selectedAuto.requiresPathLoading()) {
+      Paths.loadPaths();
+    }
+    // Pre-build the auto command so autonomousInit() is instant.
+    // Rebuild whenever the chooser selection changes.
+    if (Paths.loaded && selectedAuto != cachedAutoMode) {
+      cachedAutoCommand = selectedAuto.getCommand();
+      cachedAutoMode = selectedAuto;
+    }
   }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
@@ -384,14 +396,13 @@ public class Robot extends LoggedRobot {
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
-    if (selectedAuto.requiresPathLoading()) {
-      Paths.loadPaths();
-    }
     robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
 
-    // Seed drive pose and Limelight IMUs from the auto's starting rotation
-    // instead of relying on pre-match MegaTag 1 filtering.
-    AutonCommandBase autoCommand = selectedAuto.getCommand();
+    // Use the pre-built command from disabledPeriodic, or build now as fallback.
+    AutonCommandBase autoCommand =
+        (cachedAutoMode == selectedAuto && cachedAutoCommand != null)
+            ? cachedAutoCommand
+            : selectedAuto.getCommand();
     Rotation2d startingRotation = autoCommand.getStartingRotation();
     if (startingRotation != null) {
       Pose2d seededPose =
