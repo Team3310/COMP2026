@@ -347,13 +347,15 @@ public final class TurretAimCalculator {
    * @return Field Translation2d of the outpost landing zone center.
    */
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
+    double midY = FieldConstants.kFieldWidth / 2.0;
+    FieldConstants.LandingZone zone;
     if (isBlue) {
-      return new Translation2d(
-          FieldConstants.LandingZone.BLUEOUT.getX(), FieldConstants.LandingZone.BLUEOUT.getY());
+      zone =
+          robotY < midY ? FieldConstants.LandingZone.BLUEOUT : FieldConstants.LandingZone.BLUEDEP;
     } else {
-      return new Translation2d(
-          FieldConstants.LandingZone.REDOUT.getX(), FieldConstants.LandingZone.REDOUT.getY());
+      zone = robotY < midY ? FieldConstants.LandingZone.REDDEP : FieldConstants.LandingZone.REDOUT;
     }
+    return new Translation2d(zone.getX(), zone.getY());
   }
 
   private static double clamp(double value, double min, double max) {
