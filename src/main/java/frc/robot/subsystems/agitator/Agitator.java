@@ -7,6 +7,7 @@ import frc.lib.subsystems.MotorInputsAutoLogged;
 import frc.lib.subsystems.ServoMotorSubsystem;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -202,5 +203,9 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    */
   public Command customVelocityCommand(double velocityRPM) {
     return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+  }
+
+  public Command customVelocityCommand(DoubleSupplier velocitySupplierRPM) {
+    return velocitySetpointCommand(velocitySupplierRPM).withName(getName() + " Custom Velocity");
   }
 }
