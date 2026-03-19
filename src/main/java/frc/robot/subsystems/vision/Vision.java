@@ -74,6 +74,13 @@ public class Vision extends SubsystemBase {
   private boolean firstLoop = true; // push throttle on the very first periodic() call
   private int lastIMUMode = -1; // track IMU mode to avoid spamming SetIMUMode every cycle
 
+  // Downsample disabled-mode processing to avoid loop overruns.
+  // While disabled the cameras are throttled (low FPS) so running full
+  // NT reads + SetRobotOrientation + processCameraPreMatch at 50 Hz is
+  // wasteful and eats into the 20 ms budget.  Run every Nth cycle instead.
+  private int disabledCycleCounter = 0;
+  private static final int DISABLED_PROCESS_INTERVAL = 5; // run every 5th cycle (~10 Hz)
+
   // Pre-match pose seeding state.
   // The first accepted seed uses setPose() (hard reset); subsequent seeds use
   // addVisionMeasurement() so the estimator converges smoothly.
@@ -179,6 +186,7 @@ public class Vision extends SubsystemBase {
           // Preserve existing seed state; log event for debugging.
           Logger.recordOutput("Vision/resetSkippedOnDisable", true);
         }
+        disabledCycleCounter = 0; // reset so first disabled cycle processes immediately
       }
       wasDisabled = isDisabled;
       firstLoop = false;
@@ -190,20 +198,28 @@ public class Vision extends SubsystemBase {
     // Flush after each camera so every Limelight receives its update immediately.
     double robotYawDeg = drive.getRotation().getDegrees();
     double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
-    for (String name : VisionConstants.kCameraNames) {
-      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
-    }
 
-    // While disabled, run pre-match pose seeding (strict filters, no pose-jump
-    // rejection) so the robot knows its field position before auto starts.
-    // While enabled, run normal vision processing with all filters.
-    // Both paths still query cameras and log even when visionEnabled is false —
-    // only the actual pose injection is suppressed.
+    // While disabled, downsample the expensive per-camera work
+    // (SetRobotOrientation flushes + getBotPoseEstimate NT reads) so we don't
+    // blow the 20 ms loop budget.  The cameras are throttled to low FPS anyway,
+    // so 10 Hz robot-side processing is more than enough.
     if (isDisabled) {
-      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-        processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
+      disabledCycleCounter++;
+      if (disabledCycleCounter >= DISABLED_PROCESS_INTERVAL) {
+        disabledCycleCounter = 0;
+        for (String name : VisionConstants.kCameraNames) {
+          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+        for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+          processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
+        }
       }
       return;
+    }
+
+    // Enabled path — full-rate processing every cycle.
+    for (String name : VisionConstants.kCameraNames) {
+      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 
     // Process each camera — collect accepted observations for timestamp-sorted injection.
