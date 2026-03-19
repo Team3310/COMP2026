@@ -450,6 +450,51 @@ public class RobotContainer {
     SmartDashboard.putNumber("left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
     SmartDashboard.putNumber("right turret offset", Constants.ScorerConstants.kRightTurretOffset);
 
+    SmartDashboard.putData(
+        "Left Turret Offset +1",
+        new InstantCommand(
+                () -> {
+                  Constants.ScorerConstants.kLeftTurretOffset += 1.0;
+                  SmartDashboard.putNumber(
+                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
+                  System.out.println(
+                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
+                })
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Right Turret Offset +1",
+        new InstantCommand(
+                () -> {
+                  Constants.ScorerConstants.kRightTurretOffset += 1.0;
+                  SmartDashboard.putNumber(
+                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
+                  System.out.println(
+                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
+                })
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Left Turret Offset -1",
+        new InstantCommand(
+                () -> {
+                  Constants.ScorerConstants.kLeftTurretOffset -= 1.0;
+                  SmartDashboard.putNumber(
+                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
+                  System.out.println(
+                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
+                })
+            .ignoringDisable(true));
+    SmartDashboard.putData(
+        "Right Turret Offset -1",
+        new InstantCommand(
+                () -> {
+                  Constants.ScorerConstants.kRightTurretOffset -= 1.0;
+                  SmartDashboard.putNumber(
+                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
+                  System.out.println(
+                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
+                })
+            .ignoringDisable(true));
+
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
         "Lights Red",
