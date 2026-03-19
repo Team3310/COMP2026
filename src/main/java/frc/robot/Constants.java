@@ -278,7 +278,7 @@ public final class Constants {
     // to reduce thermals during long disabled periods.
     // 0 = process every frame.  LL4 handles heat fine for pre-match.
     // Low value gives smooth pose convergence instead of choppy jumps.
-    public static final int kDisabledThrottleFrames = 0;
+    public static final int kDisabledThrottleFrames = 100;
 
     // Limelight frame throttle while enabled. 0 = process every frame.
     public static final int kEnabledThrottleFrames = 0;
