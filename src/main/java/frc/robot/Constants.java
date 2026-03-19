@@ -738,7 +738,7 @@ public final class Constants {
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.75;
+    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.7;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
     kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.125;
 
@@ -757,7 +757,7 @@ public final class Constants {
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
     kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kRightFlywheelConfig.fxConfig.Slot0.kP = 0.75;
+    kRightFlywheelConfig.fxConfig.Slot0.kP = 0.7;
     kRightFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
     kRightFlywheelConfig.fxConfig.Slot0.kV = 0.125;
 
