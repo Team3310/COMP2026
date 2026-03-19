@@ -281,7 +281,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
     NamedCommands.registerCommand("crossOverride", buildCrossOverrideCommand());
-    
+
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
     DriverReadout.addChoosers(autonomousChooser);
