@@ -534,18 +534,15 @@ public class Robot extends LoggedRobot {
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
     if (shouldTrack(currentState) && !crossOverrideActive) {
-      // During autonomous, keep the hood at min degrees unless actively
-      // snowblowing (shooting while driving) or the shoot button is held.
-      boolean autonHoldMin =
-          DriverStation.isAutonomousEnabled()
-              && currentState != BotState.SNOWBLOW
-              && !shootButtonHeld;
+      // Keep the hood at min degrees unless actively snowblowing or the
+      // shoot button is held — prevents hood from tracking while driving.
+      boolean holdMin = currentState != BotState.SNOWBLOW && !shootButtonHeld;
       double leftHoodDeg =
-          autonHoldMin
+          holdMin
               ? Constants.ScorerConstants.kHoodMinDegrees
               : robotContainer.getTurretAimManager().getLeftHoodAngleDeg();
       double rightHoodDeg =
-          autonHoldMin
+          holdMin
               ? Constants.ScorerConstants.kHoodMinDegrees
               : robotContainer.getTurretAimManager().getRightHoodAngleDeg();
       CommandScheduler.getInstance()
