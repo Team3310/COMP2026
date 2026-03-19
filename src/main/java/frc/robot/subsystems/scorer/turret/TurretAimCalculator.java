@@ -50,6 +50,8 @@ public final class TurretAimCalculator {
     public final double leftHoodDeg;
     /** Left flywheel speed in RPM. */
     public final double leftFlywheelRPM;
+    /** Vertical feed speed in RPM. */
+    public final double verticalFeedRPM;
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
     /** Right hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
@@ -67,6 +69,7 @@ public final class TurretAimCalculator {
         double leftTurretDeg,
         double leftHoodDeg,
         double leftFlywheelRPM,
+        double verticalFeedRPM,
         double rightTurretDeg,
         double rightHoodDeg,
         double rightFlywheelRPM,
@@ -75,6 +78,7 @@ public final class TurretAimCalculator {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.leftFlywheelRPM = leftFlywheelRPM;
+      this.verticalFeedRPM = verticalFeedRPM;
       this.rightTurretDeg = rightTurretDeg;
       this.rightHoodDeg = rightHoodDeg;
       this.rightFlywheelRPM = rightFlywheelRPM;
@@ -104,7 +108,8 @@ public final class TurretAimCalculator {
    * Compute aim angles for both turrets and hoods.
    *
    * @param robotPose Current robot field pose from odometry / pose estimator.
-   * @return An {@link AimResult} with six values (L/R turret, hood, feeder) plus debug info.
+   * @return An {@link AimResult} with L/R turret, hood, flywheel, and vertical-feed RPM plus debug
+   *     info.
    */
   public static AimResult calculate(Pose2d robotPose) {
     boolean isBlue = (Robot.getEffectiveAlliance() == Alliance.Blue);
@@ -161,11 +166,20 @@ public final class TurretAimCalculator {
             + Constants.ScorerConstants.kTurretOffsetDegrees
             + Constants.ScorerConstants.kRightTurretOffset; // add any static offset
     double hoodDeg = result[1];
-    double feederRPM = result[2];
+    double flywheelRPM = result[2];
+    double verticalFeedRPM = result[3];
 
     // Same values for both sides (parallel turrets)
     return new AimResult(
-        turretDegLeft, hoodDeg, feederRPM, turretDegRight, hoodDeg, feederRPM, fieldTarget, home);
+        turretDegLeft,
+        hoodDeg,
+        flywheelRPM,
+        verticalFeedRPM,
+        turretDegRight,
+        hoodDeg,
+        flywheelRPM,
+        fieldTarget,
+        home);
   }
 
   // ====================================================================
@@ -200,13 +214,13 @@ public final class TurretAimCalculator {
   }
 
   /**
-   * Compute turret angle, hood angle, and feeder speed for a single shooter.
+   * Compute turret angle, hood angle, flywheel speed, and vertical-feed speed for a single shooter.
    *
    * @param shooterField Field-space XY of the shooter exit.
    * @param targetField Field-space XY of the target.
    * @param robotHeading Current robot heading on the field.
    * @param home true when in own alliance zone (aim at hub); false for pass/lob mode.
-   * @return double[3]: [turretDeg, hoodDeg, feederRPM].
+   * @return double[4]: [turretDeg, hoodDeg, flywheelRPM, verticalFeedRPM].
    */
   private static double[] computeAngles(
       Translation2d shooterField,
@@ -262,9 +276,12 @@ public final class TurretAimCalculator {
     double horizontalDist = Math.hypot(dx, dy);
     double hoodDeg;
     double flywheelRPM;
+    double verticalFeedRPM;
 
     hoodDeg = interpolateTable(SORTED_SHOOT_TABLE, horizontalDist, 1); // column 1 = hood
     flywheelRPM = interpolateTable(SORTED_SHOOT_TABLE, horizontalDist, 2); // column 2 = flywheel
+    verticalFeedRPM =
+        interpolateTable(SORTED_SHOOT_TABLE, horizontalDist, 4); // column 4 = vertical feed
 
     // Clamp hood to physical limits
     hoodDeg =
@@ -273,7 +290,7 @@ public final class TurretAimCalculator {
             Constants.ScorerConstants.kHoodMinDegrees,
             Constants.ScorerConstants.kHoodMaxDegrees);
 
-    return new double[] {turretDeg, hoodDeg, flywheelRPM};
+    return new double[] {turretDeg, hoodDeg, flywheelRPM, verticalFeedRPM};
   }
 
   /**
@@ -286,7 +303,7 @@ public final class TurretAimCalculator {
    * @param table 2-D array where each row is {distance, ...values...}.
    * @param distance The horizontal distance to look up.
    * @param valueColumn The column index of the value to interpolate (1-based: 1 = hood, 2 =
-   *     flywheel, 3 = TOF).
+   *     flywheel, 3 = TOF, 4 = vertical feed).
    * @return The interpolated value.
    */
   public static double interpolateTable(double[][] table, double distance, int valueColumn) {
@@ -321,34 +338,22 @@ public final class TurretAimCalculator {
   }
 
   /**
-   * Pick the closer landing zone for pass mode.
+   * Pick the landing zone for pass mode. Always targets the outpost (OUT) zone on the alliance
+   * side. The hub/mid landing zone entries remain in {@link FieldConstants.LandingZone} but are not
+   * used for pass targeting.
    *
-   * @param robotY Robot's current Y coordinate on the field (meters).
+   * @param robotY Robot's current Y coordinate on the field (meters). (currently unused)
    * @param isBlue true if we are the blue alliance.
-   * @return Field Translation2d of the chosen landing zone center.
+   * @return Field Translation2d of the outpost landing zone center.
    */
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
-    double outpostY, midY, targetX;
     if (isBlue) {
-      outpostY = FieldConstants.LandingZone.BLUEOUT.getY();
-      midY = FieldConstants.LandingZone.BLUEMID.getY();
-      targetX = FieldConstants.LandingZone.BLUEOUT.getX(); // same X for both blue landing zones
+      return new Translation2d(
+          FieldConstants.LandingZone.BLUEOUT.getX(), FieldConstants.LandingZone.BLUEOUT.getY());
     } else {
-      outpostY = FieldConstants.LandingZone.REDOUT.getY();
-      midY = FieldConstants.LandingZone.REDMID.getY();
-      targetX = FieldConstants.LandingZone.REDOUT.getX(); // same X for both red landing zones
+      return new Translation2d(
+          FieldConstants.LandingZone.REDOUT.getX(), FieldConstants.LandingZone.REDOUT.getY());
     }
-
-    // Pick whichever landing zone is closer to the robot in Y.
-    // A bias toward DEP shifts the decision line so the robot prefers
-    // shooting to DEP unless it's clearly on the OUT side of the field.
-    // Increase kMidBiasMeters to widen the MID-preferred region.
-    double midBias = FieldConstants.kMidBiasMeters;
-    double distToOutpost = Math.abs(robotY - outpostY);
-    double distToMid = Math.abs(robotY - midY) - midBias;
-    double chosenY = (distToOutpost <= distToMid) ? outpostY : midY;
-
-    return new Translation2d(targetX, chosenY);
   }
 
   private static double clamp(double value, double min, double max) {

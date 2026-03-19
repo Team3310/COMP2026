@@ -221,6 +221,7 @@ public class TurretAimManager extends SubsystemBase {
     inputs.leftTurretAngleDeg = outLeftTurret;
     inputs.leftHoodAngleDeg = result.leftHoodDeg;
     inputs.leftFlywheelRPM = result.leftFlywheelRPM;
+    inputs.verticalFeedRPM = result.verticalFeedRPM;
     inputs.rightTurretAngleDeg = outRightTurret;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
     inputs.rightFlywheelRPM = result.rightFlywheelRPM;
@@ -244,6 +245,7 @@ public class TurretAimManager extends SubsystemBase {
       Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
       Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
       Logger.recordOutput("TurretAim/LeftFlywheelRPM", result.leftFlywheelRPM);
+      Logger.recordOutput("TurretAim/VerticalFeedRPM", result.verticalFeedRPM);
       Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
       Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
       Logger.recordOutput("TurretAim/RightFlywheelRPM", result.rightFlywheelRPM);
@@ -318,6 +320,10 @@ public class TurretAimManager extends SubsystemBase {
 
   public double getRightFlywheelRPM() {
     return inputs.rightFlywheelRPM;
+  }
+
+  public double getVerticalFeedRPM() {
+    return inputs.verticalFeedRPM;
   }
 
   /** Returns the simulated (lagged) turret angle in degrees, for visualization. */
