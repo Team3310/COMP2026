@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4361022727272723,
-        "y": 7.425943181818181
+        "x": 3.5646332737030413,
+        "y": 7.385545617173523
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.430757379248659,
-        "y": 7.846900187022278
+        "x": 5.559288380224428,
+        "y": 7.806502622377621
       },
       "isLocked": false,
       "linkedName": "DepStart"
@@ -80,12 +80,12 @@
     },
     {
       "anchor": {
-        "x": 3.4361022727272723,
-        "y": 7.425943181818181
+        "x": 3.5646332737030413,
+        "y": 7.385545617173523
       },
       "prevControl": {
-        "x": 2.3966071109123432,
-        "y": 6.208134534070579
+        "x": 2.5251381118881127,
+        "y": 6.167736969425921
       },
       "nextControl": null,
       "isLocked": false,
@@ -130,13 +130,13 @@
   },
   "goalEndState": {
     "velocity": 1.0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "Dep",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

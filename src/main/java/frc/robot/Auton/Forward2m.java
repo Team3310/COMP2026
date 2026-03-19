@@ -19,7 +19,7 @@ public class Forward2m extends AutonCommandBase {
   private static final double kTimeoutSeconds = 4.0;
 
   public Forward2m(RobotContainer robotContainer) {
-    super(robotContainer, (Pose2d) null);
+    super(robotContainer, (Rotation2d) null);
 
     var drive = robotContainer.getDrive();
     Translation2d[] startTranslation = new Translation2d[] {Translation2d.kZero};

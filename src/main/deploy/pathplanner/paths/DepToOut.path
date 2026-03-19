@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4361022727272723,
-        "y": 7.425943181818181
+        "x": 3.5646332737030413,
+        "y": 7.385545617173523
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.992909090909091,
-        "y": 6.477715909090907
+        "x": 3.12144009188486,
+        "y": 6.43731834444625
       },
       "isLocked": false,
       "linkedName": "DepStart"
@@ -48,7 +48,7 @@
   "folder": "Dep",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

@@ -534,16 +534,24 @@ public class Robot extends LoggedRobot {
                 .getTurretRight()
                 .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
     if (shouldTrack(currentState) && !crossOverrideActive) {
+      // During autonomous, keep the hood at min degrees unless actively
+      // snowblowing (shooting while driving) or the shoot button is held.
+      boolean autonHoldMin =
+          DriverStation.isAutonomousEnabled()
+              && currentState != BotState.SNOWBLOW
+              && !shootButtonHeld;
+      double leftHoodDeg =
+          autonHoldMin
+              ? Constants.ScorerConstants.kHoodMinDegrees
+              : robotContainer.getTurretAimManager().getLeftHoodAngleDeg();
+      double rightHoodDeg =
+          autonHoldMin
+              ? Constants.ScorerConstants.kHoodMinDegrees
+              : robotContainer.getTurretAimManager().getRightHoodAngleDeg();
       CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getHoodLeft()
-                  .setDegreesCommand(robotContainer.getTurretAimManager().getLeftHoodAngleDeg()));
+          .schedule(robotContainer.getHoodLeft().setDegreesCommand(leftHoodDeg));
       CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getHoodRight()
-                  .setDegreesCommand(robotContainer.getTurretAimManager().getRightHoodAngleDeg()));
+          .schedule(robotContainer.getHoodRight().setDegreesCommand(rightHoodDeg));
     }
 
     // Flywheel control in pit mode only — normal-mode flywheels are now

@@ -1,7 +1,6 @@
 package frc.robot.Auton;
 
 import com.pathplanner.lib.path.PathPlannerPath;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,27 +17,27 @@ import frc.robot.RobotContainer;
  */
 public class AutonCommandBase extends SequentialCommandGroup {
   private final RobotContainer robotContainer;
-  private final Pose2d startingPose;
+  private final Rotation2d startingRotation;
 
   /**
    * Creates a new AutonCommandBase.
    *
    * @param robotContainer The robot container
-   * @param startingPose The starting pose of the robot
+   * @param startingRotation The starting rotation of the robot, or null for no pose reset
    */
-  protected AutonCommandBase(RobotContainer robotContainer, Pose2d startingPose) {
+  protected AutonCommandBase(RobotContainer robotContainer, Rotation2d startingRotation) {
     this.robotContainer = robotContainer;
-    this.startingPose = startingPose;
+    this.startingRotation = startingRotation;
   }
 
   /**
-   * Returns the starting pose, or null if this auto should run from wherever the robot currently is
-   * (no pose reset).
+   * Returns the starting pose (current drive translation + the provided starting rotation adjusted
+   * for alliance), or null if this auto should run from wherever the robot currently is (no pose
+   * reset).
    */
-  public Pose2d getStartingPose() {
-    if (startingPose == null) return null;
-    return new Pose2d(
-        this.startingPose.getTranslation(),
+  public Rotation2d getStartingRotation() {
+    if (startingRotation == null) return null;
+    return startingRotation.plus(
         Robot.currentAlliance == Alliance.Red
             ? Rotation2d.fromDegrees(180)
             : Rotation2d.fromDegrees(0));

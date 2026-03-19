@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4361022727272723,
-        "y": 7.425943181818181
+        "x": 4.473255813953489,
+        "y": 7.417996422182468
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.2294886363636355,
-        "y": 7.910363636363636
+        "x": 6.305454077898846,
+        "y": 7.767008517645147
       },
       "isLocked": false,
-      "linkedName": "DepStart"
+      "linkedName": "DepStartTrench"
     },
     {
       "anchor": {
@@ -20,12 +20,12 @@
         "y": 6.920909090909091
       },
       "prevControl": {
-        "x": 7.600056818181818,
-        "y": 7.529011363636363
+        "x": 7.339284329258368,
+        "y": 7.346837797249349
       },
       "nextControl": {
-        "x": 7.820666970779492,
-        "y": 6.227411463310092
+        "x": 8.12397137745975,
+        "y": 6.4282468694096595
       },
       "isLocked": false,
       "linkedName": null
@@ -135,7 +135,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -150,7 +150,7 @@
   "folder": "Dep",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": false
 }
