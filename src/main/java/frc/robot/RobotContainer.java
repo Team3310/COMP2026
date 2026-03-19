@@ -546,7 +546,6 @@ public class RobotContainer {
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
-        roof.setMinHeightCommand(),
         Commands.parallel(
                 flywheelLeft.setRPMCommand(leftTargetRpm),
                 flywheelRight.setRPMCommand(rightTargetRpm))
