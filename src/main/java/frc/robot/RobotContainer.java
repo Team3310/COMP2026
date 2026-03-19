@@ -631,10 +631,12 @@ public class RobotContainer {
                               if (isTurretOnTarget()) {
                                 CommandScheduler.getInstance()
                                     .schedule(
-                                        verticalFeedLeft.setRPMCommand(verticalFeedTargetRpm));
+                                        verticalFeedLeft.customVelocityCommand(
+                                            verticalFeedTargetRpm));
                                 CommandScheduler.getInstance()
                                     .schedule(
-                                        verticalFeedRight.setRPMCommand(verticalFeedTargetRpm));
+                                        verticalFeedRight.customVelocityCommand(
+                                            verticalFeedTargetRpm));
                                 CommandScheduler.getInstance()
                                     .schedule(agitatorLeft.snowblowCommand());
                                 CommandScheduler.getInstance()
