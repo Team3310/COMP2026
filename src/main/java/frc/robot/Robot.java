@@ -692,6 +692,7 @@ public class Robot extends LoggedRobot {
                             .schedule(robotContainer.getAgitatorRight().offCommand());
                       }
                     })
+                .until(() -> currentState != BotState.SNOWBLOW)
                 .ignoringDisable(false));
   }
 
