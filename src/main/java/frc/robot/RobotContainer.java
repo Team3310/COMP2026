@@ -563,7 +563,9 @@ public class RobotContainer {
                               Math.abs(
                                   flywheelRight.getCurrentVelocity()
                                       - rightTargetRpm.getAsDouble());
-                          return leftErr < tolRPM && rightErr < tolRPM;
+                          return leftErr < tolRPM
+                              && rightErr < tolRPM
+                              && turretAimManager.isLockedOn();
                         })
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
                     .andThen(

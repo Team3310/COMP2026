@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
@@ -14,8 +16,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.lib.limelight.LimelightHelpers;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
+import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.subsystems.Lights;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -377,16 +381,34 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     inPit = false;
-    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
-    var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+
+    var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
     if (selectedAuto.requiresPathLoading()) {
       Paths.loadPaths();
     }
     robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
 
-    autonomousCommand = robotContainer.getAutonomousCommand();
-    // schedule the autonomous command (example)
+    // Seed drive pose and Limelight IMUs from the auto's starting rotation
+    // instead of relying on pre-match MegaTag 1 filtering.
+    AutonCommandBase autoCommand = selectedAuto.getCommand();
+    Rotation2d startingRotation = autoCommand.getStartingRotation();
+    if (startingRotation != null) {
+      Pose2d seededPose =
+          new Pose2d(robotContainer.getDrive().getPose().getTranslation(), startingRotation);
+      robotContainer.getDrive().setPose(seededPose);
+
+      // Push the same heading to every Limelight so MegaTag 2's IMU is
+      // correctly seeded at the moment auto begins.
+      double yawDeg = startingRotation.getDegrees();
+      for (String name : Constants.VisionConstants.kCameraNames) {
+        LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+      }
+    }
+
+    robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
+
+    autonomousCommand = autoCommand;
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
