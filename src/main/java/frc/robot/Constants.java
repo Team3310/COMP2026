@@ -770,7 +770,7 @@ public final class Constants {
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
-    public static final double kIntakePivotDeployDegrees = 150.0;
+    public static final double kIntakePivotDeployDegrees = 170.0;
     public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
@@ -784,7 +784,7 @@ public final class Constants {
     public static final double kDeployVelocityRPM = 2109.0;
     public static final double kRetractVelocityRPM = 200.0;
 
-    public static final double kIntakePivotToleranceRadians = 0.05;
+    public static final double kIntakePivotToleranceRadians = 0.01;
     public static final double kIntakeRollerRadius = 0.0269875; // in m
 
     public static final double kIntakePivotCancoderOffset = kIsPracticeBot ? 0.411133 : -0.086914;
@@ -851,7 +851,7 @@ public final class Constants {
             (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
-    kIntakePivotConfig.kMaxPositionUnits = 145.0; // degrees (fully deployed)
+    kIntakePivotConfig.kMaxPositionUnits = 170.0; // degrees (fully deployed)
     kIntakePivotConfig.kMinPositionUnits = 0.0; // degrees (fully stowed)
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     kIntakePivotConfig.fxConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
