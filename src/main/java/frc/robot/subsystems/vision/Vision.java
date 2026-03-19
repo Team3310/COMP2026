@@ -542,54 +542,19 @@ public class Vision extends SubsystemBase {
       return;
     }
 
-    // 6. Apply stricter filters before the very first hard seed. Once the robot
-    //    has a seed, fall back to the looser refinement thresholds above.
-    if (!hasSeed) {
-      if (estimate.tagCount < VisionConstants.kInitialSeedMinTagCount) {
-        if (shouldLog) {
-          Logger.recordOutput(prefix + "preMatch", false);
-          Logger.recordOutput(prefix + "preMatchReject", "initial_tag_count");
-        }
-        return;
-      }
-
-      if (xyStdDev > VisionConstants.kInitialSeedMaxStdDev) {
-        if (shouldLog) {
-          Logger.recordOutput(prefix + "preMatch", false);
-          Logger.recordOutput(prefix + "preMatchReject", "initial_xy_stddev_too_high");
-        }
-        return;
-      }
-
-      if (yawStdDev > VisionConstants.kInitialSeedMaxYawStdDevDeg) {
-        if (shouldLog) {
-          Logger.recordOutput(prefix + "preMatch", false);
-          Logger.recordOutput(prefix + "preMatchReject", "initial_yaw_stddev_too_high");
-        }
-        return;
-      }
-    }
-
-    // 7. Update stable-seed tracking from accepted MT1 poses.
+    // 6. Update stable-seed tracking from accepted MT1 poses.
     updateStableSeedState(visionPose, shouldLog, prefix);
 
-    // 8. Seed the pose estimator.
+    // 7. Seed the pose estimator.
     if (!hasSeed) {
-      boolean initialSeedReady =
-          stableSeedSampleCount >= VisionConstants.kInitialSeedMinStableSamples;
-      if (initialSeedReady) {
-        if (visionEnabled) {
-          drive.setPose(visionPose);
-          hasSeed = true;
-        }
-        if (shouldLog) {
-          Logger.recordOutput(
-              prefix + "preMatchAction", visionEnabled ? "setPose" : "setPose_suppressed");
-          Logger.recordOutput(
-              prefix + "preMatchSeededYawDeg", visionPose.getRotation().getDegrees());
-        }
-      } else if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatchAction", "waiting_for_initial_seed_stability");
+      if (visionEnabled) {
+        drive.setPose(visionPose);
+        hasSeed = true;
+      }
+      if (shouldLog) {
+        Logger.recordOutput(
+            prefix + "preMatchAction", visionEnabled ? "setPose" : "setPose_suppressed");
+        Logger.recordOutput(prefix + "preMatchSeededYawDeg", visionPose.getRotation().getDegrees());
       }
     } else {
       double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
@@ -612,16 +577,13 @@ public class Vision extends SubsystemBase {
       seedStable = true;
     }
 
-    // 9. Logging (rate-limited).
+    // 8. Logging (rate-limited).
     if (shouldLog) {
       Logger.recordOutput(prefix + "preMatch", true);
       Logger.recordOutput(prefix + "preMatchInjected", visionEnabled);
       Logger.recordOutput(prefix + "preMatchHasSeed", hasSeed);
       Logger.recordOutput(prefix + "preMatchSeedStable", seedStable);
       Logger.recordOutput(prefix + "preMatchStableSamples", stableSeedSampleCount);
-      Logger.recordOutput(
-          prefix + "preMatchInitialSeedReady",
-          stableSeedSampleCount >= VisionConstants.kInitialSeedMinStableSamples);
       Logger.recordOutput(prefix + "preMatchPose", visionPose);
       Logger.recordOutput(prefix + "preMatchTagCount", estimate.tagCount);
       Logger.recordOutput(prefix + "preMatchXYStdDev", xyStdDev);

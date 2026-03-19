@@ -258,8 +258,9 @@ public final class Constants {
     // On enable the system switches to MegaTag 2 which uses the now-correct
     // gyro heading for its constrained solve.
 
-    // Require at least this many tags visible to accept a disabled-mode
-    // refinement after the initial seed has been established.
+    // Require at least this many tags visible to accept a disabled-mode seed.
+    // 1 = accept single-tag results (the stddev multiplier already down-weights
+    //     noisy measurements so every observation helps converge the estimate).
     public static final int kPreMatchMinTagCount = 1;
 
     // Maximum Limelight-reported XY std dev (meters) to accept a seed.
@@ -294,14 +295,6 @@ public final class Constants {
     // Maximum yaw delta (degrees) between consecutive accepted MT1 poses for
     // the seed to continue counting as stable.
     public static final double kPreMatchStableSeedYawDeltaDeg = 2.0;
-
-    // ---- Initial seed acquisition (first disabled-mode setPose only) ----
-    // The very first seed is stricter than later pre-match refinements because
-    // it hard-resets both the pose estimator and the gyro heading reference.
-    public static final int kInitialSeedMinTagCount = 2;
-    public static final double kInitialSeedMaxStdDev = 0.20;
-    public static final double kInitialSeedMaxYawStdDevDeg = 5.0;
-    public static final int kInitialSeedMinStableSamples = 3;
   }
   // #endregion
 
