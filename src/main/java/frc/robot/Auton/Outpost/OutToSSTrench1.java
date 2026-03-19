@@ -12,6 +12,6 @@ public class OutToSSTrench1 extends AutonCommandBase {
 
     this.addCommands(
         new SequentialCommandGroup(
-            followPath(Paths.OutToSSTrench), followPath(Paths.snowblowOutpost)));
+            followPath(Paths.OutToSSTrench), followPath(Paths.snowblowOutpostBumpToTrench)));
   }
 }

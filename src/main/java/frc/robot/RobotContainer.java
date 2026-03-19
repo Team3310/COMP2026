@@ -280,7 +280,7 @@ public class RobotContainer {
         "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
-    NamedCommands.registerCommand("crossOverride", buildCrossOverrideCommand());
+    NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5646332737030413,
-        "y": 2.4043470483005365
+        "x": 3.5484078711985685,
+        "y": 2.761305903398926
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.315277280858676,
-        "y": 2.0960644007155635
+        "x": 2.299051878354203,
+        "y": 2.453023255813953
       },
       "isLocked": false,
       "linkedName": "OutTrench"
@@ -133,7 +133,7 @@
   "folder": "Out",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": false
 }
