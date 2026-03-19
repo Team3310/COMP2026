@@ -738,7 +738,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -821,7 +821,7 @@ public final class Constants {
 
     // PID Slot 0 gains for MotionMagicVoltage
     // Design sheet: X44, gear ratio 5.454545:1, 40A stator, Motion Magic Position Control
-    kIntakePivotConfig.fxConfig.Slot0.kP = 2.0; // Start conservative — tune up from here
+    kIntakePivotConfig.fxConfig.Slot0.kP = 60.0; // Start conservative — tune up from here
     kIntakePivotConfig.fxConfig.Slot0.kI = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kS = 0.0; // Static friction compensation (volts)
@@ -836,7 +836,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.Slot1.kA = 0.0;
 
     // Motion Magic profile — units are rotor rotations/s and rotations/s²
-    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 50.0; // rot/s
+    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0; // rot/s
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0; // rot/s²
 
     // Units = degrees
