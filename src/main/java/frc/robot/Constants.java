@@ -439,7 +439,7 @@ public final class Constants {
     // zone and the shoot command is being held.
     public static double kHomeScoringMaxLinearSpeedMps = 2.8;
     public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
-    public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 4.0;
+    public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
     public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
     public static double kHomeScoringMaxAngularDecelRadPerSec2 = 45.0;
