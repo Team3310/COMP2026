@@ -757,7 +757,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   // #endregion
