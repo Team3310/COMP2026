@@ -448,6 +448,7 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
+    public static final double kWaitTime = 0.5; // seconds after flywheels are up to speed
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;
@@ -795,7 +796,7 @@ public final class Constants {
         new CANDeviceId(13, CanBusNames.superstructureFor(13)); // Motor 1 (master)
     kIntakeRollerConfig.momentOfInertia = 0.00132536;
     kIntakeRollerConfig.unitToRotorRatio =
-        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
+        (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
 
     kIntakeRollerConfig.fxConfig.Slot0.kP = 2.0; // Increased from 0.5
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
