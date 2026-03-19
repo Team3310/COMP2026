@@ -454,6 +454,7 @@ public final class Constants {
     public static double kReverseShootRPM = -5700.0;
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */
     public static final double kFlywheelRPMTolerance = 200.0;
+
     public static final double kHoodDegreesTolerance = 1.5;
 
     public static final double kHoodStowedDegrees = 5.0; // degrees from vertical
