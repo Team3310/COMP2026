@@ -668,15 +668,9 @@ public class Robot extends LoggedRobot {
                     () -> {
                       if (robotContainer.isTurretOnTarget()) {
                         CommandScheduler.getInstance()
-                            .schedule(
-                                robotContainer
-                                    .getVerticalFeedLeft()
-                                    .customVelocityCommand(feedRpm));
+                            .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                         CommandScheduler.getInstance()
-                            .schedule(
-                                robotContainer
-                                    .getVerticalFeedRight()
-                                    .customVelocityCommand(feedRpm));
+                            .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                         CommandScheduler.getInstance()
                             .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
                         CommandScheduler.getInstance()

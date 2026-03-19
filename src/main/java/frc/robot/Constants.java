@@ -45,6 +45,7 @@ public final class Constants {
   // Auto-detect the robot from the local roboRIO MAC address. Unknown MACs fall back to PRACTICE.
   public static final Bot currentBot = detectCurrentBot();
   public static final boolean kIsPracticeBot = currentBot == Bot.PRACTICE;
+  public static final boolean atComp = false;
 
   // Global motor voltage limit applied to all TalonFX motors
   public static final double kMotorPeakVoltage = 12.0;

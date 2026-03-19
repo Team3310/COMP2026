@@ -201,11 +201,11 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @param velocityRPS velocity in rotations per second at the output
    * @return Command that runs roller at the specified velocity
    */
-  public Command customVelocityCommand(double velocityRPM) {
-    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+  public Command setRPMCommand(double rpm) {
+    return velocitySetpointCommand(() -> rpm).withName("Flywheel Set RPM");
   }
 
-  public Command customVelocityCommand(DoubleSupplier velocitySupplierRPM) {
-    return velocitySetpointCommand(velocitySupplierRPM).withName(getName() + " Custom Velocity");
+  public Command setRPMCommand(DoubleSupplier rpmSupplier) {
+    return velocitySetpointCommand(rpmSupplier).withName("Flywheel Track RPM");
   }
 }

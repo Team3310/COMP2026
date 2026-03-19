@@ -338,22 +338,29 @@ public final class TurretAimCalculator {
   }
 
   /**
-   * Pick the landing zone for pass mode. Always targets the outpost (OUT) zone on the alliance
-   * side. The hub/mid landing zone entries remain in {@link FieldConstants.LandingZone} but are not
-   * used for pass targeting.
+   * Pick the landing zone for pass mode based on the robot's Y position relative to the field
+   * midline.
    *
-   * @param robotY Robot's current Y coordinate on the field (meters). (currently unused)
+   * <ul>
+   *   <li><b>Red:</b> REDDEP if below midline, REDOUT if above midline.
+   *   <li><b>Blue:</b> BLUEDEP if above midline, BLUEOUT if below midline (opposite of red).
+   * </ul>
+   *
+   * @param robotY Robot's current Y coordinate on the field (meters).
    * @param isBlue true if we are the blue alliance.
-   * @return Field Translation2d of the outpost landing zone center.
+   * @return Field Translation2d of the chosen landing zone center.
    */
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
+    double midY = FieldConstants.kFieldWidth / 2.0;
+    FieldConstants.LandingZone zone;
     if (isBlue) {
-      return new Translation2d(
-          FieldConstants.LandingZone.BLUEOUT.getX(), FieldConstants.LandingZone.BLUEOUT.getY());
+      zone =
+          robotY < midY ? FieldConstants.LandingZone.BLUEOUT : FieldConstants.LandingZone.BLUEDEP;
     } else {
-      return new Translation2d(
-          FieldConstants.LandingZone.REDOUT.getX(), FieldConstants.LandingZone.REDOUT.getY());
+      zone = robotY < midY ? FieldConstants.LandingZone.REDDEP : FieldConstants.LandingZone.REDOUT;
     }
+    System.out.println("Landing zone: " + zone + " (robotY=" + robotY + ")");
+    return new Translation2d(zone.getX(), zone.getY());
   }
 
   private static double clamp(double value, double min, double max) {

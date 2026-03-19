@@ -6,6 +6,7 @@ import frc.lib.subsystems.MotorInputsAutoLogged;
 import frc.lib.subsystems.ServoMotorSubsystem;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.robot.Constants;
+import java.util.function.DoubleSupplier;
 
 /**
  * The {@code IntakeRollerSubsystem} controls the roller mechanism of the robot's intake. It manages
@@ -63,7 +64,11 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
     return neutralCommand();
   }
 
-  public Command customVelocityCommand(double velocityRPM) {
-    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+  public Command setRPMCommand(double rpm) {
+    return velocitySetpointCommand(() -> rpm).withName("Intake Set RPM");
+  }
+
+  public Command setRPMCommand(DoubleSupplier rpmSupplier) {
+    return velocitySetpointCommand(rpmSupplier).withName("Intake Track RPM");
   }
 }
