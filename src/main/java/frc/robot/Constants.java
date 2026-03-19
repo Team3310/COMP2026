@@ -737,7 +737,7 @@ public final class Constants {
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.7;
+    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.75;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
     kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.125;
 
@@ -780,10 +780,10 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kIntakeVelocityRPM = 2109.0;
-    public static double kOuttakeVelocityRPM = -2109.0;
+    public static double kIntakeVelocityRPM = 1500.0;
+    public static double kOuttakeVelocityRPM = -2500.0;
 
-    public static final double kDeployVelocityRPM = 2109.0;
+    public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
 
     public static final double kIntakePivotToleranceRadians = 0.01;
