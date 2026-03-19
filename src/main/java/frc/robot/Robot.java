@@ -588,7 +588,7 @@ public class Robot extends LoggedRobot {
 
   public static boolean shouldLimitHomeZoneDrive() {
     return Robot.currentState == BotState.SNOWBLOW
-        && (shootButtonHeld 
+        && (shootButtonHeld
             && ((getEffectiveAlliance() == Alliance.Blue && currentZone == Zone.BLUE)
                 || (getEffectiveAlliance() == Alliance.Red && currentZone == Zone.RED)));
   }
