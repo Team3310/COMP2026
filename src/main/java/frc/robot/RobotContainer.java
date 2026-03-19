@@ -546,6 +546,7 @@ public class RobotContainer {
   private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
+    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
@@ -567,8 +568,8 @@ public class RobotContainer {
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
                     .andThen(
                         Commands.parallel(
-                            verticalFeedLeft.verticalFeedIntakeCommand(),
-                            verticalFeedRight.verticalFeedIntakeCommand(),
+                            verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
+                            verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
                             agitatorLeft.snowblowCommand(),
                             agitatorRight.snowblowCommand())))
             .finallyDo(

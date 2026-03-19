@@ -17,6 +17,8 @@ public interface TurretAimIO {
     public double leftHoodAngleDeg = 10.0;
     /** Left flywheel speed in RPM. */
     public double leftFlywheelRPM = 0.0;
+    /** Vertical feed speed in RPM. */
+    public double verticalFeedRPM = 0.0;
 
     public double rightTurretAngleDeg = 0.0;
     /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
