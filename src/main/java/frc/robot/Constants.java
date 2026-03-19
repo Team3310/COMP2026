@@ -821,7 +821,7 @@ public final class Constants {
 
     // PID Slot 0 gains for MotionMagicVoltage
     // Design sheet: X44, gear ratio 5.454545:1, 40A stator, Motion Magic Position Control
-    kIntakePivotConfig.fxConfig.Slot0.kP = 60.0; // Start conservative — tune up from here
+    kIntakePivotConfig.fxConfig.Slot0.kP = 60.0;
     kIntakePivotConfig.fxConfig.Slot0.kI = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kS = 0.0; // Static friction compensation (volts)
@@ -836,7 +836,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.Slot1.kA = 0.0;
 
     // Motion Magic profile — units are rotor rotations/s and rotations/s²
-    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0; // rot/s
+    kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicCruiseVelocity = 120.0; // rot/s
     kIntakePivotConfig.fxConfig.MotionMagic.MotionMagicAcceleration = 300.0; // rot/s²
 
     // Units = degrees
@@ -917,7 +917,7 @@ public final class Constants {
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -960,7 +960,7 @@ public final class Constants {
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
 
   // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
@@ -981,7 +981,7 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
 
   // #region Roof Subsystem
