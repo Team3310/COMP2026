@@ -281,8 +281,6 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
-    NamedCommands.registerCommand(
-        "flywheelOn", Commands.parallel(flywheelRight.shootCommand(), flywheelLeft.shootCommand()));
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();

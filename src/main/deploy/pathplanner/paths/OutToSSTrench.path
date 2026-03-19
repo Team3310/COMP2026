@@ -102,17 +102,6 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "flywheelOn",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "flywheelOn"
-        }
-      }
-    },
-    {
       "name": "switchToSnowblow",
       "waypointRelativePos": 0.5595238095238095,
       "endWaypointRelativePos": null,
