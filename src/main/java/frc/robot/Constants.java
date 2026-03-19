@@ -482,7 +482,7 @@ public final class Constants {
 
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
-    public static final double kTurretLockOnToleranceDeg = 20.0;
+    public static final double kTurretLockOnToleranceDeg = 60.0;
 
     // Turret command deadband — if the new aim command is within this many
     // degrees of the previous command, hold the previous value.  Prevents the
