@@ -281,7 +281,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
     NamedCommands.registerCommand("crossOverride", buildCrossOverrideCommand());
-    
+
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
     DriverReadout.addChoosers(autonomousChooser);
@@ -543,6 +543,19 @@ public class RobotContainer {
         drive, () -> xMetersPerSecondScalar, () -> yMetersPerSecondScalar, () -> 0.0);
   }
 
+  /**
+   * Returns true when both physical turrets are within tolerance of their commanded positions. Use
+   * this to gate feeders so balls aren't launched while the turret is mid-flip.
+   */
+  public boolean isTurretOnTarget() {
+    double tol = Constants.ScorerConstants.kTurretLockOnToleranceDeg;
+    double leftErr =
+        Math.abs(turretLeft.getCurrentPosition() - turretAimManager.getLeftTurretAngleDeg());
+    double rightErr =
+        Math.abs(turretRight.getCurrentPosition() - turretAimManager.getRightTurretAngleDeg());
+    return leftErr < tol && rightErr < tol;
+  }
+
   private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
@@ -563,17 +576,35 @@ public class RobotContainer {
                               Math.abs(
                                   flywheelRight.getCurrentVelocity()
                                       - rightTargetRpm.getAsDouble());
-                          return leftErr < tolRPM
-                              && rightErr < tolRPM
-                              && turretAimManager.isLockedOn();
+                          return leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget();
                         })
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
                     .andThen(
-                        Commands.parallel(
-                            verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
-                            verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
-                            agitatorLeft.snowblowCommand(),
-                            agitatorRight.snowblowCommand())))
+                        // Gate feeds and agitators — off while turret is flipping.
+                        Commands.run(
+                            () -> {
+                              if (isTurretOnTarget()) {
+                                CommandScheduler.getInstance()
+                                    .schedule(
+                                        verticalFeedLeft.customVelocityCommand(
+                                            verticalFeedTargetRpm));
+                                CommandScheduler.getInstance()
+                                    .schedule(
+                                        verticalFeedRight.customVelocityCommand(
+                                            verticalFeedTargetRpm));
+                                CommandScheduler.getInstance()
+                                    .schedule(agitatorLeft.snowblowCommand());
+                                CommandScheduler.getInstance()
+                                    .schedule(agitatorRight.snowblowCommand());
+                              } else {
+                                CommandScheduler.getInstance()
+                                    .schedule(verticalFeedLeft.offCommand());
+                                CommandScheduler.getInstance()
+                                    .schedule(verticalFeedRight.offCommand());
+                                CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                                CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                              }
+                            })))
             .finallyDo(
                 () -> {
                   CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
