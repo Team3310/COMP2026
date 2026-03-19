@@ -474,8 +474,8 @@ public final class Constants {
     public static final double kTurretUnitToRotorRatio =
         (11.0 / 32.0) * (14.0 / 220.0) * 360.0; // convert rotations to degrees
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
-    public static double kTurretOffsetDegrees = 7.0;
 
+    public static double kTurretOffsetDegrees = 0.0;
     public static double kLeftTurretOffset = 0.0;
     public static double kRightTurretOffset = 0.0;
 
