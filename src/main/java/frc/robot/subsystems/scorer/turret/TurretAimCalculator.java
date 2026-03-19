@@ -321,34 +321,22 @@ public final class TurretAimCalculator {
   }
 
   /**
-   * Pick the closer landing zone for pass mode.
+   * Pick the landing zone for pass mode. Always targets the outpost (OUT) zone on the alliance
+   * side. The hub/mid landing zone entries remain in {@link FieldConstants.LandingZone} but are not
+   * used for pass targeting.
    *
-   * @param robotY Robot's current Y coordinate on the field (meters).
+   * @param robotY Robot's current Y coordinate on the field (meters). (currently unused)
    * @param isBlue true if we are the blue alliance.
-   * @return Field Translation2d of the chosen landing zone center.
+   * @return Field Translation2d of the outpost landing zone center.
    */
   private static Translation2d pickLandingTarget(double robotY, boolean isBlue) {
-    double outpostY, midY, targetX;
     if (isBlue) {
-      outpostY = FieldConstants.LandingZone.BLUEOUT.getY();
-      midY = FieldConstants.LandingZone.BLUEMID.getY();
-      targetX = FieldConstants.LandingZone.BLUEOUT.getX(); // same X for both blue landing zones
+      return new Translation2d(
+          FieldConstants.LandingZone.BLUEOUT.getX(), FieldConstants.LandingZone.BLUEOUT.getY());
     } else {
-      outpostY = FieldConstants.LandingZone.REDOUT.getY();
-      midY = FieldConstants.LandingZone.REDMID.getY();
-      targetX = FieldConstants.LandingZone.REDOUT.getX(); // same X for both red landing zones
+      return new Translation2d(
+          FieldConstants.LandingZone.REDOUT.getX(), FieldConstants.LandingZone.REDOUT.getY());
     }
-
-    // Pick whichever landing zone is closer to the robot in Y.
-    // A bias toward DEP shifts the decision line so the robot prefers
-    // shooting to DEP unless it's clearly on the OUT side of the field.
-    // Increase kMidBiasMeters to widen the MID-preferred region.
-    double midBias = FieldConstants.kMidBiasMeters;
-    double distToOutpost = Math.abs(robotY - outpostY);
-    double distToMid = Math.abs(robotY - midY) - midBias;
-    double chosenY = (distToOutpost <= distToMid) ? outpostY : midY;
-
-    return new Translation2d(targetX, chosenY);
   }
 
   private static double clamp(double value, double min, double max) {
