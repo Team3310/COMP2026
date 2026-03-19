@@ -827,7 +827,7 @@ public final class Constants {
 
     // PID Slot 0 gains for MotionMagicVoltage
     // Design sheet: X44, gear ratio 5.454545:1, 40A stator, Motion Magic Position Control
-    kIntakePivotConfig.fxConfig.Slot0.kP = 60.0;
+    kIntakePivotConfig.fxConfig.Slot0.kP = 40.0;
     kIntakePivotConfig.fxConfig.Slot0.kI = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kD = 0.0;
     kIntakePivotConfig.fxConfig.Slot0.kS = 0.0; // Static friction compensation (volts)
