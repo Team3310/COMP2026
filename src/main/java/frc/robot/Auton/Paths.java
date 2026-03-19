@@ -35,7 +35,9 @@ public class Paths {
   public static PathPlannerPath DepSnowShoot;
   public static PathPlannerPath OutSnowShoot;
 
-  public static PathPlannerPath snowblowOutpost;
+  public static PathPlannerPath snowblowOutpostBumpToTrench;
+  public static PathPlannerPath snowblowOutpostTrenchToBump;
+  public static PathPlannerPath snowblowMidShort;
 
   public static boolean loaded;
 
@@ -44,26 +46,27 @@ public class Paths {
    * AutoBuilder.followPath() at runtime, so no manual flip needed here.
    */
   public static void loadPaths() {
-    if (loaded) return;
     loaded = true;
 
     forward2m = loadPath("forward2m");
-    DepCycle = loadPath("DepCycle");
-    OutCycle = loadPath("OutCycle");
-    HubCycle = loadPath("HubCycle");
-    DepToDep = loadPath("DepToDep");
-    OutToOut = loadPath("OutToOut");
-    DepToSSTrench = loadPath("DepToSSTrench");
-    OutToSSTrench = loadPath("OutToSSTrench");
-    TrenchToDepo = loadPath("TrenchToDepo");
-    DepToOut = loadPath("DepToOut");
-    OutToDep = loadPath("OutToDep");
-    HubToDep = loadPath("HubToDep");
-    HubToOut = loadPath("HubToOut");
-    DepSnowShoot = loadPath("DepSnowShoot");
-    OutSnowShoot = loadPath("OutSnowShoot");
-    TrenchToOut = loadPath("TrenchToOut");
-    snowblowOutpost = loadPath("snowblowOutpost");
+    // DepCycle = loadPath("DepCycle");
+    // OutCycle = loadPath("OutCycle");
+    // HubCycle = loadPath("HubCycle");
+    // DepToDep = loadPath("DepToDep");
+    // OutToOut = loadPath("OutToOut");
+    // DepToSSTrench = loadPath("DepToSSTrench");
+    // OutToSSTrench = loadPath("OutToSSTrench");
+    // TrenchToDepo = loadPath("TrenchToDepo");
+    // DepToOut = loadPath("DepToOut");
+    // OutToDep = loadPath("OutToDep");
+    // HubToDep = loadPath("HubToDep");
+    // HubToOut = loadPath("HubToOut");
+    // DepSnowShoot = loadPath("DepSnowShoot");
+    // OutSnowShoot = loadPath("OutSnowShoot");
+    // TrenchToOut = loadPath("TrenchToOut");
+    snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
+    snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
+    snowblowMidShort = loadPath("SnowblowMidShort");
   }
 
   /** Load a single path from a PathPlanner .path file. */
