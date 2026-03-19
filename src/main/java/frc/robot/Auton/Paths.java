@@ -35,6 +35,8 @@ public class Paths {
   public static PathPlannerPath DepSnowShoot;
   public static PathPlannerPath OutSnowShoot;
 
+  public static PathPlannerPath snowblowOutpost;
+
   public static boolean loaded;
 
   /**
@@ -60,6 +62,7 @@ public class Paths {
     DepSnowShoot = loadPath("DepSnowShoot");
     OutSnowShoot = loadPath("OutSnowShoot");
     TrenchToOut = loadPath("TrenchToOut");
+    snowblowOutpost = loadPath("snowblowOutpost");
   }
 
   /** Load a single path from a PathPlanner .path file. */
