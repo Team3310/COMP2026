@@ -120,19 +120,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "intakeDeploy",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "intakeDeploy"
-        }
-      }
-    },
-    {
       "name": "switchToSnowblow",
-      "waypointRelativePos": 1.154838709677419,
+      "waypointRelativePos": 0.49999999999999994,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -148,7 +137,7 @@
       "command": {
         "type": "named",
         "data": {
-          "name": "crossOverride"
+          "name": "switchToCollect"
         }
       }
     }

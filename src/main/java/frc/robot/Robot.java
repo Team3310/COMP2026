@@ -164,7 +164,7 @@ public class Robot extends LoggedRobot {
     // activeHub is still updated here because the broader robot state machine
     // still references it, but teleop drive slowdown no longer depends on
     // FMS/hub state.
-    updateHub();
+    // updateHub();
 
     // This basically says if we are not deploying or retracting, then we can change
     // states.
@@ -507,7 +507,7 @@ public class Robot extends LoggedRobot {
     // If we have no game data, we cannot compute, assume hub is active, as its
     // likely early in
     // teleop.
-    if (matchTime < 0 && (gameData == null || gameData.isEmpty())) {
+    if (matchTime < 0 || (gameData == null || gameData.isEmpty())) {
       activeHub = true;
       return;
     }

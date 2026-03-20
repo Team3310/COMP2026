@@ -9,7 +9,7 @@ import frc.robot.RobotContainer;
 public class OutSnowblowMidShort extends AutonCommandBase {
 
   public OutSnowblowMidShort(RobotContainer robotContainer) {
-    super(robotContainer, Rotation2d.fromDegrees(90.0));
+    super(robotContainer, Rotation2d.fromDegrees(180.0)); // CHANGE TO 180!!!!
 
     this.addCommands(
         new SequentialCommandGroup(
