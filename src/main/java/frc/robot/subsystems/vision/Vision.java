@@ -424,16 +424,11 @@ public class Vision extends SubsystemBase {
       return null;
     }
 
-    // 9. Reject large jumps from the current pose estimate.
-    double poseJump = drive.getPose().getTranslation().getDistance(visionPose.getTranslation());
-    if (shouldLog) Logger.recordOutput(prefix + "poseJumpM", poseJump);
-    if (poseJump > VisionConstants.kMaxPoseJumpMeters) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "pose_jump");
-      }
-      return null;
-    }
+    // 9. (removed) Previously we rejected large jumps from the current pose estimate.
+    // This pose-jump-based rejection caused valid measurements to be dropped in some cases.
+    // The check has been intentionally removed so measurements are not rejected solely
+    // on distance from the current estimated pose. Other filters (timestamp, stddev,
+    // off-field, etc.) remain in place.
 
     // 10. Apply the MT2 filter-strength multiplier and per-camera trust factor.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
