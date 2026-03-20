@@ -3,6 +3,7 @@ package frc.robot.util.choosers;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort;
+import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
 import frc.robot.RobotContainer;
 
 public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousMode> {
@@ -22,7 +23,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.OUT_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_DEP)
-        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT);
+        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
+        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2);
   }
 
   public AutonCommandBase getCommand() {
@@ -48,7 +50,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     // OUT_TO_OUT("out to out"),
     // HUB_TO_OUT("hub to out"),
     // HUB_TO_DEP("hub to depo"),
-    OUT_SNOWBLOW_MID_SHORT("out snowblow mid short");
+    OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
+    OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short");
 
     private String name = "";
 
@@ -89,6 +92,9 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           //   return new HubToDep(RobotContainer.getInstance());
         case OUT_SNOWBLOW_MID_SHORT:
           return new OutSnowblowMidShort(RobotContainer.getInstance());
+        case OUT_SNOWBLOW_MID_SHORT2:
+          return new OutSnowblowMidShort2(RobotContainer.getInstance());
+
         default:
           return new OneAuton(RobotContainer.getInstance());
       }
