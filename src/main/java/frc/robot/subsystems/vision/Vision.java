@@ -268,6 +268,12 @@ public class Vision extends SubsystemBase {
       // Args: forward, side, up, roll, pitch, yaw (meters / degrees)
       LimelightHelpers.setCameraPose_RobotSpace(
           name, pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+
+      if (VisionConstants.kLimelightLeft.equals(name)
+          || VisionConstants.kLimelightRight.equals(name)) {
+        LimelightHelpers.SetFiducialIDFiltersOverride(
+            name, VisionConstants.kSideCameraAllowedTagIds);
+      }
     }
   }
 
