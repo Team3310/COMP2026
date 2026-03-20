@@ -129,10 +129,13 @@ public final class Constants {
     public static final String kLimelightLeft = "limelight-left";
 
     public static final String[] kCameraNames = {kLimelightRear, kLimelightRight, kLimelightLeft};
+    public static final int[] kSideCameraAllowedTagIds = {
+      1, 3, 4, 6, 9, 10, 17, 19, 20, 22, 25, 26
+    };
 
     // ---- Camera #1  (Rear-facing) ----
     // SDS: X = -1.098 in, Y = 0 in, Z = 20.338 in
-    //      Zrot = 180°, Yrot(pitch) = 20°, Xrot(roll) = 0° (TBD treated as 0)
+    //      Zrot = 180°, Yrot(pitch) = -20°, Xrot(roll) = 0° (TBD treated as 0)
     public static final double kRearForwardM = Units.inchesToMeters(-1.098);
     public static final double kRearSideM = Units.inchesToMeters(0.0);
     public static final double kRearUpM = Units.inchesToMeters(20.338);
@@ -141,20 +144,20 @@ public final class Constants {
     public static final double kRearYawDeg = 180.0;
 
     // ---- Camera #2  (Right-side, mounted upside-down) ----
-    // SDS: X = -3.132 in, Y = -13.179 in, Z = 13.558 in
+    // SDS: X = -3.132 in, Y = 13.179 in, Z = 13.558 in
     //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
     public static final double kRightForwardM = Units.inchesToMeters(-3.132);
-    public static final double kRightSideM = Units.inchesToMeters(-13.179);
+    public static final double kRightSideM = Units.inchesToMeters(13.179);
     public static final double kRightUpM = Units.inchesToMeters(13.558);
     public static final double kRightRollDeg = 180.0; // upside-down
     public static final double kRightPitchDeg = 0.0;
     public static final double kRightYawDeg = -90.0;
 
     // ---- Camera #3  (Left-side) ----
-    // SDS: X = -3.312 in, Y = 13.179 in, Z = 13.558 in
+    // SDS: X = -3.312 in, Y = -13.179 in, Z = 13.558 in
     //      Zrot = 90°, Yrot = 0°, Xrot = 0°
     public static final double kLeftForwardM = Units.inchesToMeters(-3.312);
-    public static final double kLeftSideM = Units.inchesToMeters(13.179);
+    public static final double kLeftSideM = Units.inchesToMeters(-13.179);
     public static final double kLeftUpM = Units.inchesToMeters(13.558);
     public static final double kLeftRollDeg = 0.0;
     public static final double kLeftPitchDeg = 0.0;
@@ -184,7 +187,7 @@ public final class Constants {
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
     // Fast rotation causes motion-blur → bad detections.
-    public static final double kMaxAngularVelocityDegPerSec = 720.0;
+    public static final double kMaxAngularVelocityDegPerSec = 360.0;
 
     // Minimum average tag area (% of image) required to trust a single-tag result
     public static final double kMinTagAreaForSingleTag = 0.1;
