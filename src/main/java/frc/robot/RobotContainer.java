@@ -509,11 +509,15 @@ public class RobotContainer {
           // Prevent regular aim-tracking from scheduling aim commands
           frc.robot.Robot.crossOverrideActive = true;
 
-          // Schedule explicit turret setpoint commands to hold 180°
+          // Schedule explicit turret setpoint commands to hold 180° plus any live offsets
           CommandScheduler.getInstance()
-            .schedule(turretLeft.setDegreesCommand(180.0));
+            .schedule(
+              turretLeft.setDegreesCommand(
+                () -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
           CommandScheduler.getInstance()
-            .schedule(turretRight.setDegreesCommand(180.0));
+            .schedule(
+              turretRight.setDegreesCommand(
+                () -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
         })
       .ignoringDisable(true));
 
