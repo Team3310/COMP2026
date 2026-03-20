@@ -495,6 +495,33 @@ public class RobotContainer {
                 })
             .ignoringDisable(true));
 
+    // ---- Turret Override: lock both turrets to 180° (+ live offsets) ----
+    // Hood, flywheels, feeds, and everything else are unaffected.
+    // The +1/-1 offset buttons above continue to work while override is active.
+    SmartDashboard.putData(
+        "Enable Turret Override 180",
+        new InstantCommand(
+                () -> {
+                  Constants.ScorerConstants.kLeftTurretOffset = -2.0;
+                  Constants.ScorerConstants.kRightTurretOffset = 2.0;
+                  SmartDashboard.putNumber(
+                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
+                  SmartDashboard.putNumber(
+                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
+                  Robot.turretOverrideActive = true;
+                  SmartDashboard.putBoolean("turretOverrideActive", true);
+                })
+            .ignoringDisable(true));
+
+    SmartDashboard.putData(
+        "Disable Turret Override",
+        new InstantCommand(
+                () -> {
+                  Robot.turretOverrideActive = false;
+                  SmartDashboard.putBoolean("turretOverrideActive", false);
+                })
+            .ignoringDisable(true));
+
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
         "Lights Red",

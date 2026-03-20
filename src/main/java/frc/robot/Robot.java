@@ -71,6 +71,8 @@ public class Robot extends LoggedRobot {
   public static OverrideState overrideState = OverrideState.OFF;
   public static boolean stateRefreshRequested = false;
   public static boolean crossOverrideActive = false;
+  /** When true, turrets are locked to 180° + per-side offsets instead of aim-manager values. */
+  public static boolean turretOverrideActive = false;
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
@@ -557,16 +559,31 @@ public class Robot extends LoggedRobot {
   }
 
   private void track() {
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getTurretLeft()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getTurretRight()
-                .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
+    if (turretOverrideActive) {
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getTurretLeft()
+                  .setDegreesCommand(
+                      () -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getTurretRight()
+                  .setDegreesCommand(
+                      () -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
+    } else {
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getTurretLeft()
+                  .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
+      CommandScheduler.getInstance()
+          .schedule(
+              robotContainer
+                  .getTurretRight()
+                  .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
+    }
     if (shouldTrack(currentState) && !crossOverrideActive) {
       // Keep the hood at min degrees unless actively snowblowing or the
       // shoot button is held — prevents hood from tracking while driving.
