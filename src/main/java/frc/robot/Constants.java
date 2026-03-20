@@ -747,7 +747,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -766,7 +766,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
   }
 
   // #endregion
@@ -926,7 +926,7 @@ public final class Constants {
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -948,7 +948,7 @@ public final class Constants {
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
@@ -1059,7 +1059,7 @@ public final class Constants {
       return Bot.COMP;
     }
 
-    return Bot.PRACTICE;
+    return Bot.COMP;
   }
 
   public static boolean hasMacAddress(final String macAddress) {

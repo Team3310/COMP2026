@@ -140,6 +140,17 @@
           "name": "switchToCollect"
         }
       }
+    },
+    {
+      "name": "switchToSnowblow",
+      "waypointRelativePos": 3.964093357271095,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "switchToSnowblow"
+        }
+      }
     }
   ],
   "globalConstraints": {
@@ -151,7 +162,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.8,
+    "velocity": 0.0,
     "rotation": 180.0
   },
   "reversed": false,
