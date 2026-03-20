@@ -621,34 +621,25 @@ public class RobotContainer {
                               Math.abs(
                                   flywheelRight.getCurrentVelocity()
                                       - rightTargetRpm.getAsDouble());
-                          return leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget();
+                          return (leftErr < tolRPM) && (rightErr < tolRPM);
                         })
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
                     .andThen(
                         // Gate feeds and agitators — off while turret is flipping.
-                        Commands.run(
+                        Commands.runOnce(
                             () -> {
-                              if (isTurretOnTarget()) {
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedLeft.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedRight.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorLeft.snowblowCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorRight.snowblowCommand());
-                              } else {
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedLeft.offCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedRight.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                              }
+                              CommandScheduler.getInstance()
+                                  .schedule(
+                                      verticalFeedLeft.customVelocityCommand(
+                                          verticalFeedTargetRpm));
+                              CommandScheduler.getInstance()
+                                  .schedule(
+                                      verticalFeedRight.customVelocityCommand(
+                                          verticalFeedTargetRpm));
+                              CommandScheduler.getInstance()
+                                  .schedule(agitatorLeft.snowblowCommand());
+                              CommandScheduler.getInstance()
+                                  .schedule(agitatorRight.snowblowCommand());
                             })))
             .finallyDo(
                 () -> {

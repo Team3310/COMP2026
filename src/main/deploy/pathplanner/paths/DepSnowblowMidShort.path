@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.473255813953489,
-        "y": 7.417996422182468
+        "x": 3.5646332737030413,
+        "y": 7.385545617173523
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.305454077898846,
-        "y": 7.767008517645147
+        "x": 5.396831537648398,
+        "y": 7.734557712636202
       },
       "isLocked": false,
-      "linkedName": "DepStartTrench"
+      "linkedName": "DepStart"
     },
     {
       "anchor": {
@@ -32,53 +32,57 @@
     },
     {
       "anchor": {
-        "x": 7.426279069767442,
-        "y": 3.6861538461538457
+        "x": 7.527909090909091,
+        "y": 4.0968409090909095
       },
       "prevControl": {
-        "x": 8.107745974955277,
-        "y": 3.0371377459749542
+        "x": 8.258255021141647,
+        "y": 4.023107517482519
       },
       "nextControl": {
-        "x": 6.528105681517101,
-        "y": 4.541557073058934
+        "x": 6.293847417241884,
+        "y": 4.221427832748356
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.290500894454383,
-        "y": 5.211341681574241
+        "x": 6.569375,
+        "y": 6.982749999999999
       },
       "prevControl": {
-        "x": 6.874615384615385,
-        "y": 4.6110017889087676
+        "x": 7.153489490161002,
+        "y": 6.382410107334526
       },
       "nextControl": {
-        "x": 5.788286235837292,
-        "y": 5.7275067473751395
+        "x": 6.067160341382909,
+        "y": 7.498915065800898
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.5494772727272723,
-        "y": 5.261511363636364
+        "x": 3.5646332737030413,
+        "y": 7.385545617173523
       },
       "prevControl": {
-        "x": 4.631693181818182,
-        "y": 5.343965909090909
+        "x": 4.646849182793951,
+        "y": 7.468000162628068
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "DepoTrench"
+      "linkedName": "DepStart"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5,
+      "waypointRelativePos": 0.4088050314465409,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 0.8553459119496856,
       "rotationDegrees": -90.0
     },
     {
@@ -100,7 +104,20 @@
       "minWaypointRelativePos": 3.4903225806451563,
       "maxWaypointRelativePos": 4.0,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 3.4039497307001785,
+      "maxWaypointRelativePos": 4.0,
+      "constraints": {
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -113,7 +130,7 @@
   "eventMarkers": [
     {
       "name": "switchToSnowblow",
-      "waypointRelativePos": 0.34523809523809523,
+      "waypointRelativePos": 0.44524236983842047,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -124,7 +141,7 @@
     },
     {
       "name": "switchToCollect",
-      "waypointRelativePos": 1.9354838709677438,
+      "waypointRelativePos": 2.348294434470375,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -135,7 +152,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 2.8,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -150,7 +167,7 @@
   "folder": "Dep",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": false
 }
