@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.457030411449016,
-        "y": 0.5059749552772803
+        "x": 3.580858676207513,
+        "y": 0.5222003577817531
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.960017889087656,
-        "y": 0.4897495527728073
+        "x": 4.083846153846153,
+        "y": 0.5059749552772801
       },
       "isLocked": false,
-      "linkedName": "OutStartTrench"
+      "linkedName": "OutStart"
     },
     {
       "anchor": {
-        "x": 7.26402504472272,
-        "y": 0.8467084078711979
+        "x": 7.361377459749552,
+        "y": 0.6520035778175304
       },
       "prevControl": {
-        "x": 7.020470526721028,
-        "y": 0.7903063089655429
+        "x": 7.11782294174786,
+        "y": 0.5956014789118752
       },
       "nextControl": {
-        "x": 8.805438282647586,
-        "y": 1.2036672629695886
+        "x": 8.902790697674419,
+        "y": 1.008962432915921
       },
       "isLocked": false,
       "linkedName": null
@@ -104,7 +104,7 @@
       "minWaypointRelativePos": 3.5476190476190457,
       "maxWaypointRelativePos": 4.0,
       "constraints": {
-        "maxVelocity": 1.5,
+        "maxVelocity": 2.0,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -117,7 +117,7 @@
   "eventMarkers": [
     {
       "name": "switchToSnowblow",
-      "waypointRelativePos": 0.5595238095238095,
+      "waypointRelativePos": 0.7619047619047618,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -154,7 +154,7 @@
   "folder": "Out",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": false
 }
