@@ -495,50 +495,6 @@ public class RobotContainer {
                 })
             .ignoringDisable(true));
 
-  // ---- Turret Override: force both turrets to 180° and set offsets to -2/+2 ----
-  SmartDashboard.putData(
-    "Enable Turret Override 180",
-    new InstantCommand(
-        () -> {
-          // Set the turret offsets (still editable by the +1/-1 buttons afterward)
-          Constants.ScorerConstants.kLeftTurretOffset = -2.0;
-          Constants.ScorerConstants.kRightTurretOffset = 2.0;
-          SmartDashboard.putNumber("left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-          SmartDashboard.putNumber("right turret offset", Constants.ScorerConstants.kRightTurretOffset);
-
-          // Prevent regular aim-tracking from scheduling aim commands
-          frc.robot.Robot.crossOverrideActive = true;
-
-          // Schedule explicit turret setpoint commands to hold 180° plus any live offsets
-          CommandScheduler.getInstance()
-            .schedule(
-              turretLeft.setDegreesCommand(
-                () -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
-          CommandScheduler.getInstance()
-            .schedule(
-              turretRight.setDegreesCommand(
-                () -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
-        })
-      .ignoringDisable(true));
-
-  SmartDashboard.putData(
-    "Disable Turret Override",
-    new InstantCommand(
-        () -> {
-          // Cancel override and restore normal tracking/defaults
-          frc.robot.Robot.crossOverrideActive = false;
-
-          // Stop the forced turret commands by commanding current position
-          CommandScheduler.getInstance()
-            .schedule(turretLeft.setDegreesCommand(turretLeft.getCurrentPosition()));
-          CommandScheduler.getInstance()
-            .schedule(turretRight.setDegreesCommand(turretRight.getCurrentPosition()));
-          // Ensure teleop default is configured (will take over when commands end)
-          turretLeft.setTeleopDefaultCommand();
-          turretRight.setTeleopDefaultCommand();
-        })
-      .ignoringDisable(true));
-
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
         "Lights Red",
