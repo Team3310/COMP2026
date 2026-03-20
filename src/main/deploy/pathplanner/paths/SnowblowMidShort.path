@@ -78,7 +78,11 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9442060085836911,
+      "waypointRelativePos": 0.5783132530120483,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.1101573676680974,
       "rotationDegrees": 90.0
     },
     {
@@ -116,8 +120,19 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "intakeDeploy",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intakeDeploy"
+        }
+      }
+    },
+    {
       "name": "switchToSnowblow",
-      "waypointRelativePos": 0.7619047619047618,
+      "waypointRelativePos": 1.154838709677419,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

@@ -137,7 +137,7 @@ public final class Constants {
     public static final double kRearSideM = Units.inchesToMeters(0.0);
     public static final double kRearUpM = Units.inchesToMeters(20.338);
     public static final double kRearRollDeg = 0.0;
-    public static final double kRearPitchDeg = 20.0;
+    public static final double kRearPitchDeg = -20.0;
     public static final double kRearYawDeg = 180.0;
 
     // ---- Camera #2  (Right-side, mounted upside-down) ----
