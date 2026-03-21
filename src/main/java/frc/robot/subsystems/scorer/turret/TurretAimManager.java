@@ -5,17 +5,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.limelight.LimelightHelpers;
 import frc.robot.Constants;
 import frc.robot.Constants.ScorerConstants;
 import frc.robot.Constants.SimPhysicsConstants;
 import frc.robot.Robot;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -62,80 +58,6 @@ public class TurretAimManager extends SubsystemBase {
     this.speedsSupplier = speedsSupplier;
   }
 
-  private static boolean isAllowedTurretLockTag(int id) {
-    int[] allowedIds =
-        Robot.getEffectiveAlliance() == Alliance.Red
-            ? ScorerConstants.kTurretLockRedTagIds
-            : ScorerConstants.kTurretLockBlueTagIds;
-    for (int allowedId : allowedIds) {
-      if (allowedId == id) return true;
-    }
-    return false;
-  }
-
-  private Optional<LimelightHelpers.RawFiducial> getBestTurretLockFiducial() {
-    if (!Robot.turretOverrideActive) return Optional.empty();
-
-    String limelightName = Constants.VisionConstants.kLimelightRear;
-    if (!LimelightHelpers.getTV(limelightName)) return Optional.empty();
-
-    LimelightHelpers.RawFiducial best = null;
-    for (LimelightHelpers.RawFiducial fiducial : LimelightHelpers.getRawFiducials(limelightName)) {
-      if (!isAllowedTurretLockTag(fiducial.id)) continue;
-      if (best == null || fiducial.ta > best.ta) {
-        best = fiducial;
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  public OptionalDouble getTurretLockFilteredTxNcDegrees() {
-    Optional<LimelightHelpers.RawFiducial> fiducialOpt = getBestTurretLockFiducial();
-    return fiducialOpt.isPresent()
-        ? OptionalDouble.of(fiducialOpt.get().txnc)
-        : OptionalDouble.empty();
-  }
-
-  private OptionalDouble getTurretLockLookupDistanceMeters() {
-    Optional<LimelightHelpers.RawFiducial> fiducialOpt = getBestTurretLockFiducial();
-    if (fiducialOpt.isEmpty()) return OptionalDouble.empty();
-
-    LimelightHelpers.RawFiducial fiducial = fiducialOpt.get();
-    double txRad = Units.degreesToRadians(fiducial.txnc);
-    double tyRad = Units.degreesToRadians(fiducial.tync);
-    double cameraPitchRad = Units.degreesToRadians(Constants.VisionConstants.kRearPitchDeg);
-    double totalPitchRad = cameraPitchRad + tyRad;
-    double tanPitch = Math.tan(totalPitchRad);
-    if (Math.abs(tanPitch) < 1e-6) return OptionalDouble.empty();
-
-    double xTagCam =
-        (ScorerConstants.kTurretLockTagHeightMeters - Constants.VisionConstants.kRearUpM)
-            / tanPitch;
-    double yTagCam = xTagCam * Math.tan(txRad);
-
-    double shooterCenterXRobot =
-        (ScorerConstants.kLeftShooterXOffsetMeters + ScorerConstants.kRightShooterXOffsetMeters)
-            / 2.0;
-    double shooterCenterYRobot =
-        (ScorerConstants.kLeftShooterYOffsetMeters + ScorerConstants.kRightShooterYOffsetMeters)
-            / 2.0;
-
-    // Rear camera yaw is 180°, so camera +X points robot -X and camera +Y points robot -Y.
-    double dxRobot = shooterCenterXRobot - Constants.VisionConstants.kRearForwardM;
-    double dyRobot = shooterCenterYRobot - Constants.VisionConstants.kRearSideM;
-    double shooterCenterXCam = -dxRobot;
-    double shooterCenterYCam = -dyRobot;
-
-    double shooterToTagMeters =
-        Math.hypot(xTagCam - shooterCenterXCam, yTagCam - shooterCenterYCam);
-    double lookupDistanceMeters =
-        shooterToTagMeters + ScorerConstants.kTurretLockTagToHubCenterOffsetMeters;
-
-    return lookupDistanceMeters > 0.0
-        ? OptionalDouble.of(lookupDistanceMeters)
-        : OptionalDouble.empty();
-  }
-
   @Override
   public void periodic() {
     logCounter++;
@@ -174,12 +96,10 @@ public class TurretAimManager extends SubsystemBase {
                 robotSpeeds.vxMetersPerSecond * releaseDelay,
                 robotSpeeds.vyMetersPerSecond * releaseDelay,
                 robotSpeeds.omegaRadiansPerSecond * releaseDelay));
-    OptionalDouble turretLockLookupDistance = getTurretLockLookupDistanceMeters();
 
     // We need this first pass to determine (a) the target location and (b)
     // whether we're in hub mode (home=true) so we know if TOF lead applies.
-    TurretAimCalculator.AimResult initialResult =
-        TurretAimCalculator.calculate(releasePose, turretLockLookupDistance);
+    TurretAimCalculator.AimResult initialResult = TurretAimCalculator.calculate(releasePose);
 
     // ================================================================
     // Step 3: Iterative TOF-based aim-ahead convergence
@@ -219,10 +139,7 @@ public class TurretAimManager extends SubsystemBase {
     // Iterative convergence loop
     double convergedTof = 0.0;
     Translation2d lookaheadShooter = shooterField;
-    double lookaheadDist =
-        turretLockLookupDistance.isPresent()
-            ? turretLockLookupDistance.getAsDouble()
-            : shooterField.getDistance(target);
+    double lookaheadDist = shooterField.getDistance(target);
 
     for (int i = 0; i < ScorerConstants.kTofIterations; i++) {
       convergedTof = TurretAimCalculator.estimateTimeOfFlight(lookaheadDist, home);
@@ -254,8 +171,7 @@ public class TurretAimManager extends SubsystemBase {
     }
 
     // Run the aim calculator on the ballistically compensated pose.
-    TurretAimCalculator.AimResult result =
-        TurretAimCalculator.calculate(ballisticPose, turretLockLookupDistance);
+    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(ballisticPose);
     latestResult = result;
 
     // ---- Simulated turret inertia ----

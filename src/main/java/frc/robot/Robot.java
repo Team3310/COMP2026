@@ -70,8 +70,6 @@ public class Robot extends LoggedRobot {
   public static OverrideState overrideState = OverrideState.OFF;
   public static boolean stateRefreshRequested = false;
   public static boolean crossOverrideActive = false;
-  /** When true, turrets are locked to 180° + per-side offsets instead of aim-manager values. */
-  public static boolean turretOverrideActive = false;
 
   public static boolean deploying = false;
   public static boolean retracting = false;
@@ -407,12 +405,21 @@ public class Robot extends LoggedRobot {
             ? cachedAutoCommand
             : selectedAuto.getCommand();
     Pose2d startingPose = autoCommand.getStartingPose();
-    if (startingPose != null && !robotContainer.getVision().isSeeded()) {
-      // Only reset pose from the auto's starting pose if limelight has NOT already
-      // seeded odometry pre-match — if it has, trust the limelight-derived pose.
-      robotContainer.getDrive().setPose(startingPose);
+    if (startingPose != null) {
+      // Always override rotation with the auto path's starting heading.
+      // If MT1 already seeded XY pre-match, keep that translation but
+      // replace the heading so MT2's gyro prior is exactly what the path
+      // expects.  If MT1 never seeded, use the full starting pose.
+      if (robotContainer.getVision().isSeeded()) {
+        Pose2d current = robotContainer.getDrive().getPose();
+        robotContainer
+            .getDrive()
+            .setPose(new Pose2d(current.getTranslation(), startingPose.getRotation()));
+      } else {
+        robotContainer.getDrive().setPose(startingPose);
+      }
 
-      // Push the same heading to every Limelight so MegaTag 2's IMU is
+      // Push the auto heading to every Limelight so MegaTag 2's IMU is
       // correctly seeded at the moment auto begins.
       double yawDeg = startingPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
@@ -559,30 +566,16 @@ public class Robot extends LoggedRobot {
   }
 
   private void track() {
-    if (turretOverrideActive) {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretLeft()
-                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretRight()
-                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
-    } else {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretLeft()
-                  .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretRight()
-                  .setDegreesCommand(
-                      robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    }
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
     if (shouldTrack(currentState) && !crossOverrideActive) {
       // Keep the hood at min degrees unless actively snowblowing or the
       // shoot button is held — prevents hood from tracking while driving.
