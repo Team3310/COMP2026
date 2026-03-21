@@ -607,7 +607,7 @@ public class RobotContainer {
     java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
 
     return Commands.parallel(
-            Commands.startEnd(
+            Commands.startEnd( -
                 () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
             Commands.parallel(
                     flywheelLeft.setRPMCommand(leftTargetRpm),
