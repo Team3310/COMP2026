@@ -73,6 +73,7 @@ public class Robot extends LoggedRobot {
   public static boolean crossOverrideActive = false;
   /** When true, turrets are locked to 180° + per-side offsets instead of aim-manager values. */
   public static boolean turretOverrideActive = false;
+
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
@@ -564,14 +565,12 @@ public class Robot extends LoggedRobot {
           .schedule(
               robotContainer
                   .getTurretLeft()
-                  .setDegreesCommand(
-                      () -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
+                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
       CommandScheduler.getInstance()
           .schedule(
               robotContainer
                   .getTurretRight()
-                  .setDegreesCommand(
-                      () -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
+                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
     } else {
       CommandScheduler.getInstance()
           .schedule(
@@ -582,7 +581,8 @@ public class Robot extends LoggedRobot {
           .schedule(
               robotContainer
                   .getTurretRight()
-                  .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
+                  .setDegreesCommand(
+                      robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
     }
     if (shouldTrack(currentState) && !crossOverrideActive) {
       // Keep the hood at min degrees unless actively snowblowing or the
