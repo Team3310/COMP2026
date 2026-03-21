@@ -8,7 +8,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
@@ -407,15 +406,15 @@ public class Robot extends LoggedRobot {
         (cachedAutoMode == selectedAuto && cachedAutoCommand != null)
             ? cachedAutoCommand
             : selectedAuto.getCommand();
-    Rotation2d startingRotation = autoCommand.getStartingRotation();
-    if (startingRotation != null) {
-      Pose2d seededPose =
-          new Pose2d(robotContainer.getDrive().getPose().getTranslation(), startingRotation);
-      robotContainer.getDrive().setPose(seededPose);
+    Pose2d startingPose = autoCommand.getStartingPose();
+    if (startingPose != null && !robotContainer.getVision().isSeeded()) {
+      // Only reset pose from the auto's starting pose if limelight has NOT already
+      // seeded odometry pre-match — if it has, trust the limelight-derived pose.
+      robotContainer.getDrive().setPose(startingPose);
 
       // Push the same heading to every Limelight so MegaTag 2's IMU is
       // correctly seeded at the moment auto begins.
-      double yawDeg = startingRotation.getDegrees();
+      double yawDeg = startingPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
         LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
