@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 5.179483038792174,
-        "y": 0.4453733621083156
+        "y": 0.5102749721262034
       },
       "isLocked": false,
       "linkedName": "OutStart"
@@ -106,7 +106,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Out",
+  "folder": "New Folder",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
