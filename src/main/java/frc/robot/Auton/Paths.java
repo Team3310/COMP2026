@@ -39,10 +39,12 @@ public class Paths {
   public static PathPlannerPath snowblowOutpostTrenchToBump;
   public static PathPlannerPath outSnowblowMidShort;
   public static PathPlannerPath outSnowblowMidShort2;
-
   public static PathPlannerPath outCollectMidShort;
 
+  public static PathPlannerPath depSnowblowMidShort;
+
   public static boolean loaded;
+
 
   /**
    * Load all paths from PathPlanner path files. Alliance flipping is handled automatially by
@@ -67,11 +69,16 @@ public class Paths {
     // DepSnowShoot = loadPath("DepSnowShoot");
     // OutSnowShoot = loadPath("OutSnowShoot");
     // TrenchToOut = loadPath("TrenchToOut");
+
+    depSnowblowMidShort = loadPath("DepSnowblowMidShort");
+    
+
     snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
     snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
     outSnowblowMidShort = loadPath("OutSnowblowMidShort");
     outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
     outCollectMidShort = loadPath("OutCollectMidShort");
+    
   }
 
   /** Load a single path from a PathPlanner .path file. */
