@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.580858676207513,
-        "y": 0.5222003577817531
+        "y": 0.5871019677996412
       },
       "prevControl": null,
       "nextControl": {
         "x": 2.282826475849731,
-        "y": 0.5222003577817524
+        "y": 0.5871019677996404
       },
       "isLocked": false,
       "linkedName": "OutStart"
@@ -133,7 +133,7 @@
   "folder": "New Folder",
   "idealStartingState": {
     "velocity": 1.0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": false
 }
