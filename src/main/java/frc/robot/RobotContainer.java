@@ -503,8 +503,8 @@ public class RobotContainer {
         "Enable Turret Override 180",
         new InstantCommand(
                 () -> {
-                  Constants.ScorerConstants.kLeftTurretOffset = -2.0;
-                  Constants.ScorerConstants.kRightTurretOffset = 2.0;
+                  Constants.ScorerConstants.kLeftTurretOffset = 2.0;
+                  Constants.ScorerConstants.kRightTurretOffset = -2.0;
                   SmartDashboard.putNumber(
                       "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
                   SmartDashboard.putNumber(
@@ -714,7 +714,7 @@ public class RobotContainer {
                     return drive.getRotation(); // hold current heading — no target or locked on
                   }
                   double tx = LimelightHelpers.getTXNC(Constants.VisionConstants.kLimelightRear);
-                  return drive.getRotation().plus(Rotation2d.fromDegrees(tx));
+                  return drive.getRotation().minus(Rotation2d.fromDegrees(tx));
                 }));
 
     return Commands.either(

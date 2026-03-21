@@ -15,7 +15,6 @@ public class DepCollectMidShort2 extends AutonCommandBase {
     this.addCommands(
         new SequentialCommandGroup(
             followPath(Paths.depCollectMidShort), new WaitCommand(4.0),
-            followPath(Paths.depCollectMidShort), new WaitCommand(4.0)
-            ));
-    
-}}
+            followPath(Paths.depCollectMidShort), new WaitCommand(4.0)));
+  }
+}

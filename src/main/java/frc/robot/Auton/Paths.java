@@ -46,7 +46,6 @@ public class Paths {
 
   public static boolean loaded;
 
-
   /**
    * Load all paths from PathPlanner path files. Alliance flipping is handled automatially by
    * AutoBuilder.followPath() at runtime, so no manual flip needed here.
@@ -73,15 +72,12 @@ public class Paths {
 
     depSnowblowMidShort = loadPath("DepSnowblowMidShort");
     depCollectMidShort = loadPath("DepCollectMidShort");
-    
 
     snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
     snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
     outSnowblowMidShort = loadPath("OutSnowblowMidShort");
     outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
     outCollectMidShort = loadPath("OutCollectMidShort");
-
-    
   }
 
   /** Load a single path from a PathPlanner .path file. */
