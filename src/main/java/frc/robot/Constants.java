@@ -485,6 +485,8 @@ public final class Constants {
     public static double kLeftTurretOffset = 0.0;
     public static double kRightTurretOffset = 0.0;
 
+    public static double kOverrideRobotLockOnToleranceDeg = 3.0;
+
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 60.0;
