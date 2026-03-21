@@ -607,7 +607,7 @@ public class RobotContainer {
     java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
 
     return Commands.parallel(
-            Commands.startEnd(
+            Commands.startEnd( -
                 () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
             Commands.parallel(
                     flywheelLeft.setRPMCommand(leftTargetRpm),
@@ -659,25 +659,28 @@ public class RobotContainer {
                 flywheelLeft.setRPMCommand(leftTargetRpm),
                 flywheelRight.setRPMCommand(rightTargetRpm))
             .alongWith(
-                Commands.run(
-                    () -> {
-                      double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                      // Require flywheels to be AT OR ABOVE target minus tolerance so the
-                      // gate never opens while still spinning up from below.
-                      boolean leftReady =
-                          flywheelLeft.getCurrentVelocity()
-                              >= leftTargetRpm.getAsDouble() - tolRPM;
-                      boolean rightReady =
-                          flywheelRight.getCurrentVelocity()
-                              >= rightTargetRpm.getAsDouble() - tolRPM;
-                      if (leftReady && rightReady && isTurretOnTarget()) {
-                                Commands.parallel(
-                                    verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
-                                    verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
-                                    agitatorLeft.snowblowCommand(),
-                                    agitatorRight.snowblowCommand());
-                      }
-                    }))
+                Commands.waitUntil(
+                        () -> {
+                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                          // Require flywheels to be AT OR ABOVE target minus tolerance so the
+                          // gate never opens while still spinning up from below.
+                          boolean leftReady =
+                              flywheelLeft.getCurrentVelocity()
+                                  >= leftTargetRpm.getAsDouble() - tolRPM;
+                          boolean rightReady =
+                              flywheelRight.getCurrentVelocity()
+                                  >= rightTargetRpm.getAsDouble() - tolRPM;
+                          return leftReady && rightReady && isTurretOnTarget();
+                        })
+                    .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
+                    .andThen(
+                        // Use Commands.parallel so subsystem requirements are properly held
+                        // and commands stay running — never schedule() inside run().
+                        Commands.parallel(
+                            verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
+                            verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
+                            agitatorLeft.snowblowCommand(),
+                            agitatorRight.snowblowCommand())))
             .finallyDo(
                 () -> {
                   CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
