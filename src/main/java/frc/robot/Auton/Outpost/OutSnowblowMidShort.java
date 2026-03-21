@@ -27,7 +27,7 @@ public class OutSnowblowMidShort extends AutonCommandBase {
 
     this.addCommands(
         new SequentialCommandGroup(
-            followPath(Paths.outSnowblowMidShort), new WaitCommand(2.0)
+            followPath(Paths.outSnowblowMidShort), waitForFlywheelsAtSpeed(), new WaitCommand(2.0)
             // followPath(Paths.snowblowMidShort)
             ));
   }
