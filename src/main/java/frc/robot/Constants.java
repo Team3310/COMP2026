@@ -492,6 +492,10 @@ public final class Constants {
     // In turret-override mode, the robot rotates via limelight-rear tx.  The
     // robot is considered "locked on" (feeds allowed) when |tx| is below this.
     public static double kOverrideRobotLockOnToleranceDeg = 3.0;
+    public static final int[] kTurretLockRedTagIds = {5, 10, 2};
+    public static final int[] kTurretLockBlueTagIds = {18, 21, 26};
+    public static double kTurretLockTagHeightMeters = Units.inchesToMeters(72.0);
+    public static double kTurretLockTagToHubCenterOffsetMeters = 1.0;
 
     // Turret command deadband — if the new aim command is within this many
     // degrees of the previous command, hold the previous value.  Prevents the
