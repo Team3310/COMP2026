@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -607,48 +606,49 @@ public class RobotContainer {
     java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
 
     return Commands.parallel(
-        Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
-        Commands.parallel(
-                flywheelLeft.setRPMCommand(leftTargetRpm),
-                flywheelRight.setRPMCommand(rightTargetRpm),
-                // Gate feeds and agitators — off while turret is flipping.
-                Commands.run(
-                            () -> {
-                              // TODO: gating commented out — shoot immediately on button press
-                              // if (isTurretOnTarget()) {
-                              CommandScheduler.getInstance()
-                                  .schedule(
-                                      verticalFeedLeft.customVelocityCommand(
-                                          verticalFeedTargetRpm));
-                              CommandScheduler.getInstance()
-                                  .schedule(
-                                      verticalFeedRight.customVelocityCommand(
-                                          verticalFeedTargetRpm));
-                              CommandScheduler.getInstance()
-                                  .schedule(agitatorLeft.snowblowCommand());
-                              CommandScheduler.getInstance()
-                                  .schedule(agitatorRight.snowblowCommand());
-                              // } else {
-                              //   CommandScheduler.getInstance()
-                              //       .schedule(verticalFeedLeft.offCommand());
-                              //   CommandScheduler.getInstance()
-                              //       .schedule(verticalFeedRight.offCommand());
-                              //
-                              // CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                              //
-                              // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                              // }
-                            })))
-            .finallyDo(
-                () -> {
-                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  Robot.stateRefreshRequested = true;
-                }));
+            Commands.startEnd(
+                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+            Commands.parallel(
+                    flywheelLeft.setRPMCommand(leftTargetRpm),
+                    flywheelRight.setRPMCommand(rightTargetRpm))
+                .alongWith(
+                    Commands.run(
+                        () -> {
+                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                          double leftErr =
+                              Math.abs(
+                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
+                          double rightErr =
+                              Math.abs(
+                                  flywheelRight.getCurrentVelocity()
+                                      - rightTargetRpm.getAsDouble());
+                          if (leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget()) {
+                            CommandScheduler.getInstance()
+                                .schedule(
+                                    verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm));
+                            CommandScheduler.getInstance()
+                                .schedule(
+                                    verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm));
+                            CommandScheduler.getInstance().schedule(agitatorLeft.snowblowCommand());
+                            CommandScheduler.getInstance()
+                                .schedule(agitatorRight.snowblowCommand());
+                          } else {
+                            CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                            CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+                            CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                            CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                          }
+                        })))
+        .finallyDo(
+            () -> {
+              CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+              CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+              CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+              CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+              CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+              CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+              Robot.stateRefreshRequested = true;
+            });
   }
 
   private void configureButtonBindings() {
