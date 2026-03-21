@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.limelight.LimelightHelpers;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
-import frc.lib.limelight.LimelightHelpers;
 import frc.lib.util.Util;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
@@ -624,7 +624,7 @@ public class RobotContainer {
     if (Robot.turretOverrideActive) {
       boolean hasTarget = LimelightHelpers.getTV(Constants.VisionConstants.kLimelightRear);
       if (!hasTarget) return false;
-      double tx = LimelightHelpers.getTX(Constants.VisionConstants.kLimelightRear);
+      double tx = LimelightHelpers.getTXNC(Constants.VisionConstants.kLimelightRear);
       return Math.abs(tx) < Constants.ScorerConstants.kOverrideRobotLockOnToleranceDeg;
     }
     double tol = Constants.ScorerConstants.kTurretLockOnToleranceDeg;
@@ -713,11 +713,12 @@ public class RobotContainer {
                       || isTurretOnTarget()) {
                     return drive.getRotation(); // hold current heading — no target or locked on
                   }
-                  double tx = LimelightHelpers.getTX(Constants.VisionConstants.kLimelightRear);
+                  double tx = LimelightHelpers.getTXNC(Constants.VisionConstants.kLimelightRear);
                   return drive.getRotation().plus(Rotation2d.fromDegrees(tx));
                 }));
 
-    return Commands.either(overrideShootCommand, baseShootCommand, () -> Robot.turretOverrideActive);
+    return Commands.either(
+        overrideShootCommand, baseShootCommand, () -> Robot.turretOverrideActive);
   }
 
   private void configureButtonBindings() {
