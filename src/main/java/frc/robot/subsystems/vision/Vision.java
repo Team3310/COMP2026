@@ -400,9 +400,9 @@ public class Vision extends SubsystemBase {
       }
       return null;
     }
-
-    double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
-    double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
+    double DEFAULT_LINEAR_STDDEV = 0.03;
+    double xStdDev = DEFAULT_LINEAR_STDDEV;
+    double yStdDev = DEFAULT_LINEAR_STDDEV;
     double xyStdDev = Math.max(xStdDev, yStdDev);
 
     if (xyStdDev <= 0.0) {

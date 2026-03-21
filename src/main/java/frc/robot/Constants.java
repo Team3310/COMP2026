@@ -179,7 +179,7 @@ public final class Constants {
     //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
     // Order matches kCameraNames: {rear, right, left}
     public static final double[] kCameraStdDevFactors = {
-      1.0, // Rear   — centered, high mount, good tag visibility
+      0.5, // Rear   — centered, high mount, faces hub tags directly → trust MORE
       1.0, // Right  — side-mount, upside-down, may have slightly noisier results
       1.0, // Left   — side-mount, symmetric to right
     };
@@ -243,7 +243,7 @@ public final class Constants {
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
     // Increase to reduce jitter (less trust in vision, smoother pose).
-    public static double kMT2StdDevMultiplier = 10.0;
+    public static double kMT2StdDevMultiplier = 0.05;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
