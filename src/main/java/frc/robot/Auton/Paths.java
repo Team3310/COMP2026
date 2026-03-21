@@ -42,6 +42,7 @@ public class Paths {
   public static PathPlannerPath outCollectMidShort;
 
   public static PathPlannerPath depSnowblowMidShort;
+  public static PathPlannerPath depCollectMidShort;
 
   public static boolean loaded;
 
@@ -71,6 +72,7 @@ public class Paths {
     // TrenchToOut = loadPath("TrenchToOut");
 
     depSnowblowMidShort = loadPath("DepSnowblowMidShort");
+    depCollectMidShort = loadPath("DepCollectMidShort");
     
 
     snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
@@ -78,6 +80,7 @@ public class Paths {
     outSnowblowMidShort = loadPath("OutSnowblowMidShort");
     outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
     outCollectMidShort = loadPath("OutCollectMidShort");
+
     
   }
 
