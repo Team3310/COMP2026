@@ -686,24 +686,29 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
     // Gate vertical feeds on turret position — off while the turret flips.
+    // Use edge detection so a new command is only scheduled when the on-target state *changes*,
+    // preventing the running feed command from being cancelled and restarted every 20 ms loop.
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    final boolean[] wasOnTarget = {false};
     snowblowGateCommand =
         Commands.run(
                 () -> {
-                  if (robotContainer.isTurretOnTarget()) {
+                  boolean onTarget = robotContainer.isTurretOnTarget();
+                  if (onTarget && !wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(
                             robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
                     CommandScheduler.getInstance()
                         .schedule(
                             robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
-                  } else {
+                  } else if (!onTarget && wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedRight().offCommand());
                   }
+                  wasOnTarget[0] = onTarget;
                 })
             .ignoringDisable(false);
     CommandScheduler.getInstance().schedule(snowblowGateCommand);
