@@ -121,6 +121,11 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
   }
 
+  /** Returns true if the odometry has already been seeded by limelight pre-match. */
+  public boolean isSeeded() {
+    return seedStable;
+  }
+
   // -----------------------------------------------------------------------
   //  Periodic — runs every 20 ms
   // -----------------------------------------------------------------------
