@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.limelight.LimelightHelpers;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
-import frc.lib.limelight.LimelightHelpers;
 import frc.lib.util.Util;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
@@ -639,85 +639,93 @@ public class RobotContainer {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
-    Command baseShootCommand =
-        Commands.parallel(
-            Commands.startEnd(
-                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+
+    // Factory so each branch of Commands.either() gets its own fresh instance.
+    // WPILib forbids the same Command object from being composed twice.
+    java.util.function.Supplier<Command> baseShoot =
+        () ->
             Commands.parallel(
-                    flywheelLeft.setRPMCommand(leftTargetRpm),
-                    flywheelRight.setRPMCommand(rightTargetRpm))
-                .alongWith(
-                    Commands.waitUntil(
-                            () -> {
-                              double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                              double leftErr =
-                                  Math.abs(
-                                      flywheelLeft.getCurrentVelocity()
-                                          - leftTargetRpm.getAsDouble());
-                              double rightErr =
-                                  Math.abs(
-                                      flywheelRight.getCurrentVelocity()
-                                          - rightTargetRpm.getAsDouble());
-                              return leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget();
-                            })
-                        .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
-                        .andThen(
-                            // Gate feeds and agitators — off while turret is flipping.
-                            Commands.run(
+                Commands.startEnd(
+                    () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+                Commands.parallel(
+                        flywheelLeft.setRPMCommand(leftTargetRpm),
+                        flywheelRight.setRPMCommand(rightTargetRpm))
+                    .alongWith(
+                        Commands.waitUntil(
                                 () -> {
-                                  if (isTurretOnTarget()) {
-                                    CommandScheduler.getInstance()
-                                        .schedule(
-                                            verticalFeedLeft.customVelocityCommand(
-                                                verticalFeedTargetRpm));
-                                    CommandScheduler.getInstance()
-                                        .schedule(
-                                            verticalFeedRight.customVelocityCommand(
-                                                verticalFeedTargetRpm));
-                                    CommandScheduler.getInstance()
-                                        .schedule(agitatorLeft.snowblowCommand());
-                                    CommandScheduler.getInstance()
-                                        .schedule(agitatorRight.snowblowCommand());
-                                  } else {
-                                    CommandScheduler.getInstance()
-                                        .schedule(verticalFeedLeft.offCommand());
-                                    CommandScheduler.getInstance()
-                                        .schedule(verticalFeedRight.offCommand());
-                                    CommandScheduler.getInstance()
-                                        .schedule(agitatorLeft.offCommand());
-                                    CommandScheduler.getInstance()
-                                        .schedule(agitatorRight.offCommand());
-                                  }
-                                })))
-                .finallyDo(
-                    () -> {
-                      CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                      CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                      CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                      CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                      Robot.stateRefreshRequested = true;
-                    }));
+                                  double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                                  double leftErr =
+                                      Math.abs(
+                                          flywheelLeft.getCurrentVelocity()
+                                              - leftTargetRpm.getAsDouble());
+                                  double rightErr =
+                                      Math.abs(
+                                          flywheelRight.getCurrentVelocity()
+                                              - rightTargetRpm.getAsDouble());
+                                  return leftErr < tolRPM
+                                      && rightErr < tolRPM
+                                      && isTurretOnTarget();
+                                })
+                            .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
+                            .andThen(
+                                // Gate feeds and agitators — off while turret is flipping.
+                                Commands.run(
+                                    () -> {
+                                      if (isTurretOnTarget()) {
+                                        CommandScheduler.getInstance()
+                                            .schedule(
+                                                verticalFeedLeft.customVelocityCommand(
+                                                    verticalFeedTargetRpm));
+                                        CommandScheduler.getInstance()
+                                            .schedule(
+                                                verticalFeedRight.customVelocityCommand(
+                                                    verticalFeedTargetRpm));
+                                        CommandScheduler.getInstance()
+                                            .schedule(agitatorLeft.snowblowCommand());
+                                        CommandScheduler.getInstance()
+                                            .schedule(agitatorRight.snowblowCommand());
+                                      } else {
+                                        CommandScheduler.getInstance()
+                                            .schedule(verticalFeedLeft.offCommand());
+                                        CommandScheduler.getInstance()
+                                            .schedule(verticalFeedRight.offCommand());
+                                        CommandScheduler.getInstance()
+                                            .schedule(agitatorLeft.offCommand());
+                                        CommandScheduler.getInstance()
+                                            .schedule(agitatorRight.offCommand());
+                                      }
+                                    })))
+                    .finallyDo(
+                        () -> {
+                          CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                          CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                          CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                          CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+                          CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                          CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                          Robot.stateRefreshRequested = true;
+                        }));
 
     // When turret override is active, rotate the robot using the rear limelight
     // tx to align the robot's rear to the hub. Stop rotating once locked on.
-    Command overrideShootCommand =
-        baseShootCommand.alongWith(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> {
-                  if (!LimelightHelpers.getTV(Constants.VisionConstants.kLimelightRear)
-                      || isTurretOnTarget()) {
-                    return drive.getRotation(); // hold current heading — no target or locked on
-                  }
-                  double tx = LimelightHelpers.getTX(Constants.VisionConstants.kLimelightRear);
-                  return drive.getRotation().plus(Rotation2d.fromDegrees(tx));
-                }));
-
-    return Commands.either(overrideShootCommand, baseShootCommand, () -> Robot.turretOverrideActive);
+    return Commands.either(
+        baseShoot
+            .get()
+            .alongWith(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> {
+                      if (!LimelightHelpers.getTV(Constants.VisionConstants.kLimelightRear)
+                          || isTurretOnTarget()) {
+                        return drive.getRotation(); // hold heading — no target or locked on
+                      }
+                      double tx = LimelightHelpers.getTX(Constants.VisionConstants.kLimelightRear);
+                      return drive.getRotation().plus(Rotation2d.fromDegrees(tx));
+                    })),
+        baseShoot.get(),
+        () -> Robot.turretOverrideActive);
   }
 
   private void configureButtonBindings() {

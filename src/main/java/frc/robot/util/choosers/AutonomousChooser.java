@@ -1,9 +1,9 @@
 package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
-import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Dep.DepCollectMidShort2;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
+import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.OutCollectMidShort2;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
@@ -28,7 +28,6 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.HUB_TO_DEP)
         .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
         .addOption(AutonomousMode.DEP_COLLECT_MID_SHORT)
-
         .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
         .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
         .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2);
