@@ -491,10 +491,6 @@ public final class Constants {
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 60.0;
 
-    // Override robot lock-on tolerance — when turret override is active, the robot must be
-    // within this many degrees (tx) of the rear limelight to be considered locked on.
-    public static final double kOverrideRobotLockOnToleranceDeg = 5.0;
-
     // ---- Turret-lock tag-based aiming ----
     // AprilTag IDs the turret lock is allowed to track, per alliance.
     public static final int[] kTurretLockRedTagIds = {5, 10, 2};
