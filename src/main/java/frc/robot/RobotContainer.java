@@ -610,46 +610,34 @@ public class RobotContainer {
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
                 flywheelLeft.setRPMCommand(leftTargetRpm),
-                flywheelRight.setRPMCommand(rightTargetRpm))
-            .alongWith(
-                Commands.waitUntil(
-                        () -> {
-                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                          double leftErr =
-                              Math.abs(
-                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
-                          double rightErr =
-                              Math.abs(
-                                  flywheelRight.getCurrentVelocity()
-                                      - rightTargetRpm.getAsDouble());
-                          return leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget();
-                        })
-                    .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
-                    .andThen(
-                        // Gate feeds and agitators — off while turret is flipping.
-                        Commands.run(
+                flywheelRight.setRPMCommand(rightTargetRpm),
+                // Gate feeds and agitators — off while turret is flipping.
+                Commands.run(
                             () -> {
-                              if (isTurretOnTarget()) {
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedLeft.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedRight.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorLeft.snowblowCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorRight.snowblowCommand());
-                              } else {
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedLeft.offCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedRight.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                              }
+                              // TODO: gating commented out — shoot immediately on button press
+                              // if (isTurretOnTarget()) {
+                              CommandScheduler.getInstance()
+                                  .schedule(
+                                      verticalFeedLeft.customVelocityCommand(
+                                          verticalFeedTargetRpm));
+                              CommandScheduler.getInstance()
+                                  .schedule(
+                                      verticalFeedRight.customVelocityCommand(
+                                          verticalFeedTargetRpm));
+                              CommandScheduler.getInstance()
+                                  .schedule(agitatorLeft.snowblowCommand());
+                              CommandScheduler.getInstance()
+                                  .schedule(agitatorRight.snowblowCommand());
+                              // } else {
+                              //   CommandScheduler.getInstance()
+                              //       .schedule(verticalFeedLeft.offCommand());
+                              //   CommandScheduler.getInstance()
+                              //       .schedule(verticalFeedRight.offCommand());
+                              //
+                              // CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                              //
+                              // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                              // }
                             })))
             .finallyDo(
                 () -> {
