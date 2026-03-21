@@ -431,16 +431,16 @@ public final class Constants {
 
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
-    public static double kNormalMaxLinearSpeedMps = 6.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 10.0;
+    public static double kNormalMaxLinearSpeedMps = 4.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 6.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 12.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
-    public static double kNormalMaxAngularDecelRadPerSec2 = 45.0;
+    public static double kNormalMaxAngularDecelRadPerSec2 = 60.0;
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
-    public static double kHomeScoringMaxLinearSpeedMps = 2.8;
+    public static double kHomeScoringMaxLinearSpeedMps = 2.0;
     public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
     public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
@@ -489,12 +489,13 @@ public final class Constants {
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 60.0;
 
-    // In turret-override mode, the robot rotates via limelight-rear tx.  The
-    // robot is considered "locked on" (feeds allowed) when |tx| is below this.
-    public static double kOverrideRobotLockOnToleranceDeg = 3.0;
+    // ---- Turret-lock tag-based aiming ----
+    // AprilTag IDs the turret lock is allowed to track, per alliance.
     public static final int[] kTurretLockRedTagIds = {5, 10, 2};
     public static final int[] kTurretLockBlueTagIds = {18, 21, 26};
+    // Height of the turret-lock target tags above the carpet (meters).
     public static double kTurretLockTagHeightMeters = Units.inchesToMeters(72.0);
+    // Distance from the tag face to the hub center (meters).
     public static double kTurretLockTagToHubCenterOffsetMeters = 1.0;
 
     // Turret command deadband — if the new aim command is within this many
