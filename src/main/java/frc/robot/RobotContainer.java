@@ -37,6 +37,7 @@ import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
+import java.util.OptionalDouble;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
