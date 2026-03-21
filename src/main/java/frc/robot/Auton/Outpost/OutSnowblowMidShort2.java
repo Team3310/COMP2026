@@ -13,7 +13,7 @@ public class OutSnowblowMidShort2 extends AutonCommandBase {
     super(robotContainer, Rotation2d.fromDegrees(180.0));
     this.addCommands(
         new SequentialCommandGroup(
-            followPath(Paths.outSnowblowMidShort),
+            followPath(Paths.outSnowblowMidShort2),
             new WaitCommand(3.0),
             followPath(Paths.outSnowblowMidShort2),
             new WaitCommand(3.0)));

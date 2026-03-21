@@ -40,6 +40,8 @@ public class Paths {
   public static PathPlannerPath outSnowblowMidShort;
   public static PathPlannerPath outSnowblowMidShort2;
 
+  public static PathPlannerPath outCollectMidShort;
+
   public static boolean loaded;
 
   /**
@@ -69,6 +71,7 @@ public class Paths {
     snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
     outSnowblowMidShort = loadPath("OutSnowblowMidShort");
     outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
+    outCollectMidShort = loadPath("OutCollectMidShort");
   }
 
   /** Load a single path from a PathPlanner .path file. */
