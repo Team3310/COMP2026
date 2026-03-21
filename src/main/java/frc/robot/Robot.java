@@ -8,7 +8,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
@@ -71,8 +70,6 @@ public class Robot extends LoggedRobot {
   public static OverrideState overrideState = OverrideState.OFF;
   public static boolean stateRefreshRequested = false;
   public static boolean crossOverrideActive = false;
-  /** When true, turrets are locked to 180° + per-side offsets instead of aim-manager values. */
-  public static boolean turretOverrideActive = false;
 
   public static boolean deploying = false;
   public static boolean retracting = false;
@@ -407,15 +404,24 @@ public class Robot extends LoggedRobot {
         (cachedAutoMode == selectedAuto && cachedAutoCommand != null)
             ? cachedAutoCommand
             : selectedAuto.getCommand();
-    Rotation2d startingRotation = autoCommand.getStartingRotation();
-    if (startingRotation != null) {
-      Pose2d seededPose =
-          new Pose2d(robotContainer.getDrive().getPose().getTranslation(), startingRotation);
-      robotContainer.getDrive().setPose(seededPose);
+    Pose2d startingPose = autoCommand.getStartingPose();
+    if (startingPose != null) {
+      // Always override rotation with the auto path's starting heading.
+      // If MT1 already seeded XY pre-match, keep that translation but
+      // replace the heading so MT2's gyro prior is exactly what the path
+      // expects.  If MT1 never seeded, use the full starting pose.
+      if (robotContainer.getVision().isSeeded()) {
+        Pose2d current = robotContainer.getDrive().getPose();
+        robotContainer
+            .getDrive()
+            .setPose(new Pose2d(current.getTranslation(), startingPose.getRotation()));
+      } else {
+        robotContainer.getDrive().setPose(startingPose);
+      }
 
-      // Push the same heading to every Limelight so MegaTag 2's IMU is
+      // Push the auto heading to every Limelight so MegaTag 2's IMU is
       // correctly seeded at the moment auto begins.
-      double yawDeg = startingRotation.getDegrees();
+      double yawDeg = startingPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
         LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
@@ -560,30 +566,16 @@ public class Robot extends LoggedRobot {
   }
 
   private void track() {
-    if (turretOverrideActive) {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretLeft()
-                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kLeftTurretOffset));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretRight()
-                  .setDegreesCommand(() -> 180.0 + Constants.ScorerConstants.kRightTurretOffset));
-    } else {
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretLeft()
-                  .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
-      CommandScheduler.getInstance()
-          .schedule(
-              robotContainer
-                  .getTurretRight()
-                  .setDegreesCommand(
-                      robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
-    }
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretLeft()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getLeftTurretAngleDeg()));
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getTurretRight()
+                .setDegreesCommand(robotContainer.getTurretAimManager().getRightTurretAngleDeg()));
     if (shouldTrack(currentState) && !crossOverrideActive) {
       // Keep the hood at min degrees unless actively snowblowing or the
       // shoot button is held — prevents hood from tracking while driving.
@@ -683,33 +675,33 @@ public class Robot extends LoggedRobot {
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    // Gate agitators and vertical feeds on turret position — off while the turret flips.
+    // Floor rollers run unconditionally during snowblow — not tied to turret position.
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
+    // Gate vertical feeds on turret position — off while the turret flips.
+    // Use edge detection so a new command is only scheduled when the on-target state *changes*,
+    // preventing the running feed command from being cancelled and restarted every 20 ms loop.
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    final boolean[] wasOnTarget = {false};
     snowblowGateCommand =
         Commands.run(
                 () -> {
-                  if (robotContainer.isTurretOnTarget()) {
+                  boolean onTarget = robotContainer.isTurretOnTarget();
+                  if (onTarget && !wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(
                             robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
                     CommandScheduler.getInstance()
                         .schedule(
                             robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().snowblowCommand());
-                  } else {
+                  } else if (!onTarget && wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedRight().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().offCommand());
                   }
+                  wasOnTarget[0] = onTarget;
                 })
             .ignoringDisable(false);
     CommandScheduler.getInstance().schedule(snowblowGateCommand);

@@ -2,6 +2,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -119,6 +120,11 @@ public class Vision extends SubsystemBase {
 
   public void setVisionEnabled(boolean enabled) {
     SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
+  }
+
+  /** Returns true if the odometry has already been seeded by limelight pre-match. */
+  public boolean isSeeded() {
+    return seedStable;
   }
 
   // -----------------------------------------------------------------------
@@ -245,10 +251,37 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // Log injection count (rate-limited).
+    // Log injection count and the combined pose feeding odometry (rate-limited).
     if (shouldLog) {
       Logger.recordOutput("Vision/acceptedCount", accepted.size());
       Logger.recordOutput("Vision/injected", visionEnabled && !accepted.isEmpty());
+
+      // Log the combined accepted pose that is actually feeding the pose
+      // estimator this cycle.  When multiple cameras pass filters we compute a
+      // stddev-weighted average so AdvantageScope can show a single "what
+      // odometry sees" ghost alongside the per-camera raw ghosts.
+      if (!accepted.isEmpty()) {
+        double weightSum = 0.0;
+        double sumX = 0.0;
+        double sumY = 0.0;
+        double sumCos = 0.0;
+        double sumSin = 0.0;
+        for (AcceptedObservation obs : accepted) {
+          // Weight = 1/stddev² — lower stddev → higher weight.
+          double w = 1.0 / (obs.scaledXYStdDev() * obs.scaledXYStdDev());
+          weightSum += w;
+          sumX += obs.pose().getX() * w;
+          sumY += obs.pose().getY() * w;
+          double r = obs.pose().getRotation().getRadians();
+          sumCos += Math.cos(r) * w;
+          sumSin += Math.sin(r) * w;
+        }
+        double avgX = sumX / weightSum;
+        double avgY = sumY / weightSum;
+        double avgYaw = Math.atan2(sumSin / weightSum, sumCos / weightSum);
+        Pose2d combinedAccepted = new Pose2d(avgX, avgY, new Rotation2d(avgYaw));
+        Logger.recordOutput("Vision/combinedAcceptedPose", combinedAccepted);
+      }
     }
   }
 
@@ -338,6 +371,15 @@ public class Vision extends SubsystemBase {
       SmartDashboard.putString(prefix + "rawPose", estimate.pose.toString());
     } else {
       SmartDashboard.putString(prefix + "rawPose", "No tags");
+    }
+
+    // Log the raw (pre-filter) per-camera ghost pose for AdvantageScope diagnostics.
+    if (estimate != null && estimate.pose != null) {
+      if (shouldLog) {
+        Logger.recordOutput(prefix + "ghostPose", estimate.pose);
+        Logger.recordOutput(prefix + "ghostTagCount", estimate.tagCount);
+        Logger.recordOutput(prefix + "ghostAvgTagDist", estimate.avgTagDist);
+      }
     }
 
     // 2. Null / no-tag guard.

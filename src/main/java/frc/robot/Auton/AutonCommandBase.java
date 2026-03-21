@@ -1,6 +1,7 @@
 package frc.robot.Auton;
 
 import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,30 +21,31 @@ import frc.robot.RobotContainer;
  */
 public class AutonCommandBase extends SequentialCommandGroup {
   private final RobotContainer robotContainer;
-  private final Rotation2d startingRotation;
+  private final Pose2d startingPose;
 
   /**
    * Creates a new AutonCommandBase.
    *
    * @param robotContainer The robot container
-   * @param startingRotation The starting rotation of the robot, or null for no pose reset
+   * @param startingPose The full starting pose of the robot, or null for no pose reset
    */
-  protected AutonCommandBase(RobotContainer robotContainer, Rotation2d startingRotation) {
+  protected AutonCommandBase(RobotContainer robotContainer, Pose2d startingPose) {
     this.robotContainer = robotContainer;
-    this.startingRotation = startingRotation;
+    this.startingPose = startingPose;
   }
 
   /**
-   * Returns the starting pose (current drive translation + the provided starting rotation adjusted
-   * for alliance), or null if this auto should run from wherever the robot currently is (no pose
-   * reset).
+   * Returns the starting pose adjusted for alliance (rotation flipped 180° on Red), or null if this
+   * auto should run from wherever the robot currently is (no pose reset).
    */
-  public Rotation2d getStartingRotation() {
-    if (startingRotation == null) return null;
-    return startingRotation.plus(
-        Robot.currentAlliance == Alliance.Red
-            ? Rotation2d.fromDegrees(180)
-            : Rotation2d.fromDegrees(0));
+  public Pose2d getStartingPose() {
+    if (startingPose == null) return null;
+    if (Robot.currentAlliance == Alliance.Red) {
+      return new Pose2d(
+          startingPose.getTranslation(),
+          startingPose.getRotation().plus(Rotation2d.fromDegrees(180)));
+    }
+    return startingPose;
   }
 
   protected Command followPath(PathPlannerPath path) {
