@@ -29,7 +29,7 @@ public class OutCollectMidShort2 extends AutonCommandBase {
         new SequentialCommandGroup(
             followPath(Paths.outCollectMidShort),
             new WaitCommand(3.5),
-            followPath(Paths.outCollectMidShort),
+            followPath(Paths.outCollectMidShort2),
             new WaitCommand(3.5)));
   }
 }
