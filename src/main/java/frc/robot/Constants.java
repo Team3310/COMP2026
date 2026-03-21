@@ -489,6 +489,10 @@ public final class Constants {
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 60.0;
 
+    // In turret-override mode, the robot rotates via limelight-rear tx.  The
+    // robot is considered "locked on" (feeds allowed) when |tx| is below this.
+    public static double kOverrideRobotLockOnToleranceDeg = 3.0;
+
     // Turret command deadband — if the new aim command is within this many
     // degrees of the previous command, hold the previous value.  Prevents the
     // turret from chasing tiny jitter while shooting.
