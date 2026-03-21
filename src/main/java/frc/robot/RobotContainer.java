@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.OptionalDouble;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.limelight.LimelightHelpers;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
 import frc.lib.subsystems.SimTalonFXIO;
 import frc.lib.subsystems.TalonFXIO;
@@ -37,7 +40,6 @@ import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
-import java.util.OptionalDouble;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -622,10 +624,10 @@ public class RobotContainer {
    */
   public boolean isTurretOnTarget() {
     if (Robot.turretOverrideActive) {
-      OptionalDouble tx = turretAimManager.getTurretLockFilteredTxNcDegrees();
-      return tx.isPresent()
-          && Math.abs(tx.getAsDouble())
-              < Constants.ScorerConstants.kOverrideRobotLockOnToleranceDeg;
+      boolean hasTarget = LimelightHelpers.getTV(Constants.VisionConstants.kLimelightRear);
+      if (!hasTarget) return false;
+      double tx = LimelightHelpers.getTXNC(Constants.VisionConstants.kLimelightRear);
+      return Math.abs(tx) < Constants.ScorerConstants.kOverrideRobotLockOnToleranceDeg;
     }
     double tol = Constants.ScorerConstants.kTurretLockOnToleranceDeg;
     double leftErr =
@@ -708,23 +710,23 @@ public class RobotContainer {
 
     // When turret override is active, rotate the robot using the rear limelight
     // tx to align the robot's rear to the hub. Stop rotating once locked on.
-    Command overrideShootCommand =
-        baseShootCommand.alongWith(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> {
-                  if (!LimelightHelpers.getTV(Constants.VisionConstants.kLimelightRear)
-                      || isTurretOnTarget()) {
+    return Commands.either(
+        baseShoot
+            .get()
+            .alongWith(
+                DriveCommands.joystickDriveAtAngle(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> {
+                    OptionalDouble tx = turretAimManager.getTurretLockFilteredTxNcDegrees();
+                  if (tx.isEmpty() || isTurretOnTarget()) {
                     return drive.getRotation(); // hold current heading — no target or locked on
                   }
-                  double tx = LimelightHelpers.getTXNC(Constants.VisionConstants.kLimelightRear);
-                  return drive.getRotation().minus(Rotation2d.fromDegrees(tx));
-                }));
-
-    return Commands.either(
-        overrideShootCommand, baseShootCommand, () -> Robot.turretOverrideActive);
+                  return drive.getRotation().minus(Rotation2d.fromDegrees(tx.getAsDouble()));
+                })),
+        baseShoot.get(),
+        () -> Robot.turretOverrideActive);
   }
 
   private void configureButtonBindings() {
