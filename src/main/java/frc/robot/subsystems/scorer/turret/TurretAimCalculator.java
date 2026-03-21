@@ -9,6 +9,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.OptionalDouble;
 
 /**
  * Pure-math utility that computes the desired turret (lateral) and hood (vertical) angles for the
@@ -112,6 +113,19 @@ public final class TurretAimCalculator {
    *     info.
    */
   public static AimResult calculate(Pose2d robotPose) {
+    return calculate(robotPose, OptionalDouble.empty());
+  }
+
+  /**
+   * Compute aim angles for both turrets and hoods, optionally overriding the lookup-table distance.
+   *
+   * @param robotPose Current robot field pose from odometry / pose estimator.
+   * @param overrideLookupDistanceMeters Optional lookup-table distance used only when turret lock
+   *     has a valid rear-tag measurement.
+   * @return An {@link AimResult} with L/R turret, hood, flywheel, and vertical-feed RPM plus debug
+   *     info.
+   */
+  public static AimResult calculate(Pose2d robotPose, OptionalDouble overrideLookupDistanceMeters) {
     boolean isBlue = (Robot.getEffectiveAlliance() == Alliance.Blue);
 
     FieldConstants.Zone zone = Robot.currentZone;
@@ -155,7 +169,8 @@ public final class TurretAimCalculator {
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
-    double[] result = computeAngles(midShooterField, fieldTarget, heading, home);
+    double[] result =
+        computeAngles(midShooterField, fieldTarget, heading, home, overrideLookupDistanceMeters);
 
     double turretDegLeft =
         result[0]
@@ -226,7 +241,8 @@ public final class TurretAimCalculator {
       Translation2d shooterField,
       Translation2d targetField,
       Rotation2d robotHeading,
-      boolean home) {
+      boolean home,
+      OptionalDouble overrideLookupDistanceMeters) {
     // --- Lateral (turret) angle ---
     // Vector from shooter to target in field frame
     double dx = targetField.getX() - shooterField.getX();
@@ -273,7 +289,10 @@ public final class TurretAimCalculator {
     lastTurretDeg = turretDeg;
 
     // --- Vertical (hood) angle and flywheel speed via lookup table ---
-    double horizontalDist = Math.hypot(dx, dy);
+    double horizontalDist =
+        (Robot.turretOverrideActive && overrideLookupDistanceMeters.isPresent())
+            ? overrideLookupDistanceMeters.getAsDouble()
+            : Math.hypot(dx, dy);
     double hoodDeg;
     double flywheelRPM;
     double verticalFeedRPM;
