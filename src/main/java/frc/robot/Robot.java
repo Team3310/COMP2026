@@ -607,7 +607,7 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
-    } else if (currentState == BotState.SNOWBLOW) {
+    } else if (currentState == BotState.SNOWBLOW && !shootButtonHeld) {
       double leftTargetRpm = robotContainer.getTurretAimManager().getLeftFlywheelRPM();
       double rightTargetRpm = robotContainer.getTurretAimManager().getRightFlywheelRPM();
       CommandScheduler.getInstance()

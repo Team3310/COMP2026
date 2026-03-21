@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.subsystems.ServoMotorSubsystemConfig;
@@ -600,7 +601,7 @@ public class RobotContainer {
     return leftErr < tol && rightErr < tol;
   }
 
-  private Command buildShootWhileHeldCommand() {
+  /*private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
@@ -623,15 +624,11 @@ public class RobotContainer {
                                   flywheelRight.getCurrentVelocity()
                                       - rightTargetRpm.getAsDouble());
                           if (leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget()) {
-                            CommandScheduler.getInstance()
-                                .schedule(
-                                    verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm));
-                            CommandScheduler.getInstance()
-                                .schedule(
-                                    verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm));
-                            CommandScheduler.getInstance().schedule(agitatorLeft.snowblowCommand());
-                            CommandScheduler.getInstance()
-                                .schedule(agitatorRight.snowblowCommand());
+                            Commands.parallel(
+                                verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
+                                verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
+                                agitatorLeft.snowblowCommand(),
+                                agitatorRight.snowblowCommand());
                           } else {
                             CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
                             CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
@@ -649,6 +646,51 @@ public class RobotContainer {
               CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
               Robot.stateRefreshRequested = true;
             });
+  }*/
+
+  private Command buildShootWhileHeldCommand() {
+    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
+    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
+    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
+
+    return Commands.parallel(
+        Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+        Commands.parallel(
+                flywheelLeft.setRPMCommand(leftTargetRpm),
+                flywheelRight.setRPMCommand(rightTargetRpm))
+            .alongWith(
+                Commands.waitUntil(
+                        () -> {
+                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
+                          // Require flywheels to be AT OR ABOVE target minus tolerance so the
+                          // gate never opens while still spinning up from below.
+                          boolean leftReady =
+                              flywheelLeft.getCurrentVelocity()
+                                  >= leftTargetRpm.getAsDouble() - tolRPM;
+                          boolean rightReady =
+                              flywheelRight.getCurrentVelocity()
+                                  >= rightTargetRpm.getAsDouble() - tolRPM;
+                          return leftReady && rightReady && isTurretOnTarget();
+                        })
+                    .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
+                    .andThen(
+                        // Use Commands.parallel so subsystem requirements are properly held
+                        // and commands stay running — never schedule() inside run().
+                        Commands.parallel(
+                            verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
+                            verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
+                            agitatorLeft.snowblowCommand(),
+                            agitatorRight.snowblowCommand())))
+            .finallyDo(
+                () -> {
+                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                  CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+                  CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                  Robot.stateRefreshRequested = true;
+                }));
   }
 
   private void configureButtonBindings() {
