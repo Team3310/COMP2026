@@ -1,7 +1,5 @@
 package frc.robot;
 
-import java.util.OptionalDouble;
-
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,6 +38,7 @@ import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
+import java.util.OptionalDouble;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -719,12 +718,12 @@ public class RobotContainer {
                     () -> -driver.getLeftY(),
                     () -> -driver.getLeftX(),
                     () -> {
-                    OptionalDouble tx = turretAimManager.getTurretLockFilteredTxNcDegrees();
-                  if (tx.isEmpty() || isTurretOnTarget()) {
-                    return drive.getRotation(); // hold current heading — no target or locked on
-                  }
-                  return drive.getRotation().minus(Rotation2d.fromDegrees(tx.getAsDouble()));
-                })),
+                      OptionalDouble tx = turretAimManager.getTurretLockFilteredTxNcDegrees();
+                      if (tx.isEmpty() || isTurretOnTarget()) {
+                        return drive.getRotation(); // hold current heading — no target or locked on
+                      }
+                      return drive.getRotation().minus(Rotation2d.fromDegrees(tx.getAsDouble()));
+                    })),
         baseShoot.get(),
         () -> Robot.turretOverrideActive);
   }
