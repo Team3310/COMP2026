@@ -682,7 +682,10 @@ public class Robot extends LoggedRobot {
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    // Gate agitators and vertical feeds on turret position — off while the turret flips.
+    // Floor rollers run unconditionally during snowblow — not tied to turret position.
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
+    // Gate vertical feeds on turret position — off while the turret flips.
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
     snowblowGateCommand =
@@ -695,19 +698,11 @@ public class Robot extends LoggedRobot {
                     CommandScheduler.getInstance()
                         .schedule(
                             robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().snowblowCommand());
                   } else {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedRight().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().offCommand());
                   }
                 })
             .ignoringDisable(false);
