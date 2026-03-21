@@ -32,8 +32,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
   }
 
   /**
-   * Returns the starting pose adjusted for alliance (rotation flipped 180° on Red), or null if
-   * this auto should run from wherever the robot currently is (no pose reset).
+   * Returns the starting pose adjusted for alliance (rotation flipped 180° on Red), or null if this
+   * auto should run from wherever the robot currently is (no pose reset).
    */
   public Pose2d getStartingPose() {
     if (startingPose == null) return null;
