@@ -46,6 +46,9 @@ public class Paths {
   public static PathPlannerPath depCollectMidShort;
   public static PathPlannerPath depCollectMidShort2;
 
+  public static PathPlannerPath citrus1;
+  public static PathPlannerPath citrus2;
+
   public static boolean loaded;
 
   /**
@@ -82,6 +85,9 @@ public class Paths {
     outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
     outCollectMidShort = loadPath("OutCollectMidShort");
     outCollectMidShort2 = loadPath("OutCollectMidShort2");
+
+    citrus1 = loadPath("Citrus1");
+    citrus2 = loadPath("Citrus2");
   }
 
   /** Load a single path from a PathPlanner .path file. */

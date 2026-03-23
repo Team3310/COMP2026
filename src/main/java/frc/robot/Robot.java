@@ -137,10 +137,6 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
-    // Optionally switch the thread to high priority to improve loop
-    // timing (see the template project documentation for details)
-    // Threads.setCurrentThreadPriority(true, 99);
-
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
     // finished or interrupted commands, and running subsystem periodic() methods.
@@ -160,11 +156,6 @@ public class Robot extends LoggedRobot {
     double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
 
     updateZone();
-
-    // activeHub is still updated here because the broader robot state machine
-    // still references it, but teleop drive slowdown no longer depends on
-    // FMS/hub state.
-    // updateHub();
 
     // This basically says if we are not deploying or retracting, then we can change
     // states.
@@ -366,8 +357,6 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("Current/TotalRobot_A", totalMotorCurrent + totalDriveCurrent);
     }
 
-    // Return to non-RT thread priority (do not modify the first argument)
-    // Threads.setCurrentThreadPriority(false, 10);
   }
 
   /** This function is called once when the robot is disabled. */
@@ -489,79 +478,6 @@ public class Robot extends LoggedRobot {
       currentZone = Zone.MID;
     } else {
       currentZone = Zone.RED;
-    }
-  }
-
-  public void updateHub() {
-    // If manually overridden OFF via SmartDashboard button, skip automatic
-    // calculation
-    if (hubOverride) {
-      activeHub = false;
-      return;
-    }
-
-    // Hub is always enabled in autonomous.
-    if (DriverStation.isAutonomousEnabled()) {
-      activeHub = true;
-      return;
-    }
-    // At this point, if we're not teleop enabled, there is no hub.
-    if (!DriverStation.isTeleopEnabled()) {
-      return;
-    }
-
-    // We're teleop enabled, compute.
-    double matchTime = DriverStation.getMatchTime();
-    String gameData = DriverStation.getGameSpecificMessage();
-    // If we have no game data, we cannot compute, assume hub is active, as its
-    // likely early in
-    // teleop.
-    if (matchTime < 0 || (gameData == null || gameData.isEmpty())) {
-      activeHub = true;
-      return;
-    }
-    boolean redInactiveFirst = false;
-    switch (gameData.charAt(0)) {
-      case 'R' -> redInactiveFirst = true;
-      case 'B' -> redInactiveFirst = false;
-      default -> {
-        // If we have invalid game data, assume hub is active.
-        activeHub = true;
-        return;
-      }
-    }
-
-    // Shift was is active for blue if red won auto, or red if blue won auto.
-    boolean shift1Active =
-        switch (currentAlliance) {
-          case Red -> !redInactiveFirst;
-          case Blue -> redInactiveFirst;
-        };
-
-    if (matchTime > 130) {
-      // Transition shift, hub is active.
-      activeHub = true;
-      return;
-    } else if (matchTime > 105) {
-      // Shift 1
-      activeHub = shift1Active;
-      return;
-    } else if (matchTime > 80) {
-      // Shift 2
-      activeHub = !shift1Active;
-      return;
-    } else if (matchTime > 55) {
-      // Shift 3
-      activeHub = shift1Active;
-      return;
-    } else if (matchTime > 30) {
-      // Shift 4
-      activeHub = !shift1Active;
-      return;
-    } else {
-      // End game, hub always active.
-      activeHub = true;
-      return;
     }
   }
 
