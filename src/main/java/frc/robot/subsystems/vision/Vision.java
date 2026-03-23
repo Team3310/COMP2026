@@ -148,12 +148,6 @@ public class Vision extends SubsystemBase {
     // Read the dashboard toggle — when false, cameras still run and log but
     // do NOT inject measurements into the pose estimator.  Useful for debugging.
     boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, true);
-    if (shouldLog) {
-      Logger.recordOutput("Vision/enabled", visionEnabled);
-      Logger.recordOutput("Vision/Seeded", hasSeed);
-      Logger.recordOutput("Vision/SeedStable", seedStable);
-      Logger.recordOutput("Vision/StableSeedSampleCount", stableSeedSampleCount);
-    }
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
@@ -189,8 +183,6 @@ public class Vision extends SubsystemBase {
         boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
         if (resetOnDisable) {
           resetSeedState();
-          // Preserve existing seed state; log event for debugging.
-          Logger.recordOutput("Vision/resetSkippedOnDisable", true);
         }
         disabledCycleCounter = 0; // reset so first disabled cycle processes immediately
       }
@@ -217,6 +209,7 @@ public class Vision extends SubsystemBase {
           LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
         }
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+          logRawMegaTag2Pose(VisionConstants.kCameraNames[i]);
           processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
         }
       }
@@ -251,11 +244,8 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // Log injection count and the combined pose feeding odometry (rate-limited).
+    // Log the final filtered pose feeding odometry (rate-limited).
     if (shouldLog) {
-      Logger.recordOutput("Vision/acceptedCount", accepted.size());
-      Logger.recordOutput("Vision/injected", visionEnabled && !accepted.isEmpty());
-
       // Log the combined accepted pose that is actually feeding the pose
       // estimator this cycle.  When multiple cameras pass filters we compute a
       // stddev-weighted average so AdvantageScope can show a single "what
@@ -280,7 +270,8 @@ public class Vision extends SubsystemBase {
         double avgY = sumY / weightSum;
         double avgYaw = Math.atan2(sumSin / weightSum, sumCos / weightSum);
         Pose2d combinedAccepted = new Pose2d(avgX, avgY, new Rotation2d(avgYaw));
-        Logger.recordOutput("Vision/combinedAcceptedPose", combinedAccepted);
+        Logger.recordOutput("Vision/finalFilteredPose", combinedAccepted);
+        Logger.recordOutput("Vision/finalFilteredXYStdDev", Math.sqrt(1.0 / weightSum));
       }
     }
   }
@@ -339,6 +330,20 @@ public class Vision extends SubsystemBase {
     }
   }
 
+  private void logRawMegaTag2Pose(String cameraName) {
+    String prefix = "Vision/" + cameraName + "/";
+    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+    if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
+      double xStdDev = 0.03;
+      double yStdDev = 0.03;
+      double xyStdDev = Math.max(xStdDev, yStdDev);
+      Logger.recordOutput(prefix + "mt2Pose", estimate.pose);
+      Logger.recordOutput(prefix + "mt2XYStdDev", xyStdDev);
+    } else {
+      Logger.recordOutput(prefix + "mt2XYStdDev", -1.0);
+    }
+  }
+
   // -----------------------------------------------------------------------
   //  Per-camera processing
   // -----------------------------------------------------------------------
@@ -373,18 +378,13 @@ public class Vision extends SubsystemBase {
       SmartDashboard.putString(prefix + "rawPose", "No tags");
     }
 
-    // Log the raw (pre-filter) per-camera ghost pose for AdvantageScope diagnostics.
-    if (estimate != null && estimate.pose != null) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "ghostPose", estimate.pose);
-        Logger.recordOutput(prefix + "ghostTagCount", estimate.tagCount);
-        Logger.recordOutput(prefix + "ghostAvgTagDist", estimate.avgTagDist);
-      }
+    // Log raw MT2 pose and stddev only when a valid tagged pose exists.
+    if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
+      Logger.recordOutput(prefix + "mt2Pose", estimate.pose);
     }
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
-      if (shouldLog) Logger.recordOutput(prefix + "accepted", false);
       return null;
     }
 
@@ -446,23 +446,17 @@ public class Vision extends SubsystemBase {
     double xStdDev = DEFAULT_LINEAR_STDDEV;
     double yStdDev = DEFAULT_LINEAR_STDDEV;
     double xyStdDev = Math.max(xStdDev, yStdDev);
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt2XYStdDev", xyStdDev);
+    }
 
     if (xyStdDev <= 0.0) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stddevs_zero");
-      }
       return null;
     }
 
     // 8. Reject measurements with excessively high std devs.
     if (VisionConstants.kMT2MaxAcceptedStdDev > 0.0
         && xyStdDev > VisionConstants.kMT2MaxAcceptedStdDev) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stddev_too_high");
-        Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
-      }
       return null;
     }
 
@@ -476,21 +470,7 @@ public class Vision extends SubsystemBase {
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
     double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
-    // 11. Logging for AdvantageScope (rate-limited).
-    if (shouldLog) {
-      Logger.recordOutput(prefix + "accepted", true);
-      Logger.recordOutput(prefix + "pose", visionPose);
-      Logger.recordOutput(prefix + "tagCount", estimate.tagCount);
-      Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
-      Logger.recordOutput(prefix + "avgTagArea", estimate.avgTagArea);
-      Logger.recordOutput(prefix + "xyStdDev", scaledXYStdDev);
-      Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
-      Logger.recordOutput(prefix + "cameraFactor", cameraFactor);
-      Logger.recordOutput(prefix + "llXStdDev", xStdDev);
-      Logger.recordOutput(prefix + "llYStdDev", yStdDev);
-    }
-
-    // 12. Return the accepted observation for timestamp-sorted injection.
+    // 11. Return the accepted observation for timestamp-sorted injection.
     return new AcceptedObservation(
         visionPose, estimate.timestampSeconds, scaledXYStdDev, VisionConstants.kThetaStdDev);
   }
@@ -537,11 +517,13 @@ public class Vision extends SubsystemBase {
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
-      if (shouldLog) Logger.recordOutput(prefix + "preMatch", false);
       return;
     }
 
     Pose2d visionPose = estimate.pose;
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt1Pose", visionPose);
+    }
 
     // 3. Require multi-tag for high confidence (especially important for yaw).
     if (estimate.tagCount < VisionConstants.kPreMatchMinTagCount) {
@@ -578,28 +560,20 @@ public class Vision extends SubsystemBase {
     double yStdDev = stddevs[VisionConstants.kMT1YStdDevIndex];
     double yawStdDev = stddevs[VisionConstants.kMT1YawStdDevIndex];
     double xyStdDev = Math.max(xStdDev, yStdDev);
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt1XYStdDev", xyStdDev);
+      Logger.recordOutput(prefix + "mt1YawStdDev", yawStdDev);
+    }
 
     if (xyStdDev <= 0.0) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "stddevs_zero");
-      }
       return;
     }
 
     if (xyStdDev > VisionConstants.kPreMatchMaxStdDev) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "xy_stddev_too_high");
-      }
       return;
     }
 
     if (yawStdDev > VisionConstants.kPreMatchMaxYawStdDevDeg) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "yaw_stddev_too_high");
-      }
       return;
     }
 
@@ -612,11 +586,6 @@ public class Vision extends SubsystemBase {
         drive.setPose(visionPose);
         hasSeed = true;
       }
-      if (shouldLog) {
-        Logger.recordOutput(
-            prefix + "preMatchAction", visionEnabled ? "setPose" : "setPose_suppressed");
-        Logger.recordOutput(prefix + "preMatchSeededYawDeg", visionPose.getRotation().getDegrees());
-      }
     } else {
       double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
       double scaledYawStdDev = yawStdDev * VisionConstants.kMT1StdDevMultiplier;
@@ -626,29 +595,12 @@ public class Vision extends SubsystemBase {
             estimate.timestampSeconds,
             VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
       }
-      if (shouldLog) {
-        Logger.recordOutput(
-            prefix + "preMatchAction", visionEnabled ? "refine" : "refine_suppressed");
-      }
     }
 
     if (!hasSeed && !visionEnabled) {
       seedStable = false;
     } else if (hasSeed && stableSeedSampleCount >= VisionConstants.kPreMatchStableSeedMinSamples) {
       seedStable = true;
-    }
-
-    // 8. Logging (rate-limited).
-    if (shouldLog) {
-      Logger.recordOutput(prefix + "preMatch", true);
-      Logger.recordOutput(prefix + "preMatchInjected", visionEnabled);
-      Logger.recordOutput(prefix + "preMatchHasSeed", hasSeed);
-      Logger.recordOutput(prefix + "preMatchSeedStable", seedStable);
-      Logger.recordOutput(prefix + "preMatchStableSamples", stableSeedSampleCount);
-      Logger.recordOutput(prefix + "preMatchPose", visionPose);
-      Logger.recordOutput(prefix + "preMatchTagCount", estimate.tagCount);
-      Logger.recordOutput(prefix + "preMatchXYStdDev", xyStdDev);
-      Logger.recordOutput(prefix + "preMatchYawStdDev", yawStdDev);
     }
   }
 
@@ -685,10 +637,5 @@ public class Vision extends SubsystemBase {
     }
 
     lastAcceptedPreMatchPose = visionPose;
-
-    if (shouldLog) {
-      Logger.recordOutput(prefix + "preMatchXYDeltaMeters", xyDeltaMeters);
-      Logger.recordOutput(prefix + "preMatchYawDeltaDeg", yawDeltaDeg);
-    }
   }
 }
