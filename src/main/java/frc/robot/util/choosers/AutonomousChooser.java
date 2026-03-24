@@ -28,7 +28,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.HUB_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_DEP)
         .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
-        .addOption(AutonomousMode.DEP_COLLECT_MID_SHORT)
+        .addOption(AutonomousMode.DEP_COLLECT)
         .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
         .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
         .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2)
@@ -59,7 +59,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     // HUB_TO_OUT("hub to out"),
     // HUB_TO_DEP("hub to depo"),
     DEP_SNOWBLOW_MID_SHORT("depo snowblow mid short"),
-    DEP_COLLECT_MID_SHORT("DepCollect"),
+    DEP_COLLECT("DepCollect"),
 
     OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
     OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
@@ -103,7 +103,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           //   return new HubToOut(RobotContainer.getInstance());
           // case HUB_TO_DEP:
           //   return new HubToDep(RobotContainer.getInstance());
-        case DEP_COLLECT_MID_SHORT:
+        case DEP_COLLECT:
           return new DepCollect(RobotContainer.getInstance());
         case DEP_SNOWBLOW_MID_SHORT:
           return new DepSnowblowMidShort2(RobotContainer.getInstance());
@@ -125,7 +125,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     }
 
     public boolean disablesVisionSeeding() {
-      return this == TEST_FORWARD;
+      return this == TEST_FORWARD || this == DEP_COLLECT;
     }
   }
 }
