@@ -13,16 +13,21 @@ public interface TurretAimIO {
   public static class TurretAimIOInputs {
     // ---- Computed aim angles (degrees) ----
     public double leftTurretAngleDeg = 0.0;
+
     /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double leftHoodAngleDeg = 10.0;
+
     /** Left flywheel speed in RPM. */
     public double leftFlywheelRPM = 0.0;
+
     /** Vertical feed speed in RPM. */
     public double verticalFeedRPM = 0.0;
 
     public double rightTurretAngleDeg = 0.0;
+
     /** Hood angle in degrees from vertical (10 = 80° elevation, 35 = 55° elevation). */
     public double rightHoodAngleDeg = 10.0;
+
     /** Right flywheel speed in RPM. */
     public double rightFlywheelRPM = 0.0;
 
@@ -35,13 +40,16 @@ public interface TurretAimIO {
 
     /** Field-space X of the current target (meters). */
     public double targetXMeters = 0.0;
+
     /** Field-space Y of the current target (meters). */
     public double targetYMeters = 0.0;
 
     /** Robot X at time of calculation (meters). */
     public double robotXMeters = 0.0;
+
     /** Robot Y at time of calculation (meters). */
     public double robotYMeters = 0.0;
+
     /** Robot heading at time of calculation (degrees). */
     public double robotHeadingDeg = 0.0;
 

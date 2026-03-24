@@ -1,9 +1,10 @@
 package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
-import frc.robot.Auton.Dep.DepCollectMidShort2;
+import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
 import frc.robot.Auton.OneAuton;
+import frc.robot.Auton.Outpost.CitrusAuton;
 import frc.robot.Auton.Outpost.OutCollectMidShort2;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
@@ -26,11 +27,12 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.OUT_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_DEP)
-        .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
-        .addOption(AutonomousMode.DEP_COLLECT_MID_SHORT)
-        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
-        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
-        .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2);
+        // .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
+        .addOption(AutonomousMode.DEP_COLLECT)
+        // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
+        // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
+        .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2)
+        .addOption(AutonomousMode.CITRUS_AUTON);
   }
 
   public AutonCommandBase getCommand() {
@@ -57,11 +59,12 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     // HUB_TO_OUT("hub to out"),
     // HUB_TO_DEP("hub to depo"),
     DEP_SNOWBLOW_MID_SHORT("depo snowblow mid short"),
-    DEP_COLLECT_MID_SHORT("2depo collect mid short"),
+    DEP_COLLECT("DepCollect"),
 
     OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
     OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
-    OUT_COLLECT_MID_SHORT2("2out collect mid short");
+    OUT_COLLECT_MID_SHORT2("2out collect mid short"),
+    CITRUS_AUTON("citrus auton");
 
     private String name = "";
 
@@ -100,8 +103,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           //   return new HubToOut(RobotContainer.getInstance());
           // case HUB_TO_DEP:
           //   return new HubToDep(RobotContainer.getInstance());
-        case DEP_COLLECT_MID_SHORT:
-          return new DepCollectMidShort2(RobotContainer.getInstance());
+        case DEP_COLLECT:
+          return new DepCollect(RobotContainer.getInstance());
         case DEP_SNOWBLOW_MID_SHORT:
           return new DepSnowblowMidShort2(RobotContainer.getInstance());
         case OUT_SNOWBLOW_MID_SHORT:
@@ -110,7 +113,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new OutSnowblowMidShort2(RobotContainer.getInstance());
         case OUT_COLLECT_MID_SHORT2:
           return new OutCollectMidShort2(RobotContainer.getInstance());
-
+        case CITRUS_AUTON:
+          return new CitrusAuton(RobotContainer.getInstance());
         default:
           return new OneAuton(RobotContainer.getInstance());
       }
@@ -121,7 +125,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     }
 
     public boolean disablesVisionSeeding() {
-      return this == TEST_FORWARD;
+      return this == TEST_FORWARD || this == DEP_COLLECT;
     }
   }
 }
