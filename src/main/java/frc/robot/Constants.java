@@ -1011,7 +1011,6 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
-    
   }
 
   // #region Roof Subsystem
