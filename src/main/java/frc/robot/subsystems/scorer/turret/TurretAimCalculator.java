@@ -46,16 +46,22 @@ public final class TurretAimCalculator {
   public static class AimResult {
     /** Left turret lateral angle in degrees (0 = forward, + = left). */
     public final double leftTurretDeg;
+
     /** Left hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double leftHoodDeg;
+
     /** Left flywheel speed in RPM. */
     public final double leftFlywheelRPM;
+
     /** Vertical feed speed in RPM. */
     public final double verticalFeedRPM;
+
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
+
     /** Right hood angle in degrees from vertical (0 = straight up, 35 = 55° from horizontal). */
     public final double rightHoodDeg;
+
     /** Right flywheel speed in RPM. */
     public final double rightFlywheelRPM;
 

@@ -146,6 +146,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerSnowblowRPM)
         .withName(getName() + " Snowblow");
   }
+
   /**
    * Command to run roller at the floor roller outtake speed from SmartDashboard.
    *

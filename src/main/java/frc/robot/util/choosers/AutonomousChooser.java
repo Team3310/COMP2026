@@ -27,10 +27,10 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.OUT_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_DEP)
-        .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
+        // .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
         .addOption(AutonomousMode.DEP_COLLECT)
-        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
-        .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
+        // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
+        // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
         .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2)
         .addOption(AutonomousMode.CITRUS_AUTON);
   }

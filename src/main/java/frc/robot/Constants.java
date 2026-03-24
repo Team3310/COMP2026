@@ -296,6 +296,7 @@ public final class Constants {
     // the seed to continue counting as stable.
     public static final double kPreMatchStableSeedYawDeltaDeg = 2.0;
   }
+
   // #endregion
 
   // #region Sim Physics
@@ -365,6 +366,7 @@ public final class Constants {
     // Prevents the simulated turret from slewing unrealistically fast.
     public static double kTurretSimMaxVelocityDegPerSec = 360.0;
   }
+
   // #endregion
 
   // #region Drive Command Tuning
@@ -444,6 +446,7 @@ public final class Constants {
     public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
     public static double kHomeScoringMaxAngularDecelRadPerSec2 = 45.0;
   }
+
   // #endregion
 
   // #region Scorer Subsystems
@@ -452,6 +455,7 @@ public final class Constants {
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;
+
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */
     public static final double kFlywheelRPMTolerance = 50.0;
 
@@ -1058,6 +1062,7 @@ public final class Constants {
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
+
   // #endregion
 
   // #endregion
