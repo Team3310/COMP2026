@@ -653,6 +653,7 @@ public final class Constants {
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
     kLeftHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightHoodConfig = new ServoMotorSubsystemConfig();
@@ -682,6 +683,7 @@ public final class Constants {
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
     kRightHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kLeftTurretConfig = new ServoMotorSubsystemConfig();
@@ -714,6 +716,7 @@ public final class Constants {
     kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
     kLeftTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightTurretConfig =
@@ -745,6 +748,7 @@ public final class Constants {
     kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
     kRightTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kLeftFlywheelConfig =
@@ -765,6 +769,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -785,6 +790,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #endregion
@@ -835,6 +841,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
   }
@@ -889,6 +896,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0; // Per design sheet
     kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #endregion
@@ -948,6 +956,7 @@ public final class Constants {
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -971,6 +980,7 @@ public final class Constants {
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
@@ -993,6 +1003,7 @@ public final class Constants {
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
@@ -1015,6 +1026,7 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #region Roof Subsystem
