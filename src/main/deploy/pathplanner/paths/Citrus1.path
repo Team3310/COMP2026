@@ -20,12 +20,12 @@
         "y": 0.8924166666666655
       },
       "prevControl": {
-        "x": 8.916037236371187,
-        "y": 0.6173409931558906
+        "x": 8.792298590974362,
+        "y": 0.5767293478974334
       },
       "nextControl": {
-        "x": 8.377372422344928,
-        "y": 1.5503358192990107
+        "x": 8.729614340703511,
+        "y": 1.14088760033507
       },
       "isLocked": false,
       "linkedName": null
@@ -86,8 +86,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "",
-      "waypointRelativePos": 0.227488151658768,
+      "name": "switchToCollect",
+      "waypointRelativePos": 0.41706161137440767,
       "endWaypointRelativePos": null,
       "command": {
         "type": "sequential",
@@ -95,6 +95,12 @@
           "commands": []
         }
       }
+    },
+    {
+      "name": "switchToSnowblow",
+      "waypointRelativePos": 4.0,
+      "endWaypointRelativePos": null,
+      "command": null
     }
   ],
   "globalConstraints": {

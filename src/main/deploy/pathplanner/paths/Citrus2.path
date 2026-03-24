@@ -122,14 +122,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "",
-      "waypointRelativePos": 0.227488151658768,
+      "name": "switchToCollect",
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "sequential",
@@ -137,6 +131,12 @@
           "commands": []
         }
       }
+    },
+    {
+      "name": "switchToSnowblow",
+      "waypointRelativePos": 5.0,
+      "endWaypointRelativePos": null,
+      "command": null
     }
   ],
   "globalConstraints": {
