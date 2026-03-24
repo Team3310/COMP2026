@@ -32,32 +32,32 @@
     },
     {
       "anchor": {
-        "x": 5.724263888888889,
-        "y": 0.7706111111111102
+        "x": 5.933542039355992,
+        "y": 0.7331305903398926
       },
       "prevControl": {
-        "x": 5.651180555555555,
-        "y": 0.502638888888888
+        "x": 5.8604587060226585,
+        "y": 0.4651583681176703
       },
       "nextControl": {
-        "x": 5.909151722753402,
-        "y": 1.448533168614317
+        "x": 6.118429873220505,
+        "y": 1.4110526478430994
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.089680555555556,
-        "y": 4.193347222222222
+        "x": 6.241824686940967,
+        "y": 4.1729159212880145
       },
       "prevControl": {
-        "x": 5.695042734334739,
-        "y": 3.8081055396019012
+        "x": 5.84718686572015,
+        "y": 3.7876742386676936
       },
       "nextControl": {
-        "x": 6.601263888888889,
-        "y": 4.692749999999999
+        "x": 6.7534080202743,
+        "y": 4.672318699065792
       },
       "isLocked": false,
       "linkedName": null
@@ -128,7 +128,14 @@
       "command": {
         "type": "sequential",
         "data": {
-          "commands": []
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "switchToCollect"
+              }
+            }
+          ]
         }
       }
     },
@@ -136,7 +143,12 @@
       "name": "switchToSnowblow",
       "waypointRelativePos": 5.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "switchToSnowblow"
+        }
+      }
     }
   ],
   "globalConstraints": {

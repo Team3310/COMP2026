@@ -25,7 +25,7 @@
       },
       "nextControl": {
         "x": 8.729614340703511,
-        "y": 1.14088760033507
+        "y": 1.1408876003350703
       },
       "isLocked": false,
       "linkedName": null
@@ -92,7 +92,14 @@
       "command": {
         "type": "sequential",
         "data": {
-          "commands": []
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "switchToCollect"
+              }
+            }
+          ]
         }
       }
     },
@@ -100,7 +107,12 @@
       "name": "switchToSnowblow",
       "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "switchToSnowblow"
+        }
+      }
     }
   ],
   "globalConstraints": {
