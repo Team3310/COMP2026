@@ -148,7 +148,7 @@ public final class Constants {
     //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
     public static final double kRightForwardM = Units.inchesToMeters(-3.132);
     public static final double kRightSideM = Units.inchesToMeters(13.179);
-    public static final double kRightUpM = Units.inchesToMeters(13.558);
+    public static final double kRightUpM = Units.inchesToMeters(12.859);
     public static final double kRightRollDeg = 180.0; // upside-down
     public static final double kRightPitchDeg = 0.0;
     public static final double kRightYawDeg = -90.0;
