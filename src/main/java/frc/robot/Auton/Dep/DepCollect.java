@@ -11,9 +11,9 @@ import frc.robot.Auton.Paths;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 
-public class DepCollectMidShort2 extends AutonCommandBase {
+public class DepCollect extends AutonCommandBase {
 
-  public DepCollectMidShort2(RobotContainer robotContainer) {
+  public DepCollect(RobotContainer robotContainer) {
     super(
         robotContainer,
         new Pose2d(
@@ -27,7 +27,7 @@ public class DepCollectMidShort2 extends AutonCommandBase {
 
     this.addCommands(
         new SequentialCommandGroup(
-            followPath(Paths.depCollectMidShort), new WaitCommand(3.5),
-            followPath(Paths.depCollectMidShort2), new WaitCommand(3.5)));
+            followPath(Paths.depCollect), new WaitCommand(3.5),
+            followPath(Paths.depCollect2), new WaitCommand(3.5)));
   }
 }

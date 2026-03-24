@@ -1,7 +1,7 @@
 package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
-import frc.robot.Auton.Dep.DepCollectMidShort2;
+import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.CitrusAuton;
@@ -59,7 +59,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     // HUB_TO_OUT("hub to out"),
     // HUB_TO_DEP("hub to depo"),
     DEP_SNOWBLOW_MID_SHORT("depo snowblow mid short"),
-    DEP_COLLECT_MID_SHORT("2depo collect mid short"),
+    DEP_COLLECT_MID_SHORT("DepCollect"),
 
     OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
     OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
@@ -104,7 +104,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           // case HUB_TO_DEP:
           //   return new HubToDep(RobotContainer.getInstance());
         case DEP_COLLECT_MID_SHORT:
-          return new DepCollectMidShort2(RobotContainer.getInstance());
+          return new DepCollect(RobotContainer.getInstance());
         case DEP_SNOWBLOW_MID_SHORT:
           return new DepSnowblowMidShort2(RobotContainer.getInstance());
         case OUT_SNOWBLOW_MID_SHORT:
