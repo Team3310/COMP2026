@@ -104,13 +104,13 @@
       }
     },
     {
-      "name": "switchToSnowblow",
+      "name": "snowblowEnableVertical",
       "waypointRelativePos": 4.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "switchToSnowblow"
+          "name": "snowblowEnableVertical"
         }
       }
     }

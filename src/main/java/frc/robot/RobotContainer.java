@@ -282,6 +282,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
+    NamedCommands.registerCommand("snowblowEnableVertical", buildSnowblowEnableVerticalCommand());
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
@@ -394,6 +395,12 @@ public class RobotContainer {
     SmartDashboard.putData(
         "rotate turret to max",
         Commands.parallel(turretLeft.maxCommand(), turretRight.maxCommand()));
+    SmartDashboard.putData(
+        "Reset Turrets + Stow Intake",
+        Commands.parallel(
+            turretLeft.setDegreesCommand(Constants.ScorerConstants.kTurretStowedPosition),
+            turretRight.setDegreesCommand(Constants.ScorerConstants.kTurretStowedPosition),
+            intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees)));
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
@@ -561,6 +568,32 @@ public class RobotContainer {
           Robot.overrideState = overrideState;
           Robot.stateRefreshRequested = true;
         });
+  }
+
+  /**
+   * Waits until both floor rollers are at snowblow speed (live from the SmartDashboard table),
+   * then enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
+   * PathPlanner named command {@code "snowblowEnableVertical"}.
+   */
+  private Command buildSnowblowEnableVerticalCommand() {
+    return new edu.wpi.first.wpilibj2.command.WaitUntilCommand(
+            () -> {
+              double target = Constants.AgitatorConstants.kFloorRollerSnowblowRPM;
+              double tol = Constants.ScorerConstants.kFlywheelRPMTolerance;
+              return Math.abs(agitatorLeft.getCurrentVelocity() - target) < tol
+                  && Math.abs(agitatorRight.getCurrentVelocity() - target) < tol;
+            })
+        .withTimeout(3.0)
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  java.util.function.DoubleSupplier feedRpm = turretAimManager::getVerticalFeedRPM;
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(verticalFeedLeft.customVelocityCommand(feedRpm));
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(verticalFeedRight.customVelocityCommand(feedRpm));
+                }))
+        .withName("SnowblowEnableVertical");
   }
 
   private boolean isOperatorJamClearOverrideAllowed() {

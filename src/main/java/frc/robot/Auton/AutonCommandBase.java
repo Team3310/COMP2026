@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathplanner.util.FlippingUtil;
 import frc.lib.util.FieldConstants.Zone;
@@ -48,6 +49,41 @@ public class AutonCommandBase extends SequentialCommandGroup {
 
   protected Command followPath(PathPlannerPath path) {
     return new FollowPathCommand(robotContainer.getDrive(), path);
+  }
+
+  /**
+   * Returns a command that waits until both floor rollers are within
+   * {@link Constants#kFlywheelRPMTolerance} RPM of the snowblow target speed (read live from the
+   * SmartDashboard table via {@link Constants.AgitatorConstants#kFloorRollerSnowblowRPM}), then
+   * immediately starts both vertical feed rollers at the aim-manager's desired feed RPM.
+   *
+   * <p>Falls back to a 3-second timeout so the auto never hangs indefinitely.
+   */
+  protected Command waitForSnowblowAtSpeed() {
+    return new WaitUntilCommand(
+            () -> {
+              double target = Constants.AgitatorConstants.kFloorRollerSnowblowRPM;
+              double tol = Constants.ScorerConstants.kFlywheelRPMTolerance;
+              double leftErr =
+                  Math.abs(robotContainer.getAgitatorLeft().getCurrentVelocity() - target);
+              double rightErr =
+                  Math.abs(robotContainer.getAgitatorRight().getCurrentVelocity() - target);
+              return leftErr < tol && rightErr < tol;
+            })
+        .withTimeout(3.0)
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  java.util.function.DoubleSupplier feedRpm =
+                      robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(
+                          robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(
+                          robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
+                }))
+        .withName("WaitForSnowblowAtSpeed");
   }
 
   protected Command followPathAndSnowblow(PathPlannerPath path) {
