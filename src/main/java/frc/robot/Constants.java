@@ -797,10 +797,10 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kIntakeVelocityRPM = 2000.0;
+    public static double kIntakeVelocityRPM = 1500.0;
     public static double kOuttakeVelocityRPM = -2500.0;
 
-    public static final double kDeployVelocityRPM = 2000.0;
+    public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
 
     public static final double kIntakePivotToleranceRadians = 0.03;
@@ -909,7 +909,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting
