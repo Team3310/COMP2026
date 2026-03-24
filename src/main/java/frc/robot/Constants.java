@@ -647,7 +647,8 @@ public final class Constants {
     kLeftHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightHoodConfig = new ServoMotorSubsystemConfig();
@@ -675,7 +676,8 @@ public final class Constants {
     kRightHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftTurretConfig = new ServoMotorSubsystemConfig();
@@ -706,7 +708,8 @@ public final class Constants {
     kLeftTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightTurretConfig =
@@ -736,7 +739,8 @@ public final class Constants {
     kRightTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
   }
 
   public static final ServoMotorSubsystemConfig kLeftFlywheelConfig =
@@ -825,7 +829,8 @@ public final class Constants {
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
   }
@@ -879,6 +884,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0; // Per design sheet
+    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
   }
 
   // #endregion
@@ -936,7 +942,8 @@ public final class Constants {
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -958,7 +965,8 @@ public final class Constants {
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
