@@ -129,9 +129,6 @@ public final class Constants {
     public static final String kLimelightLeft = "limelight-left";
 
     public static final String[] kCameraNames = {kLimelightRear, kLimelightRight, kLimelightLeft};
-    public static final int[] kSideCameraAllowedTagIds = {
-      1, 3, 4, 6, 9, 10, 17, 19, 20, 22, 25, 26
-    };
 
     // ---- Camera #1  (Rear-facing) ----
     // SDS: X = -1.098 in, Y = 0 in, Z = 20.338 in
