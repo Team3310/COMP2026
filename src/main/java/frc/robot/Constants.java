@@ -145,7 +145,7 @@ public final class Constants {
     //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
     public static final double kRightForwardM = Units.inchesToMeters(-3.132);
     public static final double kRightSideM = Units.inchesToMeters(13.179);
-    public static final double kRightUpM = Units.inchesToMeters(13.558);
+    public static final double kRightUpM = Units.inchesToMeters(12.859);
     public static final double kRightRollDeg = 180.0; // upside-down
     public static final double kRightPitchDeg = 0.0;
     public static final double kRightYawDeg = -90.0;
@@ -760,7 +760,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -780,7 +780,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
   }
 
   // #endregion
@@ -797,10 +797,10 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kIntakeVelocityRPM = 1500.0;
+    public static double kIntakeVelocityRPM = 2000.0;
     public static double kOuttakeVelocityRPM = -2500.0;
 
-    public static final double kDeployVelocityRPM = 1500.0;
+    public static final double kDeployVelocityRPM = 2000.0;
     public static final double kRetractVelocityRPM = 200.0;
 
     public static final double kIntakePivotToleranceRadians = 0.03;
@@ -943,7 +943,7 @@ public final class Constants {
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -966,7 +966,7 @@ public final class Constants {
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
@@ -988,7 +988,7 @@ public final class Constants {
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
 
   // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
@@ -1010,7 +1010,7 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
   }
 
   // #region Roof Subsystem
