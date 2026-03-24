@@ -356,7 +356,6 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("Current/TotalDrivetrain_A", totalDriveCurrent);
       SmartDashboard.putNumber("Current/TotalRobot_A", totalMotorCurrent + totalDriveCurrent);
     }
-
   }
 
   /** This function is called once when the robot is disabled. */

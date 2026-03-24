@@ -3,18 +3,26 @@ package frc.robot.Auton.Outpost;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.lib.pathplanner.util.FlippingUtil;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 
 public class CitrusAuton extends AutonCommandBase {
 
+  private static final Pose2d BLUE_START =
+      new Pose2d(new Translation2d(4.433125, 0.7584305555555546), Rotation2d.fromDegrees(180.0));
+
   public CitrusAuton(RobotContainer robotContainer) {
     super(
         robotContainer,
-        new Pose2d(new Translation2d(4.433125, 0.7584305555555546), Rotation2d.fromDegrees(180.0)));
+        Robot.getEffectiveAlliance() == Alliance.Red
+            ? FlippingUtil.flipFieldPose(BLUE_START)
+            : BLUE_START);
 
     this.addCommands(
         new SequentialCommandGroup(
