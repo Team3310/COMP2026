@@ -755,7 +755,8 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -774,7 +775,8 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
   }
 
   // #endregion
@@ -977,7 +979,8 @@ public final class Constants {
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
   }
 
   // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
@@ -998,7 +1001,9 @@ public final class Constants {
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    
   }
 
   // #region Roof Subsystem
