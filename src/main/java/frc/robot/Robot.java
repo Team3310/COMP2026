@@ -417,6 +417,13 @@ public class Robot extends LoggedRobot {
 
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
 
+    // Spin flywheels up to shoot speed immediately on auton enable so they are
+    // ready before the first shot opportunity.
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getFlywheelLeft().setRPMCommand(Constants.ScorerConstants.kShootRPM));
+    CommandScheduler.getInstance()
+        .schedule(robotContainer.getFlywheelRight().setRPMCommand(Constants.ScorerConstants.kShootRPM));
+
     autonomousCommand = autoCommand;
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
