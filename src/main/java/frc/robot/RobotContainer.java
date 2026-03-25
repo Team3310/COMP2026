@@ -629,6 +629,10 @@ public class RobotContainer {
     return leftErr < tol && rightErr < tol;
   }
 
+  private boolean isFlywheelWithinTolerance(double currentRpm, double targetRpm) {
+    return Math.abs(currentRpm - targetRpm) <= Constants.ScorerConstants.kFlywheelRPMTolerance;
+  }
+
   /*private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
@@ -689,15 +693,12 @@ public class RobotContainer {
             .alongWith(
                 Commands.waitUntil(
                         () -> {
-                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                          // Require flywheels to be AT OR ABOVE target minus tolerance so the
-                          // gate never opens while still spinning up from below.
                           boolean leftReady =
-                              flywheelLeft.getCurrentVelocity()
-                                  >= leftTargetRpm.getAsDouble() - tolRPM;
+                              isFlywheelWithinTolerance(
+                                  flywheelLeft.getCurrentVelocity(), leftTargetRpm.getAsDouble());
                           boolean rightReady =
-                              flywheelRight.getCurrentVelocity()
-                                  >= rightTargetRpm.getAsDouble() - tolRPM;
+                              isFlywheelWithinTolerance(
+                                  flywheelRight.getCurrentVelocity(), rightTargetRpm.getAsDouble());
                           return leftReady && rightReady && isTurretOnTarget();
                         })
                     .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
