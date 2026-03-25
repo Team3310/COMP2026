@@ -451,7 +451,7 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kWaitTime = 0.5; // seconds after flywheels are up to speed
+    public static final double kWaitTime = 0.0; // seconds after flywheels are up to speed
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;
@@ -994,15 +994,15 @@ public final class Constants {
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
     kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.45;
     kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.125;
 
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -1017,15 +1017,15 @@ public final class Constants {
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
     kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.45;
     kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.125;
 
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
