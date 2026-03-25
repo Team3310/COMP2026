@@ -280,6 +280,7 @@ public class Robot extends LoggedRobot {
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       SmartDashboard.putBoolean("inPit", inPit);
+      SmartDashboard.putBoolean("ShootButtonHeld", shootButtonHeld);
       SmartDashboard.putBoolean("PitMode/Active", inPit);
       SmartDashboard.putString("PitMode/Status", inPit ? "IN PIT" : "NORMAL");
       SmartDashboard.putString("currentState", "" + currentState);
@@ -613,10 +614,10 @@ public class Robot extends LoggedRobot {
                   if (onTarget && !wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(
-                            robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
+                            robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                     CommandScheduler.getInstance()
                         .schedule(
-                            robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
+                            robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                   } else if (!onTarget && wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());

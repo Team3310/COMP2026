@@ -18,11 +18,11 @@ public class DepSnowblowMidShort2 extends AutonCommandBase {
         robotContainer,
         new Pose2d(
             Robot.getEffectiveAlliance() == Alliance.Blue
-                ? FieldConstants.StartingPosition.BLUEDEP.getTranslation().getX()
-                : FieldConstants.StartingPosition.REDDEP.getTranslation().getX(),
+                ? FieldConstants.StartingPosition.BLUEDEPHOME.getTranslation().getX()
+                : FieldConstants.StartingPosition.REDDEPHOME.getTranslation().getX(),
             Robot.getEffectiveAlliance() == Alliance.Blue
-                ? FieldConstants.StartingPosition.BLUEDEP.getTranslation().getY()
-                : FieldConstants.StartingPosition.REDDEP.getTranslation().getY(),
+                ? FieldConstants.StartingPosition.BLUEDEPHOME.getTranslation().getY()
+                : FieldConstants.StartingPosition.REDDEPHOME.getTranslation().getY(),
             Rotation2d.fromDegrees(180.0)));
 
     this.addCommands(

@@ -1,5 +1,7 @@
 package frc.robot.Auton;
 
+import java.util.function.DoubleSupplier;
+
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -7,9 +9,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathplanner.util.FlippingUtil;
+import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -78,10 +83,10 @@ public class AutonCommandBase extends SequentialCommandGroup {
                       robotContainer.getTurretAimManager()::getVerticalFeedRPM;
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
                       .schedule(
-                          robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
+                          robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
                       .schedule(
-                          robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
+                          robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                 }))
         .withName("WaitForSnowblowAtSpeed");
   }
@@ -89,6 +94,104 @@ public class AutonCommandBase extends SequentialCommandGroup {
   protected Command followPathAndSnowblow(PathPlannerPath path) {
     return new ParallelCommandGroup(
         followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.SNOWBLOW));
+  }
+protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
+    return new SequentialCommandGroup(
+        new ParallelDeadlineGroup(
+            followPath(path),
+            new SequentialCommandGroup(
+                new WaitCommand(1.0),
+                new InstantCommand(() -> Robot.overrideState = OverrideState.COLLECT)),
+            new SequentialCommandGroup(new WaitCommand(4.0), shoot())));
+  }
+
+  // #endregion
+
+  // #region Helpers
+
+  private Command spinUp() {
+    return new SequentialCommandGroup(
+        new WaitUntilCommand(this::hasCrossedAllianceShootline),
+        new InstantCommand(() -> System.out.println("enteredSpinUp")),
+        flywheelsOn(),
+        waitForFlywheelsAtSpeed());
+  }
+
+  private Command shoot() {
+    return new SequentialCommandGroup(
+        new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline),
+        new InstantCommand(() -> System.out.println("enteredShoot")),
+        shootStart(),
+        shootAndWait(),
+        shootEnd());
+  }
+
+  private Command shootStart() {
+    return new InstantCommand(() -> Robot.shootButtonHeld = true);
+  }
+
+  private Command shootEnd() {
+    return new InstantCommand(() -> Robot.shootButtonHeld = false);
+  }
+
+  /**
+   * Returns a command that continuously tracks TurretAimManager flywheel RPM targets. Use as a
+   * parallel command alongside the entire auto sequence so the flywheels stay spun up for the full
+   * autonomous period. Uses asProxy() so flywheel subsystem requirements don't propagate to the
+   * parent command group.
+   */
+  protected Command flywheelsOn() {
+    DoubleSupplier leftTargetRpm = robotContainer.getTurretAimManager()::getLeftFlywheelRPM;
+    DoubleSupplier rightTargetRpm = robotContainer.getTurretAimManager()::getRightFlywheelRPM;
+    // Use asProxy() so flywheel subsystem requirements don't propagate to the
+    // parent SequentialCommandGroup (which also contains followPath).  Without
+    // this, the whole group claims Drive + Flywheels + Agitators etc., and the
+    // state-machine's collect() scheduling on those subsystems cancels the
+    // entire group — killing path-following after ~1 cm.
+    return new ParallelCommandGroup(
+            robotContainer.getFlywheelLeft().setRPMCommand(leftTargetRpm).asProxy(),
+            robotContainer.getFlywheelRight().setRPMCommand(rightTargetRpm).asProxy())
+        .until(() -> false);
+  }
+
+  private Command shootAndWait() {
+    DoubleSupplier verticalFeedTargetRpm = robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    // Use asProxy() so agitator/vertical-feed subsystem requirements don't
+    // propagate to the parent SequentialCommandGroup — same reason as above.
+    return new SequentialCommandGroup(
+        new ParallelCommandGroup(
+            robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
+            robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
+            robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
+            robotContainer.getVerticalFeedRight().setRPMCommand(verticalFeedTargetRpm).asProxy()),
+        new WaitCommand(3.0));
+  }
+  // #endregion
+
+  // #region Auto Conditions
+  private boolean hasCrossedAllianceShootline() {
+    double robotX = robotContainer.getDrive().getPose().getX();
+    double trenchMidSideLine =
+        Robot.getEffectiveAlliance() == Alliance.Blue
+            ? FieldConstants.kBlueShootLine
+            : FieldConstants.kRedShootLine;
+
+    return Robot.getEffectiveAlliance() == Alliance.Blue
+        ? robotX < trenchMidSideLine
+        : robotX > trenchMidSideLine;
+  }
+
+  private boolean hasCrossedAllianceTrenchCenterline() {
+    double robotX = robotContainer.getDrive().getPose().getX();
+    System.out.println("enteredTrenchCheck");
+    double trenchCenterLine =
+        Robot.getEffectiveAlliance() == Alliance.Blue
+            ? FieldConstants.kBlueTrenchCenterLine
+            : FieldConstants.kRedTrenchCenterLine;
+
+    return Robot.getEffectiveAlliance() == Alliance.Blue
+        ? robotX < trenchCenterLine
+        : robotX > trenchCenterLine;
   }
 
   /**
@@ -120,4 +223,5 @@ public class AutonCommandBase extends SequentialCommandGroup {
         .withTimeout(3.0)
         .withName("WaitForFlywheelsAtSpeed");
   }
+  // #endregion
 }
