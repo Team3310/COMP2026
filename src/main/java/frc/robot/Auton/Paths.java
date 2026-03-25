@@ -46,8 +46,14 @@ public class Paths {
   public static PathPlannerPath depCollect;
   public static PathPlannerPath depCollect2;
 
+  public static PathPlannerPath outCollect;
+  public static PathPlannerPath outCollect2;
+
   public static PathPlannerPath citrus1;
   public static PathPlannerPath citrus2;
+
+  public static PathPlannerPath depCitrus1;
+  public static PathPlannerPath depCitrus2;
 
   public static boolean loaded;
 
@@ -79,6 +85,9 @@ public class Paths {
     depCollect = loadPath("DepCollect");
     depCollect2 = loadPath("DepCollect2");
 
+    outCollect = loadPath("OutCollect");
+    outCollect2 = loadPath("OutCollect2");
+
     // snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
     // snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
     // outSnowblowMidShort = loadPath("OutSnowblowMidShort");
@@ -88,6 +97,9 @@ public class Paths {
 
     citrus1 = loadPath("Citrus1");
     citrus2 = loadPath("Citrus2");
+
+    depCitrus1 = loadPath("DepCitrus1");
+    depCitrus2 = loadPath("DepCitrus2");
   }
 
   /** Load a single path from a PathPlanner .path file. */

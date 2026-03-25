@@ -1,10 +1,12 @@
 package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
+import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.CitrusAuton;
+import frc.robot.Auton.Outpost.OutCollect;
 import frc.robot.Auton.Outpost.OutCollectMidShort2;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
@@ -29,10 +31,12 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.HUB_TO_DEP)
         // .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
         .addOption(AutonomousMode.DEP_COLLECT)
+        .addOption(AutonomousMode.OUT_COLLECT)
         // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
         // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
         .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2)
-        .addOption(AutonomousMode.CITRUS_AUTON);
+        .addOption(AutonomousMode.CITRUS_AUTON)
+        .addOption(AutonomousMode.DEP_CITRUS);
   }
 
   public AutonCommandBase getCommand() {
@@ -61,10 +65,12 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     DEP_SNOWBLOW_MID_SHORT("depo snowblow mid short"),
     DEP_COLLECT("DepCollect"),
 
+    OUT_COLLECT("OutCollect"),
     OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
     OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
     OUT_COLLECT_MID_SHORT2("2out collect mid short"),
-    CITRUS_AUTON("citrus auton");
+    CITRUS_AUTON("citrus auton"),
+    DEP_CITRUS("dep citrus");
 
     private String name = "";
 
@@ -105,6 +111,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           //   return new HubToDep(RobotContainer.getInstance());
         case DEP_COLLECT:
           return new DepCollect(RobotContainer.getInstance());
+        case OUT_COLLECT:
+          return new OutCollect(RobotContainer.getInstance());
         case DEP_SNOWBLOW_MID_SHORT:
           return new DepSnowblowMidShort2(RobotContainer.getInstance());
         case OUT_SNOWBLOW_MID_SHORT:
@@ -115,6 +123,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new OutCollectMidShort2(RobotContainer.getInstance());
         case CITRUS_AUTON:
           return new CitrusAuton(RobotContainer.getInstance());
+        case DEP_CITRUS:
+          return new DepCitrus(RobotContainer.getInstance());
         default:
           return new OneAuton(RobotContainer.getInstance());
       }
