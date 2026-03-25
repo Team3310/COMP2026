@@ -95,7 +95,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
 
   protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
     return new SequentialCommandGroup(
-        new ParallelDeadlineGroup(
+        new ParallelCommandGroup(
             followPath(path),
             new SequentialCommandGroup(
                 new WaitCommand(1.0),
@@ -156,13 +156,21 @@ public class AutonCommandBase extends SequentialCommandGroup {
     DoubleSupplier verticalFeedTargetRpm = robotContainer.getTurretAimManager()::getVerticalFeedRPM;
     // Use asProxy() so agitator/vertical-feed subsystem requirements don't
     // propagate to the parent SequentialCommandGroup — same reason as above.
+    // Use ParallelDeadlineGroup with a WaitCommand as the deadline so the
+    // never-ending velocity commands are interrupted after 3 seconds and the
+    // sequence can continue to the next step.
     return new SequentialCommandGroup(
-        new ParallelCommandGroup(
+        new ParallelDeadlineGroup(
+            new WaitCommand(3.0),
+            new SequentialCommandGroup(
+            new ParallelCommandGroup(
             robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
             robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
             robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
             robotContainer.getVerticalFeedRight().setRPMCommand(verticalFeedTargetRpm).asProxy()),
-        new WaitCommand(3.0));
+            new InstantCommand(() -> System.out.println("setShoot")))
+        ),
+        new InstantCommand(() -> System.out.println("doneWait")));
   }
 
   // #endregion
