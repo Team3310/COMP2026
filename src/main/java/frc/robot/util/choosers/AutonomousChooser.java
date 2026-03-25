@@ -125,7 +125,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     }
 
     public boolean disablesVisionSeeding() {
-      return this == TEST_FORWARD || this == DEP_COLLECT;
+      return this == TEST_FORWARD;
     }
   }
 }
