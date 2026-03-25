@@ -282,7 +282,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
-    NamedCommands.registerCommand("snowblowEnableVertical", buildSnowblowEnableVerticalCommand());
+    NamedCommands.registerCommand("snowblow", buildSnowblowCommand());
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
@@ -567,9 +567,9 @@ public class RobotContainer {
   /**
    * Waits until both floor rollers are at snowblow speed (live from the SmartDashboard table), then
    * enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
-   * PathPlanner named command {@code "snowblowEnableVertical"}.
+   * PathPlanner named command {@code "snowblow"}.
    */
-  private Command buildSnowblowEnableVerticalCommand() {
+  private Command buildSnowblowCommand() {
     return new edu.wpi.first.wpilibj2.command.WaitUntilCommand(
             () -> {
               double target = Constants.AgitatorConstants.kFloorRollerSnowblowRPM;
