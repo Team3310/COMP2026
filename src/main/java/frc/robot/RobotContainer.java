@@ -583,9 +583,9 @@ public class RobotContainer {
                 () -> {
                   java.util.function.DoubleSupplier feedRpm = turretAimManager::getVerticalFeedRPM;
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(verticalFeedLeft.customVelocityCommand(feedRpm));
+                      .schedule(verticalFeedLeft.setRPMCommand(feedRpm));
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(verticalFeedRight.customVelocityCommand(feedRpm));
+                      .schedule(verticalFeedRight.setRPMCommand(feedRpm));
                 }))
         .withName("SnowblowEnableVertical");
   }
@@ -705,8 +705,8 @@ public class RobotContainer {
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().
                         Commands.parallel(
-                            verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
-                            verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
+                            verticalFeedLeft.setRPMCommand(verticalFeedTargetRpm),
+                            verticalFeedRight.setRPMCommand(verticalFeedTargetRpm),
                             agitatorLeft.snowblowCommand(),
                             agitatorRight.snowblowCommand())))
             .finallyDo(

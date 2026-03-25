@@ -37,7 +37,7 @@
       },
       "prevControl": {
         "x": 8.342245719030487,
-        "y": 4.378858995985265
+        "y": 4.378858995985264
       },
       "nextControl": {
         "x": 7.970598645906903,
@@ -123,30 +123,7 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "switchToCollect",
-      "waypointRelativePos": 0.4739336492890994,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "switchToCollect"
-        }
-      }
-    },
-    {
-      "name": "snowblowEnableVertical",
-      "waypointRelativePos": 4.0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "snowblowEnableVertical"
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 3.0,

@@ -1,7 +1,5 @@
 package frc.robot.Auton;
 
-import java.util.function.DoubleSupplier;
-
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -20,6 +18,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Robot.OverrideState;
 import frc.robot.RobotContainer;
+import java.util.function.DoubleSupplier;
 
 /**
  * Container class for all autonomous commands. Automatically discovers and registers all public
@@ -82,11 +81,9 @@ public class AutonCommandBase extends SequentialCommandGroup {
                   java.util.function.DoubleSupplier feedRpm =
                       robotContainer.getTurretAimManager()::getVerticalFeedRPM;
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(
-                          robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
+                      .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(
-                          robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
+                      .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                 }))
         .withName("WaitForSnowblowAtSpeed");
   }
@@ -95,7 +92,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
     return new ParallelCommandGroup(
         followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.SNOWBLOW));
   }
-protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
+
+  protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
     return new SequentialCommandGroup(
         new ParallelDeadlineGroup(
             followPath(path),
@@ -166,6 +164,7 @@ protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
             robotContainer.getVerticalFeedRight().setRPMCommand(verticalFeedTargetRpm).asProxy()),
         new WaitCommand(3.0));
   }
+
   // #endregion
 
   // #region Auto Conditions

@@ -421,9 +421,11 @@ public class Robot extends LoggedRobot {
     // Spin flywheels up to shoot speed immediately on auton enable so they are
     // ready before the first shot opportunity.
     CommandScheduler.getInstance()
-        .schedule(robotContainer.getFlywheelLeft().setRPMCommand(Constants.ScorerConstants.kShootRPM));
+        .schedule(
+            robotContainer.getFlywheelLeft().setRPMCommand(Constants.ScorerConstants.kShootRPM));
     CommandScheduler.getInstance()
-        .schedule(robotContainer.getFlywheelRight().setRPMCommand(Constants.ScorerConstants.kShootRPM));
+        .schedule(
+            robotContainer.getFlywheelRight().setRPMCommand(Constants.ScorerConstants.kShootRPM));
 
     autonomousCommand = autoCommand;
     if (autonomousCommand != null) {
@@ -613,11 +615,9 @@ public class Robot extends LoggedRobot {
                   boolean onTarget = robotContainer.isTurretOnTarget();
                   if (onTarget && !wasOnTarget[0]) {
                     CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
+                        .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                     CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
+                        .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                   } else if (!onTarget && wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());
