@@ -15,11 +15,11 @@ public class OutCycle1 extends AutonCommandBase {
         robotContainer,
         new Pose2d(
             Robot.getEffectiveAlliance() == Alliance.Blue
-                ? FieldConstants.StartingPosition.BLUEOUT.getTranslation().getX()
-                : FieldConstants.StartingPosition.REDOUT.getTranslation().getX(),
+                ? FieldConstants.StartingPosition.BLUEOUTHOME.getTranslation().getX()
+                : FieldConstants.StartingPosition.REDOUTHOME.getTranslation().getX(),
             Robot.getEffectiveAlliance() == Alliance.Blue
-                ? FieldConstants.StartingPosition.BLUEOUT.getTranslation().getY()
-                : FieldConstants.StartingPosition.REDOUT.getTranslation().getY(),
+                ? FieldConstants.StartingPosition.BLUEOUTHOME.getTranslation().getY()
+                : FieldConstants.StartingPosition.REDOUTHOME.getTranslation().getY(),
             Rotation2d.fromDegrees(180.0)));
 
     this.addCommands(followPathAndSnowblow(Paths.OutCycle));

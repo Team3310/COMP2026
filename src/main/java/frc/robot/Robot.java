@@ -280,6 +280,7 @@ public class Robot extends LoggedRobot {
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       SmartDashboard.putBoolean("inPit", inPit);
+      SmartDashboard.putBoolean("ShootButtonHeld", shootButtonHeld);
       SmartDashboard.putBoolean("PitMode/Active", inPit);
       SmartDashboard.putString("PitMode/Status", inPit ? "IN PIT" : "NORMAL");
       SmartDashboard.putString("currentState", "" + currentState);
@@ -385,7 +386,7 @@ public class Robot extends LoggedRobot {
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
-    robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
+    robotContainer.getVision().setVisionEnabled(false);
 
     // Use the pre-built command from disabledPeriodic, or build now as fallback.
     AutonCommandBase autoCommand =
@@ -440,13 +441,13 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    robotContainer.getVision().setVisionEnabled(true);
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-    robotContainer.getVision().setVisionEnabled(true);
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
@@ -614,11 +615,9 @@ public class Robot extends LoggedRobot {
                   boolean onTarget = robotContainer.isTurretOnTarget();
                   if (onTarget && !wasOnTarget[0]) {
                     CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
+                        .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
                     CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
+                        .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
                   } else if (!onTarget && wasOnTarget[0]) {
                     CommandScheduler.getInstance()
                         .schedule(robotContainer.getVerticalFeedLeft().offCommand());
