@@ -18,7 +18,7 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Vision subsystem using 3× Limelight 4 cameras with a two-phase MegaTag strategy:
+ * Vision subsystem using 4× Limelight 4 cameras with a two-phase MegaTag strategy:
  *
  * <h3>Phase 1 — Disabled (pre-match): MegaTag 1</h3>
  *

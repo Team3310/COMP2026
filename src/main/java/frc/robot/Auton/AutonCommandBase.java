@@ -163,13 +163,18 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new ParallelDeadlineGroup(
             new WaitCommand(3.0),
             new SequentialCommandGroup(
-            new ParallelCommandGroup(
-            robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
-            robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
-            robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
-            robotContainer.getVerticalFeedRight().setRPMCommand(verticalFeedTargetRpm).asProxy()),
-            new InstantCommand(() -> System.out.println("setShoot")))
-        ),
+                new ParallelCommandGroup(
+                    robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
+                    robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
+                    robotContainer
+                        .getVerticalFeedLeft()
+                        .setRPMCommand(verticalFeedTargetRpm)
+                        .asProxy(),
+                    robotContainer
+                        .getVerticalFeedRight()
+                        .setRPMCommand(verticalFeedTargetRpm)
+                        .asProxy()),
+                new InstantCommand(() -> System.out.println("setShoot")))),
         new InstantCommand(() -> System.out.println("doneWait")));
   }
 

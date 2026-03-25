@@ -117,20 +117,33 @@ public final class Constants {
 
   // #region Vision
   // -------------------------------------------------------------------------
-  // MegaTag 2 Vision Constants — 3× Limelight 4 cameras
+  // MegaTag 2 Vision Constants — 4× Limelight 4 cameras
   // Camera positions are from the Practice Robot Software Design Sheet.
   // Coordinate system: LL Robot-Space — forward(+X), side(+Y left), up(+Z).
   // All linear values converted from inches to meters.
   // -------------------------------------------------------------------------
   public static final class VisionConstants {
     // Camera hostnames (must match Limelight web UI / network config)
+    public static final String kLimelightFront = "limelight-front";
     public static final String kLimelightRear = "limelight-rear";
     public static final String kLimelightRight = "limelight-right";
     public static final String kLimelightLeft = "limelight-left";
 
-    public static final String[] kCameraNames = {kLimelightRear, kLimelightRight, kLimelightLeft};
+    public static final String[] kCameraNames = {
+      kLimelightFront, kLimelightRear, kLimelightRight, kLimelightLeft
+    };
 
-    // ---- Camera #1  (Rear-facing) ----
+    // ---- Camera #1  (Front-facing) ----
+    // TODO: Update with actual front camera measurements from SDS
+    // Using rear camera values as placeholder
+    public static final double kFrontForwardM = Units.inchesToMeters(-1.098);
+    public static final double kFrontSideM = Units.inchesToMeters(0.0);
+    public static final double kFrontUpM = Units.inchesToMeters(20.338);
+    public static final double kFrontRollDeg = 0.0;
+    public static final double kFrontPitchDeg = 20.0;
+    public static final double kFrontYawDeg = 0.0; // facing forward
+
+    // ---- Camera #2  (Rear-facing) ----
     // SDS: X = -1.098 in, Y = 0 in, Z = 20.338 in
     //      Zrot = 180°, Yrot(pitch) = -20°, Xrot(roll) = 0° (TBD treated as 0)
     public static final double kRearForwardM = Units.inchesToMeters(-1.098);
@@ -140,7 +153,7 @@ public final class Constants {
     public static final double kRearPitchDeg = 20.0;
     public static final double kRearYawDeg = 180.0;
 
-    // ---- Camera #2  (Right-side, mounted upside-down) ----
+    // ---- Camera #3  (Right-side, mounted upside-down) ----
     // SDS: X = -3.132 in, Y = 13.179 in, Z = 13.558 in
     //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
     public static final double kRightForwardM = Units.inchesToMeters(-3.132);
@@ -150,7 +163,7 @@ public final class Constants {
     public static final double kRightPitchDeg = 0.0;
     public static final double kRightYawDeg = -90.0;
 
-    // ---- Camera #3  (Left-side) ----
+    // ---- Camera #4  (Left-side) ----
     // SDS: X = -3.312 in, Y = -13.179 in, Z = 13.558 in
     //      Zrot = 90°, Yrot = 0°, Xrot = 0°
     public static final double kLeftForwardM = Units.inchesToMeters(-3.312);
@@ -163,6 +176,7 @@ public final class Constants {
     // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
     // LimelightHelpers.setCameraPose_RobotSpace()
     public static final double[][] kCameraPoses = {
+      {kFrontForwardM, kFrontSideM, kFrontUpM, kFrontRollDeg, kFrontPitchDeg, kFrontYawDeg},
       {kRearForwardM, kRearSideM, kRearUpM, kRearRollDeg, kRearPitchDeg, kRearYawDeg},
       {kRightForwardM, kRightSideM, kRightUpM, kRightRollDeg, kRightPitchDeg, kRightYawDeg},
       {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
@@ -174,8 +188,9 @@ public final class Constants {
     //   1.0 = default trust
     //   >1.0 = trust this camera LESS  (e.g., poor mounting, lower res, frequent occlusion)
     //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
-    // Order matches kCameraNames: {rear, right, left}
+    // Order matches kCameraNames: {front, rear, right, left}
     public static final double[] kCameraStdDevFactors = {
+      0.5, // Front  — centered, high mount, faces forward → trust MORE
       0.5, // Rear   — centered, high mount, faces hub tags directly → trust MORE
       1.0, // Right  — side-mount, upside-down, may have slightly noisier results
       1.0, // Left   — side-mount, symmetric to right
