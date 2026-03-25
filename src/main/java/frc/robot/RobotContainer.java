@@ -395,12 +395,6 @@ public class RobotContainer {
     SmartDashboard.putData(
         "rotate turret to max",
         Commands.parallel(turretLeft.maxCommand(), turretRight.maxCommand()));
-    SmartDashboard.putData(
-        "Reset Turrets + Stow Intake",
-        Commands.parallel(
-            turretLeft.setDegreesCommand(Constants.ScorerConstants.kTurretStowedPosition),
-            turretRight.setDegreesCommand(Constants.ScorerConstants.kTurretStowedPosition),
-            intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees)));
 
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
@@ -571,8 +565,8 @@ public class RobotContainer {
   }
 
   /**
-   * Waits until both floor rollers are at snowblow speed (live from the SmartDashboard table),
-   * then enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
+   * Waits until both floor rollers are at snowblow speed (live from the SmartDashboard table), then
+   * enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
    * PathPlanner named command {@code "snowblowEnableVertical"}.
    */
   private Command buildSnowblowEnableVerticalCommand() {

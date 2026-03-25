@@ -4,10 +4,10 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.pathplanner.util.FlippingUtil;
 import frc.lib.util.FieldConstants.Zone;
@@ -52,8 +52,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
   }
 
   /**
-   * Returns a command that waits until both floor rollers are within
-   * {@link Constants#kFlywheelRPMTolerance} RPM of the snowblow target speed (read live from the
+   * Returns a command that waits until both floor rollers are within {@link
+   * Constants#kFlywheelRPMTolerance} RPM of the snowblow target speed (read live from the
    * SmartDashboard table via {@link Constants.AgitatorConstants#kFloorRollerSnowblowRPM}), then
    * immediately starts both vertical feed rollers at the aim-manager's desired feed RPM.
    *
