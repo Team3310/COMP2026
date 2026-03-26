@@ -119,7 +119,7 @@ public final class Constants {
   // -------------------------------------------------------------------------
   // MegaTag 2 Vision Constants — 4× Limelight 4 cameras
   // Camera positions are from the Practice Robot Software Design Sheet.
-  // Coordinate system: LL Robot-Space — forward(+X), side(+Y left), up(+Z).
+  // Coordinate system: LL Robot-Space — forward(+X), side(+Y right), up(+Z).
   // All linear values converted from inches to meters.
   // -------------------------------------------------------------------------
   public static final class VisionConstants {
@@ -157,8 +157,8 @@ public final class Constants {
 
     // ---- Camera #3  (Right-side) ----
     // SDS: X = -3.068 in (behind center), Y = 13.079 in (right of center), Z = 13.323 in (up)
-    //      Yaw = -90° (facing right), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=-0.07787 m, side=+0.3322 m (right = positive Y), up=+0.3383 m
+    //      Yaw = 90° (facing right), Pitch = 20° (tilted up), Roll = 0°
+    // LL Robot-Space: forward=-0.07787 m, side=-0.3322 m (right = negative Y), up=+0.3383 m
     public static final double kRightForwardM = -0.07787;
     public static final double kRightSideM = -0.3322;
     public static final double kRightUpM = 0.3383;
@@ -168,8 +168,8 @@ public final class Constants {
 
     // ---- Camera #4  (Left-side) ----
     // SDS: X = -3.068 in (behind center), Y = -13.079 in (left of center), Z = 13.323 in (up)
-    //      Yaw = 90° (facing left), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=-0.07787 m, side=-0.3322 m (left = negative Y), up=+0.3383 m
+    //      Yaw = -90° (facing left), Pitch = 20° (tilted up), Roll = 0°
+    // LL Robot-Space: forward=-0.07787 m, side=+0.3322 m (left = positive Y), up=+0.3383 m
     public static final double kLeftForwardM = -0.07787;
     public static final double kLeftSideM = 0.3322;
     public static final double kLeftUpM = 0.3383;
