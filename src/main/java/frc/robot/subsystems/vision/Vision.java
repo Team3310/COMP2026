@@ -4,6 +4,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.limelight.LimelightHelpers;
@@ -84,6 +85,14 @@ public class Vision extends SubsystemBase {
   private boolean hasSeed = false;
   private boolean seedStable = false;
 
+  // AdvantageScope QoL: track the last time each camera saw tags so we can
+  // log an off-screen pose when a camera goes stale.  This keeps the field
+  // view clean instead of showing frozen ghost poses from the last sighting.
+  private static final double STALE_TIMEOUT_SEC = 1.0;
+  private static final Pose2d OFF_SCREEN_POSE = new Pose2d(100, 100, new Rotation2d());
+  private final double[] lastMT2SeenTime;
+  private double lastFinalFilteredTime = 0.0;
+
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
   // Set to false from Elastic/SmartDashboard to remove vision from the pose
@@ -101,6 +110,7 @@ public class Vision extends SubsystemBase {
    */
   public Vision(Drive drive) {
     this.drive = drive;
+    this.lastMT2SeenTime = new double[VisionConstants.kCameraNames.length];
     // Publish the default value so the toggle appears on the dashboard immediately.
     // TODO: Re-enable vision seeding once camera coordinates are verified on the real robot.
     SmartDashboard.putBoolean(kVisionEnabledKey, false);
@@ -204,7 +214,7 @@ public class Vision extends SubsystemBase {
           processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
           // Log MT2 after processCameraPreMatch so any heading broadcast from a seed
           // has already been sent before we read back the MT2 result for display.
-          logRawMegaTag2Pose(VisionConstants.kCameraNames[i]);
+          logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
         }
       }
       return;
@@ -247,6 +257,7 @@ public class Vision extends SubsystemBase {
       // stddev-weighted average so AdvantageScope can show a single "what
       // odometry sees" ghost alongside the per-camera raw ghosts.
       if (!accepted.isEmpty()) {
+        lastFinalFilteredTime = Timer.getFPGATimestamp();
         double weightSum = 0.0;
         double sumX = 0.0;
         double sumY = 0.0;
@@ -268,6 +279,9 @@ public class Vision extends SubsystemBase {
         Pose2d combinedAccepted = new Pose2d(avgX, avgY, new Rotation2d(avgYaw));
         Logger.recordOutput("Vision/finalFilteredPose", combinedAccepted);
         Logger.recordOutput("Vision/finalFilteredXYStdDev", Math.sqrt(1.0 / weightSum));
+      } else if (Timer.getFPGATimestamp() - lastFinalFilteredTime > STALE_TIMEOUT_SEC) {
+        // No cameras accepted — move the combined ghost off-screen after 1s.
+        Logger.recordOutput("Vision/finalFilteredPose", OFF_SCREEN_POSE);
       }
     }
   }
@@ -319,16 +333,21 @@ public class Vision extends SubsystemBase {
     }
   }
 
-  private void logRawMegaTag2Pose(String cameraName) {
+  private void logRawMegaTag2Pose(String cameraName, int cameraIndex) {
     String prefix = "Vision/" + cameraName + "/";
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
     if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
+      lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
       double xStdDev = 0.03;
       double yStdDev = 0.03;
       double xyStdDev = Math.max(xStdDev, yStdDev);
       Logger.recordOutput(prefix + "mt2Pose", estimate.pose);
       Logger.recordOutput(prefix + "mt2XYStdDev", xyStdDev);
     } else {
+      // No tags — if stale for > 1s, log off-screen so AdvantageScope clears the ghost.
+      if (Timer.getFPGATimestamp() - lastMT2SeenTime[cameraIndex] > STALE_TIMEOUT_SEC) {
+        Logger.recordOutput(prefix + "mt2Pose", OFF_SCREEN_POSE);
+      }
       Logger.recordOutput(prefix + "mt2XYStdDev", -1.0);
     }
   }
@@ -370,10 +389,16 @@ public class Vision extends SubsystemBase {
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
+      // No tags — if stale for > 1s, log off-screen so AdvantageScope clears the ghost.
+      if (shouldLog
+          && Timer.getFPGATimestamp() - lastMT2SeenTime[cameraIndex] > STALE_TIMEOUT_SEC) {
+        Logger.recordOutput(prefix + "mt2Pose", OFF_SCREEN_POSE);
+      }
       return null;
     }
 
     Pose2d visionPose = estimate.pose;
+    lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
 
     // Log raw MT2 pose.
     if (shouldLog) {
