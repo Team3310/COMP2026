@@ -108,7 +108,8 @@ public class Vision extends SubsystemBase {
   public Vision(Drive drive) {
     this.drive = drive;
     // Publish the default value so the toggle appears on the dashboard immediately.
-    SmartDashboard.putBoolean(kVisionEnabledKey, true);
+    // TODO: Re-enable vision seeding once camera coordinates are verified on the real robot.
+    SmartDashboard.putBoolean(kVisionEnabledKey, false);
     SmartDashboard.putBoolean(kVisionSeededKey, false);
     SmartDashboard.putBoolean(kVisionSeedStableKey, false);
     // Whether to reset the pre-match seed when transitioning back to disabled.
