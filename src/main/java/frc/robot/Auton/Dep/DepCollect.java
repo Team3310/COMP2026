@@ -2,17 +2,18 @@ package frc.robot.Auton.Dep;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.lib.util.FieldConstants;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
-import frc.lib.util.FieldConstants;
 import frc.robot.RobotContainer;
 
 public class DepCollect extends AutonCommandBase {
   private static final Pose2d BLUE_START =
-      new Pose2d(FieldConstants.StartingPosition.BLUEDEPMID.getTranslation(), Rotation2d.fromDegrees(-90.0));
+      new Pose2d(
+          FieldConstants.StartingPosition.BLUEDEPMID.getTranslation(),
+          Rotation2d.fromDegrees(-90.0));
 
   public DepCollect(RobotContainer robotContainer) {
 
