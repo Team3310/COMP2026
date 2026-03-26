@@ -32,7 +32,7 @@ public class TunerConstantsPractice {
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
-      new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+      new Slot0Configs().withKP(2.0).withKI(0).withKD(0).withKS(0).withKV(0.144);
 
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
@@ -54,20 +54,34 @@ public class TunerConstantsPractice {
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final Current kSlipCurrent = Amps.of(120);
+  private static final Current kSlipCurrent = Amps.of(80);
 
   // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
   // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
-  private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
+  private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
+  .withCurrentLimits(
+              new CurrentLimitsConfigs()
+                  // Swerve azimuth does not require much torque output, so we can set a relatively
+                  // low stator current limit to help avoid brownouts without impacting performance.
+                  .withStatorCurrentLimit(Amps.of(80))
+                  .withSupplyCurrentLimit(Amps.of(30))
+                  .withStatorCurrentLimitEnable(true)
+                  .withSupplyCurrentLimitEnable(true))
+          .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.2))
+          .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(0.2))
+          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));;
   private static final TalonFXConfiguration steerInitialConfigs =
       new TalonFXConfiguration()
           .withCurrentLimits(
               new CurrentLimitsConfigs()
                   // Swerve azimuth does not require much torque output, so we can set a relatively
-                  // low
-                  // stator current limit to help avoid brownouts without impacting performance.
-                  .withStatorCurrentLimit(Amps.of(60))
-                  .withStatorCurrentLimitEnable(true));
+                  // low stator current limit to help avoid brownouts without impacting performance.
+                  .withStatorCurrentLimit(Amps.of(80))
+                  .withSupplyCurrentLimit(Amps.of(30))
+                  .withStatorCurrentLimitEnable(true)
+                  .withSupplyCurrentLimitEnable(true))
+          .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));
+                  
   private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
   // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
   private static final Pigeon2Configuration pigeonConfigs = null;
@@ -78,7 +92,7 @@ public class TunerConstantsPractice {
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.24);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(7.37);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
