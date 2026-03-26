@@ -399,14 +399,7 @@ public class Robot extends LoggedRobot {
       // If MT1 already seeded XY pre-match, keep that translation but
       // replace the heading so MT2's gyro prior is exactly what the path
       // expects.  If MT1 never seeded, use the full starting pose.
-      if (robotContainer.getVision().isSeeded()) {
-        Pose2d current = robotContainer.getDrive().getPose();
-        robotContainer
-            .getDrive()
-            .setPose(new Pose2d(current.getTranslation(), startingPose.getRotation()));
-      } else {
         robotContainer.getDrive().setPose(startingPose);
-      }
 
       // Push the auto heading to every Limelight so MegaTag 2's IMU is
       // correctly seeded at the moment auto begins.

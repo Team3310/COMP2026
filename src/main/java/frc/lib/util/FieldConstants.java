@@ -35,13 +35,17 @@ public class FieldConstants {
   public static final double kMidBiasMeters = Units.inchesToMeters(24.0); // ~0.6 m
 
   public static enum StartingPosition { // measured with sim
-    BLUEDEPHOME(new Translation2d(3.570, 7.617)),
+    BLUEDEPHOME(new Translation2d(3.570, 7.247)),
+    BLUEDEPMID(new Translation2d(4.407, 7.247)),
     BLUEHUB(new Translation2d(3.570, 3.977)),
-    BLUEOUTHOME(new Translation2d(3.750, 0.463)),
-    REDDEPHOME(new Translation2d(13.0, 0.463)),
-    REDDEPMID(new Translation2d(13.0, 3.0)),
+    BLUEOUTHOME(new Translation2d(3.750, 0.841)),
+    BLUEOUTMID(new Translation2d(4.407, 0.841)),
+
+    REDDEPHOME(new Translation2d(13.0, 0.841)),
+    REDDEPMID(new Translation2d(12.201, 0.841)),
     REDHUB(new Translation2d(13.0, 3.977)),
-    REDOUTHOME(new Translation2d(13.0, 7.617));
+    REDOUTHOME(new Translation2d(13.0, 7.247)),
+    REDOUTMID(new Translation2d(12.201, 7.247));
 
     private Translation2d translation;
 
