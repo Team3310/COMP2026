@@ -21,7 +21,7 @@
       },
       "prevControl": {
         "x": 7.393598191214469,
-        "y": 0.386293669250646
+        "y": 0.38629366925064607
       },
       "nextControl": {
         "x": 8.238994458870597,
@@ -57,7 +57,7 @@
       },
       "nextControl": {
         "x": 5.674112701252236,
-        "y": 0.415822540250447
+        "y": 0.41582254025044696
       },
       "isLocked": false,
       "linkedName": null
@@ -68,8 +68,8 @@
         "y": 0.691654382826477
       },
       "prevControl": {
-        "x": 3.798518991240929,
-        "y": 0.779957673432135
+        "x": 3.7985189912409294,
+        "y": 0.7799576734321351
       },
       "nextControl": {
         "x": 3.813451659847205,
@@ -81,15 +81,15 @@
     {
       "anchor": {
         "x": 5.965992844364937,
-        "y": 0.935035420393560
+        "y": 0.93503542039356
       },
       "prevControl": {
         "x": 5.528084078711984,
-        "y": 0.162116246544153
+        "y": 0.16211624654415313
       },
       "nextControl": {
         "x": 6.1584011676060415,
-        "y": 1.274640593675530
+        "y": 1.27464059367553
       },
       "isLocked": false,
       "linkedName": null
@@ -101,7 +101,7 @@
       },
       "prevControl": {
         "x": 5.9484033744931475,
-        "y": 4.177803565273430
+        "y": 4.17780356527343
       },
       "nextControl": {
         "x": 6.582558139534885,
@@ -133,7 +133,7 @@
       },
       "prevControl": {
         "x": 7.098403754202583,
-        "y": 0.779957673432135
+        "y": 0.7799576734321351
       },
       "nextControl": {
         "x": 6.630632319126808,
@@ -159,11 +159,11 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1.208556149732621,
-      "rotationDegrees": 120.0
+      "rotationDegrees": 119.99999999999999
     },
     {
       "waypointRelativePos": 1.6995708154506437,
-      "rotationDegrees": 120.0
+      "rotationDegrees": 119.99999999999999
     },
     {
       "waypointRelativePos": 2.8342245989304815,
@@ -249,7 +249,26 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "wait",
+      "waypointRelativePos": 4.09354838709678,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "wait",
+              "data": {
+                "waitTime": 4.0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 3.0,

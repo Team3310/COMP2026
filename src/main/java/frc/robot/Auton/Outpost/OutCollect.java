@@ -18,7 +18,6 @@ public class OutCollect extends AutonCommandBase {
 
     this.addCommands(
         new ParallelDeadlineGroup(
-            followPathAndCollectThenShoot(Paths.outCollectFull),
-            flywheelsOn()));
+            followPathAndCollectThenShoot(Paths.outCollectFull), flywheelsOn()));
   }
 }
