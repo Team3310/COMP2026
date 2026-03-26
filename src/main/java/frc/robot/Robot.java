@@ -367,9 +367,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
-    // TODO: Restore auto-based seeding once camera coordinates are verified on the real robot.
-    // robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
-    robotContainer.getVision().setVisionEnabled(false);
+    robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
     if (selectedAuto.requiresPathLoading()) {
       Paths.loadPaths();
     }
@@ -436,9 +434,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    // TODO: Re-enable once camera coordinates are verified on the real robot.
-    // robotContainer.getVision().setVisionEnabled(true);
-    robotContainer.getVision().setVisionEnabled(false);
+    robotContainer.getVision().setVisionEnabled(true);
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to

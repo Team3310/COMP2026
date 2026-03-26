@@ -293,6 +293,12 @@ public final class Constants {
     // by kMT1StdDevMultiplier and barely nudge the estimate.
     public static final double kPreMatchMaxYawStdDevDeg = 50.0;
 
+    // Maximum yaw std dev (degrees) required to seed the Pigeon2 heading from
+    // MT1 while disabled.  Much tighter than kPreMatchMaxYawStdDevDeg —
+    // we only touch the gyro when MT1 is very confident about rotation.
+    // Typical multi-tag MT1 yaw stddev is ~0.5–2° when close to the tags.
+    public static final double kGyroSeedMaxYawStdDevDeg = 3.0;
+
     // Limelight frame throttle while disabled. Higher values skip more frames
     // to reduce thermals during long disabled periods.
     // 0 = process every frame.  LL4 handles heat fine for pre-match.

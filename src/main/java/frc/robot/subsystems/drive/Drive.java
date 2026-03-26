@@ -455,6 +455,25 @@ public class Drive extends SubsystemBase {
     }
   }
 
+  /**
+   * Seeds only the gyro heading from a vision-derived yaw, without touching XY odometry. The pose
+   * estimator is updated so its rotation matches the new gyro heading, but X/Y remain unchanged.
+   * Use this during disabled pre-match when MT1 has a very confident yaw but XY is not yet trusted.
+   */
+  public void setGyroYaw(Rotation2d yaw) {
+    odometryLock.lock();
+    try {
+      gyroIO.setYaw(yaw);
+      rawGyroRotation = yaw;
+      // Re-anchor the pose estimator at the same XY with the new heading.
+      Pose2d currentPose = poseEstimator.getEstimatedPosition();
+      Pose2d correctedPose = new Pose2d(currentPose.getTranslation(), yaw);
+      poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), correctedPose);
+    } finally {
+      odometryLock.unlock();
+    }
+  }
+
   /** Re-applies the current estimated heading to the gyro for enabled-mode vision seeding. */
   public void lockGyroHeadingToEstimatedPose() {
     Pose2d estimatedPose = getPose();
