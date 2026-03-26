@@ -426,6 +426,23 @@ public class Drive extends SubsystemBase {
     return getPose().getRotation();
   }
 
+  /**
+   * Returns the raw Pigeon2 yaw — NOT fused with vision. Use this when feeding
+   * SetRobotOrientation() so that a bad vision measurement cannot corrupt the heading we send back
+   * to the Limelight for MegaTag 2.
+   */
+  public Rotation2d getRawGyroRotation() {
+    return rawGyroRotation;
+  }
+
+  /**
+   * Returns the raw Pigeon2 yaw rate in degrees per second. Comes directly from the IMU signal, not
+   * from kinematics, so it is valid even while stationary.
+   */
+  public double getRawGyroYawRateDegPerSec() {
+    return Math.toDegrees(gyroInputs.yawVelocityRadPerSec);
+  }
+
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     odometryLock.lock();

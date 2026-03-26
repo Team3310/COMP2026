@@ -8,7 +8,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 /**
  * Container class for all PathPlanner paths and autonomous routines. Paths are loaded from
- * deploy/pathplanner/paths and autos from deploy/pathplanner/autos.
+ * deploy/pathplanner/paths and autos from depliy/pathplanner/autos.
  */
 public class Paths {
   // Individual paths (loaded from .path files)

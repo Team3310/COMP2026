@@ -1,6 +1,5 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -148,7 +147,7 @@ public class Vision extends SubsystemBase {
 
     // Read the dashboard toggle — when false, cameras still run and log but
     // do NOT inject measurements into the pose estimator.  Useful for debugging.
-    boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, true);
+    boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, false);
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
@@ -191,12 +190,13 @@ public class Vision extends SubsystemBase {
       firstLoop = false;
     }
 
-    // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
-    // and MegaTag 2 has up-to-date yaw while enabled.
-    // Pass yaw rate so the Limelight can predict orientation between NT updates.
-    // Flush after each camera so every Limelight receives its update immediately.
-    double robotYawDeg = drive.getRotation().getDegrees();
-    double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
+    // Always feed the raw Pigeon2 heading to SetRobotOrientation — NOT the
+    // fused pose-estimator heading. Using the fused heading creates a feedback
+    // loop: a bad vision measurement corrupts the pose, which corrupts the
+    // heading we report back to the LL, which corrupts the next MT2 solve.
+    // The raw gyro is immune to vision errors and is what the LL actually needs.
+    double robotYawDeg = drive.getRawGyroRotation().getDegrees();
+    double yawRateDps = drive.getRawGyroYawRateDegPerSec();
 
     // While disabled, downsample the expensive per-camera work
     // (SetRobotOrientation flushes + getBotPoseEstimate NT reads) so we don't
@@ -207,7 +207,7 @@ public class Vision extends SubsystemBase {
       if (disabledCycleCounter >= DISABLED_PROCESS_INTERVAL) {
         disabledCycleCounter = 0;
         for (String name : VisionConstants.kCameraNames) {
-          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
           logRawMegaTag2Pose(VisionConstants.kCameraNames[i]);
@@ -236,14 +236,15 @@ public class Vision extends SubsystemBase {
 
     // Sort by timestamp (oldest first) and inject into pose estimator.
     accepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
-    for (AcceptedObservation obs : accepted) {
-      if (visionEnabled) {
-        drive.addVisionMeasurement(
-            obs.pose(),
-            obs.timestampSeconds(),
-            VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
-      }
-    }
+    // TODO: Re-enable once camera coordinates are verified on the real robot.
+    // for (AcceptedObservation obs : accepted) {
+    //   if (visionEnabled) {
+    //     drive.addVisionMeasurement(
+    //         obs.pose(),
+    //         obs.timestampSeconds(),
+    //         VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+    //   }
+    // }
 
     // Log the final filtered pose feeding odometry (rate-limited).
     if (shouldLog) {
@@ -576,21 +577,22 @@ public class Vision extends SubsystemBase {
     updateStableSeedState(visionPose, shouldLog, prefix);
 
     // 7. Seed the pose estimator.
-    if (!hasSeed) {
-      if (visionEnabled) {
-        drive.setPose(visionPose);
-        hasSeed = true;
-      }
-    } else {
-      double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
-      double scaledYawStdDev = yawStdDev * VisionConstants.kMT1StdDevMultiplier;
-      if (visionEnabled) {
-        drive.addVisionMeasurement(
-            visionPose,
-            estimate.timestampSeconds,
-            VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
-      }
-    }
+    // TODO: Re-enable once camera coordinates are verified on the real robot.
+    // if (!hasSeed) {
+    //   if (visionEnabled) {
+    //     drive.setPose(visionPose);
+    //     hasSeed = true;
+    //   }
+    // } else {
+    //   double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
+    //   double scaledYawStdDev = yawStdDev * VisionConstants.kMT1StdDevMultiplier;
+    //   if (visionEnabled) {
+    //     drive.addVisionMeasurement(
+    //         visionPose,
+    //         estimate.timestampSeconds,
+    //         VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
+    //   }
+    // }
 
     if (!hasSeed && !visionEnabled) {
       seedStable = false;

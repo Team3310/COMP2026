@@ -164,7 +164,7 @@ public final class Constants {
     public static final double kRightUpM = 0.3383;
     public static final double kRightRollDeg = 0.0;
     public static final double kRightPitchDeg = 20.0;
-    public static final double kRightYawDeg = -90.0;
+    public static final double kRightYawDeg = 90.0;
 
     // ---- Camera #4  (Left-side) ----
     // SDS: X = -3.068 in (behind center), Y = -13.079 in (left of center), Z = 13.323 in (up)
@@ -175,7 +175,7 @@ public final class Constants {
     public static final double kLeftUpM = 0.3383;
     public static final double kLeftRollDeg = 0.0;
     public static final double kLeftPitchDeg = 20.0;
-    public static final double kLeftYawDeg = 90.0;
+    public static final double kLeftYawDeg = -90.0;
 
     // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
     // LimelightHelpers.setCameraPose_RobotSpace()
