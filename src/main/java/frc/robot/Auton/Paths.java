@@ -95,7 +95,7 @@ public class Paths {
     // outCollectMidShort = loadPath("OutCollectMidShort");
     outCollectMidShort2 = loadPath("OutCollectMidShort2");
 
-    citrus1 = loadPath("Citrus1");
+    citrus1 = loadPath("OutCitrus1");
     citrus2 = loadPath("Citrus2");
 
     depCitrus1 = loadPath("DepCitrus1");

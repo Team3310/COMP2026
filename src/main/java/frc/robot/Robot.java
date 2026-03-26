@@ -413,15 +413,6 @@ public class Robot extends LoggedRobot {
 
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
 
-    // Spin flywheels up to shoot speed immediately on auton enable so they are
-    // ready before the first shot opportunity.
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer.getFlywheelLeft().setRPMCommand(Constants.ScorerConstants.kShootRPM));
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer.getFlywheelRight().setRPMCommand(Constants.ScorerConstants.kShootRPM));
-
     autonomousCommand = autoCommand;
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
@@ -632,8 +623,13 @@ public class Robot extends LoggedRobot {
     // Deploy intake to collect, and run motors to intake and agitator motors.
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    // Only kill flywheels during teleop — in autonomous, flywheelsOn() is
+    // running in parallel and must not be cancelled.  The auton shoot
+    // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
+    if (DriverStation.isTeleop()) {
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    }
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
