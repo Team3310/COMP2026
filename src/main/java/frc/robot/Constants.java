@@ -136,9 +136,9 @@ public final class Constants {
     // ---- Camera #1  (Front-facing) ----
     // TODO: Update with actual front camera measurements from SDS
     // Using rear camera values as placeholder
-    public static final double kFrontForwardM = Units.inchesToMeters(-1.098);
-    public static final double kFrontSideM = Units.inchesToMeters(0.0);
-    public static final double kFrontUpM = Units.inchesToMeters(20.338);
+    public static final double kFrontForwardM = 0.0094;
+    public static final double kFrontSideM = 0.0;
+    public static final double kFrontUpM = 0.5115;
     public static final double kFrontRollDeg = 0.0;
     public static final double kFrontPitchDeg = 20.0;
     public static final double kFrontYawDeg = 0.0; // facing forward
@@ -146,9 +146,9 @@ public final class Constants {
     // ---- Camera #2  (Rear-facing) ----
     // SDS: X = -1.098 in, Y = 0 in, Z = 20.338 in
     //      Zrot = 180°, Yrot(pitch) = -20°, Xrot(roll) = 0° (TBD treated as 0)
-    public static final double kRearForwardM = Units.inchesToMeters(-1.098);
-    public static final double kRearSideM = Units.inchesToMeters(0.0);
-    public static final double kRearUpM = Units.inchesToMeters(20.338);
+    public static final double kRearForwardM = -0.329;
+    public static final double kRearSideM = 0.0;
+    public static final double kRearUpM = 0.3954;
     public static final double kRearRollDeg = 0.0;
     public static final double kRearPitchDeg = 20.0;
     public static final double kRearYawDeg = 180.0;
@@ -156,21 +156,21 @@ public final class Constants {
     // ---- Camera #3  (Right-side, mounted upside-down) ----
     // SDS: X = -3.132 in, Y = 13.179 in, Z = 13.558 in
     //      Zrot = -90°, Yrot = 180° (upside-down), Xrot = 0°
-    public static final double kRightForwardM = Units.inchesToMeters(-3.132);
-    public static final double kRightSideM = Units.inchesToMeters(13.179);
-    public static final double kRightUpM = Units.inchesToMeters(12.859);
-    public static final double kRightRollDeg = 180.0; // upside-down
-    public static final double kRightPitchDeg = 0.0;
+    public static final double kRightForwardM = -0.07787;
+    public static final double kRightSideM = 0.3322;
+    public static final double kRightUpM = 0.3383;
+    public static final double kRightRollDeg = 0.0;
+    public static final double kRightPitchDeg = 20.0;
     public static final double kRightYawDeg = -90.0;
 
     // ---- Camera #4  (Left-side) ----
     // SDS: X = -3.312 in, Y = -13.179 in, Z = 13.558 in
     //      Zrot = 90°, Yrot = 0°, Xrot = 0°
-    public static final double kLeftForwardM = Units.inchesToMeters(-3.312);
-    public static final double kLeftSideM = Units.inchesToMeters(-13.179);
-    public static final double kLeftUpM = Units.inchesToMeters(13.558);
+    public static final double kLeftForwardM = -0.07787;
+    public static final double kLeftSideM = -0.3322;
+    public static final double kLeftUpM = 0.3383;
     public static final double kLeftRollDeg = 0.0;
-    public static final double kLeftPitchDeg = 0.0;
+    public static final double kLeftPitchDeg = 20.0;
     public static final double kLeftYawDeg = 90.0;
 
     // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
