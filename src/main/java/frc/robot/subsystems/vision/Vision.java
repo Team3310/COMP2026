@@ -29,11 +29,12 @@ import org.littletonrobotics.junction.Logger;
  * heading is immediately broadcast to all cameras so every MT2 solve reflects the true field
  * heading.
  *
- * <h3>Phase 2 — Enabled (auto / teleop): MegaTag 2 + IMU Mode 4</h3>
+ * <h3>Phase 2 — Enabled (auto / teleop): MegaTag 2 + IMU Mode 0</h3>
  *
- * <p>Once enabled, cameras switch to <b>IMU Mode 4 (Internal + External Assist)</b>. The LL4's 1
- * kHz internal IMU — now seeded with the correct heading — tracks orientation between 50 Hz
- * robot-code updates for frame-accurate MT2 XY solves.
+ * <p>Once enabled, cameras remain in <b>IMU Mode 0 (External Only)</b>. The raw Pigeon2 heading is
+ * pushed to all cameras every cycle at 50 Hz via {@code SetRobotOrientation()}, which is more than
+ * sufficient for accurate MT2 XY solves. Mode 4 (Internal + External Assist) was previously used
+ * but caused heading corruption on the disabled→enabled transition.
  *
  * <p>Each enabled loop we:
  *
