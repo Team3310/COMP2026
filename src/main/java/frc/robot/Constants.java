@@ -160,7 +160,7 @@ public final class Constants {
     //      Yaw = -90° (facing right), Pitch = 20° (tilted up), Roll = 0°
     // LL Robot-Space: forward=-0.07787 m, side=+0.3322 m (right = positive Y), up=+0.3383 m
     public static final double kRightForwardM = -0.07787;
-    public static final double kRightSideM = 0.3322;
+    public static final double kRightSideM = -0.3322;
     public static final double kRightUpM = 0.3383;
     public static final double kRightRollDeg = 0.0;
     public static final double kRightPitchDeg = 20.0;
@@ -171,7 +171,7 @@ public final class Constants {
     //      Yaw = 90° (facing left), Pitch = 20° (tilted up), Roll = 0°
     // LL Robot-Space: forward=-0.07787 m, side=-0.3322 m (left = negative Y), up=+0.3383 m
     public static final double kLeftForwardM = -0.07787;
-    public static final double kLeftSideM = -0.3322;
+    public static final double kLeftSideM = 0.3322;
     public static final double kLeftUpM = 0.3383;
     public static final double kLeftRollDeg = 0.0;
     public static final double kLeftPitchDeg = 20.0;
