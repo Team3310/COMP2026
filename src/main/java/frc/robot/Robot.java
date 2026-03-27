@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.lib.limelight.LimelightHelpers;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
@@ -588,32 +589,16 @@ public class Robot extends LoggedRobot {
     deploy();
     CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    // Floor rollers run unconditionally during snowblow — not tied to turret position.
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().snowblowCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().snowblowCommand());
-    // Gate vertical feeds on turret position — off while the turret flips.
-    // Use edge detection so a new command is only scheduled when the on-target state *changes*,
-    // preventing the running feed command from being cancelled and restarted every 20 ms loop.
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
-    final boolean[] wasOnTarget = {false};
     snowblowGateCommand =
-        Commands.run(
-                () -> {
-                  boolean onTarget = robotContainer.isTurretOnTarget();
-                  if (onTarget && !wasOnTarget[0]) {
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
-                  } else if (!onTarget && wasOnTarget[0]) {
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedLeft().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedRight().offCommand());
-                  }
-                  wasOnTarget[0] = onTarget;
-                })
+        new WaitCommand(Constants.ScorerConstants.kWaitTime)
+            .andThen(
+                Commands.parallel(
+                    robotContainer.getAgitatorLeft().snowblowCommand(),
+                    robotContainer.getAgitatorRight().snowblowCommand(),
+                    robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm),
+                    robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm)))
             .ignoringDisable(false);
     CommandScheduler.getInstance().schedule(snowblowGateCommand);
   }

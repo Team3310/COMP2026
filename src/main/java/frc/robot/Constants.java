@@ -476,7 +476,7 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kWaitTime = 0.0; // seconds after flywheels are up to speed
+    public static final double kWaitTime = 0.5; // seconds before teleop feed engages
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;
