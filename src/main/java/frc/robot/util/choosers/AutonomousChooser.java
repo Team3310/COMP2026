@@ -1,6 +1,7 @@
 package frc.robot.util.choosers;
 
 import frc.robot.Auton.AutonCommandBase;
+import frc.robot.Auton.Forward2m;
 import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
@@ -85,8 +86,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
     public AutonCommandBase getCommand() {
       switch (this) {
-          // case TEST_FORWARD:
-          //   return new Forward2m(RobotContainer.getInstance());
+          case TEST_FORWARD:
+             return new Forward2m(RobotContainer.getInstance());
           // case DEP_CYCLE1:
           //   return new DepCycle1(RobotContainer.getInstance());
           // case DEPSSTRENCH1:

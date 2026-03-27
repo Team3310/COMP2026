@@ -311,8 +311,8 @@ public class Vision extends SubsystemBase {
    * <ul>
    *   <li><b>All modes:</b> Mode 0 — "External Only". The LL ignores its internal IMU entirely and
    *       uses exactly the heading supplied via {@code SetRobotOrientation()} for every MT2 solve.
-   *       This ensures MT2 output is always consistent with the Pigeon2 heading we feed it, with
-   *       no internal drift or IMU fighting on enable transitions.
+   *       This ensures MT2 output is always consistent with the Pigeon2 heading we feed it, with no
+   *       internal drift or IMU fighting on enable transitions.
    * </ul>
    *
    * <p>Mode 4 (Internal + External Assist) was previously used while enabled but caused heading
