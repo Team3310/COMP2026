@@ -338,9 +338,14 @@ public class Vision extends SubsystemBase {
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
     if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
       lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
-      double xStdDev = 0.03;
-      double yStdDev = 0.03;
-      double xyStdDev = Math.max(xStdDev, yStdDev);
+      // Read real LL-reported stddevs for diagnostic logging.
+      double xyStdDev = -1.0;
+      double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+      if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
+        double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
+        double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
+        xyStdDev = Math.max(xStdDev, yStdDev);
+      }
       Logger.recordOutput(prefix + "mt2Pose", estimate.pose);
       Logger.recordOutput(prefix + "mt2XYStdDev", xyStdDev);
     } else {
@@ -400,9 +405,15 @@ public class Vision extends SubsystemBase {
     Pose2d visionPose = estimate.pose;
     lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
 
-    // Log raw MT2 pose.
+    // Log raw MT2 pose and real LL-reported stddevs (diagnostic only).
     if (shouldLog) {
       Logger.recordOutput(prefix + "mt2Pose", visionPose);
+      double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+      if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
+        double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
+        double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
+        Logger.recordOutput(prefix + "mt2XYStdDev", Math.max(xStdDev, yStdDev));
+      }
     }
 
     // 3. Reject poses clearly off the field.
