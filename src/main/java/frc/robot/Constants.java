@@ -464,7 +464,7 @@ public final class Constants {
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
-    public static double kHomeScoringMaxLinearSpeedMps = 2.0;
+    public static double kHomeScoringMaxLinearSpeedMps = 2.5;
     public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
     public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;

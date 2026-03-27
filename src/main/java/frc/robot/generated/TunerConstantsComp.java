@@ -96,13 +96,13 @@ public class TunerConstantsComp {
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.24);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4.3);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
   private static final double kCoupleRatio = 4.909090909090909;
 
-  private static final double kDriveGearRatio = 5.8909090909090915;
+  private static final double kDriveGearRatio = 6.976;
   private static final double kSteerGearRatio = 12.1;
   // TODO: Calibrate kRadiusFactor for the comp bot by driving a known distance
   // and comparing measured vs actual.  Using practice-bot value as placeholder.

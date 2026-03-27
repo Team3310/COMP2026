@@ -6,7 +6,7 @@
     "Dep"
   ],
   "autoFolders": [],
-  "defaultMaxVel": 5.0,
+  "defaultMaxVel": 4.3,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
@@ -15,7 +15,7 @@
   "robotMOI": 4.69,
   "robotTrackwidth": 0.546,
   "driveWheelRadius": 0.0501,
-  "driveGearing": 5.8909,
+  "driveGearing": 6.976,
   "maxDriveSpeed": 5.0,
   "driveMotorType": "krakenX60",
   "driveCurrentLimit": 60.0,
