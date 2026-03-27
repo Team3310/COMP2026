@@ -691,17 +691,7 @@ public class RobotContainer {
                 flywheelLeft.setRPMCommand(leftTargetRpm),
                 flywheelRight.setRPMCommand(rightTargetRpm))
             .alongWith(
-                Commands.waitUntil(
-                        () -> {
-                          boolean leftReady =
-                              isFlywheelWithinTolerance(
-                                  flywheelLeft.getCurrentVelocity(), leftTargetRpm.getAsDouble());
-                          boolean rightReady =
-                              isFlywheelWithinTolerance(
-                                  flywheelRight.getCurrentVelocity(), rightTargetRpm.getAsDouble());
-                          return leftReady && rightReady && isTurretOnTarget();
-                        })
-                    .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
+                new WaitCommand(Constants.ScorerConstants.kWaitTime)
                     .andThen(
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().

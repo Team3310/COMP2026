@@ -85,7 +85,7 @@
       },
       "prevControl": {
         "x": 5.528084078711984,
-        "y": 0.16211624654415313
+        "y": 0.16211624654415324
       },
       "nextControl": {
         "x": 6.1584011676060415,
@@ -133,7 +133,7 @@
       },
       "prevControl": {
         "x": 7.098403754202583,
-        "y": 0.7799576734321351
+        "y": 0.7799576734321352
       },
       "nextControl": {
         "x": 6.630632319126808,
@@ -249,26 +249,7 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "wait",
-      "waypointRelativePos": 4.09354838709678,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "sequential",
-        "data": {
-          "commands": [
-            {
-              "type": "wait",
-              "data": {
-                "waitTime": 4.0
-              }
-            }
-          ]
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 3.0,

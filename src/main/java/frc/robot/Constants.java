@@ -464,7 +464,7 @@ public final class Constants {
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
-    public static double kHomeScoringMaxLinearSpeedMps = 2.0;
+    public static double kHomeScoringMaxLinearSpeedMps = 2.5;
     public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
     public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
@@ -476,7 +476,7 @@ public final class Constants {
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kWaitTime = 0.0; // seconds after flywheels are up to speed
+    public static final double kWaitTime = 0.5; // seconds before teleop feed engages
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5700.0;
     public static double kReverseShootRPM = -5700.0;

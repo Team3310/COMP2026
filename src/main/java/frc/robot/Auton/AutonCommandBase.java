@@ -28,6 +28,10 @@ public class AutonCommandBase extends SequentialCommandGroup {
   private final RobotContainer robotContainer;
   private final Pose2d startingPose;
 
+  public static boolean trenchCheckActive;
+  public static boolean spinUp;
+  public static boolean setShoot;
+
   /**
    * Creates a new AutonCommandBase.
    *
@@ -110,7 +114,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
   private Command spinUp() {
     return new SequentialCommandGroup(
         new WaitUntilCommand(this::hasCrossedAllianceShootline),
-        new InstantCommand(() -> System.out.println("enteredSpinUp")),
+        new InstantCommand(() -> spinUp = true),
         flywheelsOn(),
         waitForFlywheelsAtSpeed());
   }
@@ -118,7 +122,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
   private Command shoot() {
     return new SequentialCommandGroup(
         new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline),
-        new InstantCommand(() -> System.out.println("enteredShoot")),
+        new InstantCommand(() -> trenchCheckActive = false),
         shootStart(),
         shootAndWait(),
         shootEnd());
@@ -159,23 +163,18 @@ public class AutonCommandBase extends SequentialCommandGroup {
     // Use ParallelDeadlineGroup with a WaitCommand as the deadline so the
     // never-ending velocity commands are interrupted after 3 seconds and the
     // sequence can continue to the next step.
-    return new SequentialCommandGroup(
-        new ParallelDeadlineGroup(
-            new WaitCommand(3.0),
-            new SequentialCommandGroup(
-                new ParallelCommandGroup(
-                    robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
-                    robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
-                    robotContainer
-                        .getVerticalFeedLeft()
-                        .setRPMCommand(verticalFeedTargetRpm)
-                        .asProxy(),
-                    robotContainer
-                        .getVerticalFeedRight()
-                        .setRPMCommand(verticalFeedTargetRpm)
-                        .asProxy()),
-                new InstantCommand(() -> System.out.println("setShoot")))),
-        new InstantCommand(() -> System.out.println("doneWait")));
+    return new ParallelDeadlineGroup(
+        new WaitCommand(3.0),
+        new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
+                robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
+                robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
+                robotContainer
+                    .getVerticalFeedRight()
+                    .setRPMCommand(verticalFeedTargetRpm)
+                    .asProxy()),
+            new InstantCommand(() -> setShoot = true)));
   }
 
   // #endregion
@@ -195,7 +194,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
 
   private boolean hasCrossedAllianceTrenchCenterline() {
     double robotX = robotContainer.getDrive().getPose().getX();
-    System.out.println("enteredTrenchCheck");
+    trenchCheckActive = true;
     double trenchCenterLine =
         Robot.getEffectiveAlliance() == Alliance.Blue
             ? FieldConstants.kBlueTrenchCenterLine
