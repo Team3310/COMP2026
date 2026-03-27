@@ -24,7 +24,9 @@ public class DepCollect extends AutonCommandBase {
     // so flywheels are cancelled when the last path/shoot finishes.
     this.addCommands(
         new ParallelDeadlineGroup(
-            new SequentialCommandGroup(followPath(Paths.depCollect), followPath(Paths.depCollect2)),
+            new SequentialCommandGroup(
+                followPathAndCollectThenShoot(Paths.depCollect),
+                followPathAndCollectThenShoot(Paths.depCollect2)),
             flywheelsOn()));
   }
 }

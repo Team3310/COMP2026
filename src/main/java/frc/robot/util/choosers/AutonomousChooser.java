@@ -5,6 +5,7 @@ import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
 import frc.robot.Auton.Forward2m;
+import frc.robot.Auton.Forward2mPath;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.CitrusAuton;
 import frc.robot.Auton.Outpost.OutCollect;
@@ -19,6 +20,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
     setDefaultOption(AutonomousMode.ONE_AUTON)
         .addOption(AutonomousMode.TEST_FORWARD)
+        .addOption(AutonomousMode.TEST_FORWARDPATH)
         // .addOption(AutonomousMode.DEP_CYCLE1)
         // .addOption(AutonomousMode.DEPSSTRENCH1)
         // .addOption(AutonomousMode.OUT_CYCLE1)
@@ -52,6 +54,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
   public enum AutonomousMode {
     ONE_AUTON("one cycle anywhere"),
     TEST_FORWARD("test forward"),
+    TEST_FORWARDPATH("path test forward"),
     // DEP_CYCLE1("depo cycle"),
     // DEPSSTRENCH1("depo to ss trench1"),
     // OUT_CYCLE1("out cycle"),
@@ -88,6 +91,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
       switch (this) {
         case TEST_FORWARD:
           return new Forward2m(RobotContainer.getInstance());
+        case TEST_FORWARDPATH:
+          return new Forward2mPath(RobotContainer.getInstance());
           // case DEP_CYCLE1:
           //   return new DepCycle1(RobotContainer.getInstance());
           // case DEPSSTRENCH1:

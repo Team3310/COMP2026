@@ -65,7 +65,7 @@ public class Paths {
   public static void loadPaths() {
     loaded = true;
 
-    // forward2m = loadPath("forward2m");
+    forward2m = loadPath("forward2m");
     // DepCycle = loadPath("DepCycle");
     // OutCycle = loadPath("OutCycle");
     // HubCycle = loadPath("HubCycle");
