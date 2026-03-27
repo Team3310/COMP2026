@@ -132,7 +132,7 @@ public final class Constants {
     public static final String[] kCameraNames = {
       kLimelightFront, kLimelightRear, kLimelightRight, kLimelightLeft
     };
-
+/*  REMOVE from camera position setting, keep values for reference
     // ---- Camera #1  (Front-facing) ----
     // SDS: X = 0.37 in (forward), Y = 0 in (centered), Z = 20.138 in (up)
     //      Yaw = 0° (forward), Pitch = 20° (tilted up), Roll = 0°
@@ -185,7 +185,7 @@ public final class Constants {
       {kRightForwardM, kRightSideM, kRightUpM, kRightRollDeg, kRightPitchDeg, kRightYawDeg},
       {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
     };
-
+*/
     // ---- Per-camera trust weighting ----
     // Each camera can have a different trust factor that multiplies its stddevs.
     // Higher value = less trust (wider stddev = smoother but slower convergence).

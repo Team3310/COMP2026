@@ -55,8 +55,6 @@ public class Vision extends SubsystemBase {
   private static final String kVisionSeedStableKey = "Vision/SeedStable";
 
   private final Drive drive;
-  private int configCounter = CONFIG_INTERVAL; // Start at threshold so first loop configures
-  private static final int CONFIG_INTERVAL = 250; // Re-send config every 250 loops (~5 seconds)
 
   // Log rate-limiting — Logger.recordOutput is expensive (NT write per call).
   // We have ~15 log calls per camera × 3 cameras = ~45 writes per loop at 50 Hz.
@@ -155,14 +153,6 @@ public class Vision extends SubsystemBase {
     boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, false);
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
-
-    // Periodically re-send camera config so cameras that boot late or power-cycle
-    // mid-match still get the correct poses and IMU mode.
-    configCounter++;
-    if (configCounter >= CONFIG_INTERVAL) {
-      configureCameras();
-      configCounter = 0;
-    }
 
     // Always push IMU mode every cycle so the transition from mode 1 → 4
     // happens promptly when the robot is enabled.
@@ -283,25 +273,6 @@ public class Vision extends SubsystemBase {
         // No cameras accepted — move the combined ghost off-screen after 1s.
         Logger.recordOutput("Vision/finalFilteredPose", OFF_SCREEN_POSE);
       }
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  //  Camera configuration (called once)
-  // -----------------------------------------------------------------------
-  /**
-   * Pushes the measured camera poses into each Limelight. Called periodically so cameras that boot
-   * late or power-cycle mid-match still get the correct poses.
-   */
-  private void configureCameras() {
-    for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      String name = VisionConstants.kCameraNames[i];
-      double[] pose = VisionConstants.kCameraPoses[i];
-
-      // Set camera position relative to robot center.
-      // Args: forward, side, up, roll, pitch, yaw (meters / degrees)
-      LimelightHelpers.setCameraPose_RobotSpace(
-          name, pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
     }
   }
 
