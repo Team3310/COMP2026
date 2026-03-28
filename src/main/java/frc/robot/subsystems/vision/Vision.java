@@ -170,6 +170,14 @@ public class Vision extends SubsystemBase {
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
+      // Tell each camera which AprilTag IDs to track.  Tags NOT in this list
+      // are completely ignored at the hardware level (never enter the MT2
+      // solve), so we don't need to gate them with huge stddev factors.
+      if (firstLoop) {
+        for (String name : VisionConstants.kCameraNames) {
+          LimelightHelpers.SetFiducialIDFiltersOverride(name, VisionConstants.kValidTagIds);
+        }
+      }
       // Reset pre-match seed when transitioning back to disabled only if the
       // dashboard toggle is enabled. Older behavior always reset which caused
       // re-seeding and visible jumps after enable→disable cycles. Default is
@@ -201,7 +209,9 @@ public class Vision extends SubsystemBase {
           LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-          // MT1 pre-match seeding disabled — assume (0, 0) + gyro heading.
+          // MT1 pre-match seeding: attempt to seed full pose (XY + heading) from
+          // MegaTag 1 while disabled.  Only seeds once (hasSeed flag).
+          processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
           // Still log MT2 poses for AdvantageScope diagnostics.
           logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
         }
@@ -398,15 +408,22 @@ public class Vision extends SubsystemBase {
     }
 
     // 4. Apply per-camera and per-tag trust factors.
+    //    Use the best (lowest) tag factor among all visible tags — if any tag
+    //    in the frame is high-trust, the whole MegaTag2 solve benefits.
+    //    If any tag is "ignored" (999999), it only matters if it's the ONLY tag;
+    //    a good tag in the same frame will pull the factor down.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
     double tagFactor = 1.0;
-    // If ANY visible tag is a high-trust reef tag, boost trust for this measurement.
-    if (estimate.rawFiducials != null) {
+    if (estimate.rawFiducials != null && estimate.rawFiducials.length > 0) {
+      double bestFactor = Double.MAX_VALUE;
       for (var fid : estimate.rawFiducials) {
-        if (VisionConstants.kHighTrustTagIds.contains(fid.id)) {
-          tagFactor = VisionConstants.kHighTrustTagFactor;
-          break;
+        int idx = fid.id - 1; // tags are 1-indexed, array is 0-indexed
+        if (idx >= 0 && idx < VisionConstants.kTagStdDevFactors.length) {
+          bestFactor = Math.min(bestFactor, VisionConstants.kTagStdDevFactors[idx]);
         }
+      }
+      if (bestFactor < Double.MAX_VALUE) {
+        tagFactor = bestFactor;
       }
     }
     double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor * tagFactor;

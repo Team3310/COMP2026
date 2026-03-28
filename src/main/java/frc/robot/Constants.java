@@ -201,10 +201,59 @@ public final class Constants {
     };
 
     // ---- Per-tag trust weighting ----
-    // Reef tags (large, close, high-confidence geometry) get 5× more trust.
-    // Factor < 1.0 = tighter stddev = more trust.
-    public static final java.util.Set<Integer> kHighTrustTagIds = java.util.Set.of(9, 10, 25, 26);
-    public static final double kHighTrustTagFactor = 0.2; // 5× more trust (1/5 stddev scale)
+    // Factor applied per AprilTag ID.  Indexed by (tagID - 1) so tag 1 = index 0.
+    // < 1.0 = more trust (tighter stddev), 1.0 = default, 999999 = effectively ignored.
+    //
+    // 2025 Reefscape field — 32 tags:
+    //   Reef face tags (close, large, high-confidence): 5× trust
+    //   Normal tags: default trust
+    //   Ignored tags (far field / coral station / unreliable): effectively disabled
+    public static final double[] kTagStdDevFactors = {
+      // Red alliance side
+      1.0, //      Tag  1 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag  2 — processor
+      1.0, //      Tag  3 — reef
+      1.0, //      Tag  4 — reef
+      1.0, //      Tag  5 — reef
+      1.0, //      Tag  6 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag  7 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag  8 — reef
+      0.2, //      Tag  9 — reef face (5× trust)
+      0.2, //      Tag 10 — reef face (5× trust)
+      1.0, //      Tag 11 — reef
+      1.0, //      Tag 12 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag 13 — reef
+      1.0, //      Tag 14 — field
+      1.0, //      Tag 15 — field
+      1.0, //      Tag 16 — field
+      // Blue alliance side
+      1.0, //      Tag 17 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag 18 — processor
+      1.0, //      Tag 19 — reef
+      1.0, //      Tag 20 — reef
+      1.0, //      Tag 21 — reef
+      1.0, //      Tag 22 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag 23 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag 24 — reef
+      0.2, //      Tag 25 — reef face (5× trust)
+      0.2, //      Tag 26 — reef face (5× trust)
+      1.0, //      Tag 27 — reef
+      1.0, //      Tag 28 — (filtered out by SetFiducialIDFiltersOverride)
+      1.0, //      Tag 29 — reef
+      1.0, //      Tag 30 — field
+      1.0, //      Tag 31 — field
+      1.0, //      Tag 32 — field
+    };
+
+    // Tags the Limelights are allowed to track. Pushed via SetFiducialIDFiltersOverride
+    // on boot.  Tags NOT in this list are completely ignored at the hardware level —
+    // they never enter the MT1/MT2 solve.
+    // Excluded: 1, 6, 7, 12 (red coral stations / unreliable)
+    //           17, 22, 23, 28 (blue coral stations / unreliable)
+    public static final int[] kValidTagIds = {
+      2, 3, 4, 5, 8, 9, 10, 11, 13, 14, 15, 16,
+      18, 19, 20, 21, 24, 25, 26, 27, 29, 30, 31, 32
+    };
 
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
