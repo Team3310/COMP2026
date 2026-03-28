@@ -795,9 +795,9 @@ public final class Constants {
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.5;
-    kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.125;
+    kLeftFlywheelConfig.fxConfig.Slot0.kP = 11.0;
+    kLeftFlywheelConfig.fxConfig.Slot0.kS = 6.5;
+    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -816,9 +816,9 @@ public final class Constants {
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
     kRightFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kRightFlywheelConfig.fxConfig.Slot0.kP = 0.5;
-    kRightFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.125;
+    kRightFlywheelConfig.fxConfig.Slot0.kP = 11.0;
+    kRightFlywheelConfig.fxConfig.Slot0.kS = 6.5;
+    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
