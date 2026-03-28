@@ -154,6 +154,10 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
+    if (shouldLog) {
+      Logger.recordOutput("VisionEnabled", visionEnabled);
+    }
+
     // Always push IMU mode every cycle so the transition from mode 1 → 4
     // happens promptly when the robot is enabled.
     setIMUModes();
