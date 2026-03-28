@@ -969,7 +969,7 @@ public final class Constants {
     kRightFloorRollerConfig.name = "RightFloorRoller";
     kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, CanBusNames.superstructureFor(25));
     kRightFloorRollerConfig.momentOfInertia = 0.00132536;
-    kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
+    kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 20.0) * 60; // gear ratio 1.66667:1
 
     // Velocity PID gains - SIGNIFICANTLY INCREASED for better response
     // Phoenix Tuner confirmed velocity control works at these higher gains
@@ -998,7 +998,7 @@ public final class Constants {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
     kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, CanBusNames.superstructureFor(20));
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
-    kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
+    kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 20.0) * 60; // gear ratio 1.66667:1
 
     kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
