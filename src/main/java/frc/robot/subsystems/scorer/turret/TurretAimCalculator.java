@@ -71,6 +71,9 @@ public final class TurretAimCalculator {
     /** True when in own-alliance zone (aim at hub); false for pass/lob/stow. */
     public final boolean home;
 
+    /** Horizontal distance in meters from the shooter midpoint to the target used for lookup. */
+    public final double shooterDistanceMeters;
+
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
@@ -80,7 +83,8 @@ public final class TurretAimCalculator {
         double rightHoodDeg,
         double rightFlywheelRPM,
         Translation2d target,
-        boolean home) {
+        boolean home,
+        double shooterDistanceMeters) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.leftFlywheelRPM = leftFlywheelRPM;
@@ -90,6 +94,7 @@ public final class TurretAimCalculator {
       this.rightFlywheelRPM = rightFlywheelRPM;
       this.target = target;
       this.home = home;
+      this.shooterDistanceMeters = shooterDistanceMeters;
     }
   }
 
@@ -161,6 +166,7 @@ public final class TurretAimCalculator {
             / 2.0;
 
     Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
+    double shooterDistanceMeters = midShooterField.getDistance(fieldTarget);
     double[] result = computeAngles(midShooterField, fieldTarget, heading, home);
 
     double turretDegLeft =
@@ -185,7 +191,8 @@ public final class TurretAimCalculator {
         hoodDeg,
         flywheelRPM,
         fieldTarget,
-        home);
+        home,
+        shooterDistanceMeters);
   }
 
   // ====================================================================

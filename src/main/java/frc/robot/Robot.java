@@ -628,7 +628,6 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getTurretLeft().setDegreesCommand(0.0));
@@ -674,6 +673,8 @@ public class Robot extends LoggedRobot {
   }
 
   private Command retract() {
+    // Handles both pivot motion and roller sequencing, so callers shouldn't
+    // re-command the intake rollers separately (that would interrupt the motion).
     Command retractMotion =
         Commands.deadline(
             robotContainer

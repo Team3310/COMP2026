@@ -235,7 +235,7 @@ public class TurretAimManager extends SubsystemBase {
     inputs.robotYMeters = pose.getY();
     inputs.robotHeadingDeg = pose.getRotation().getDegrees();
 
-    inputs.distanceToTargetMeters = pose.getTranslation().getDistance(result.target);
+    inputs.distanceToTargetMeters = result.shooterDistanceMeters;
 
     // Log with AdvantageKit so values appear in AdvantageScope under "TurretAim/"
     Logger.processInputs("TurretAim", inputs);
