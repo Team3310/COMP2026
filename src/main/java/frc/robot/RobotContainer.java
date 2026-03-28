@@ -449,53 +449,8 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     SmartDashboard.putNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
-    SmartDashboard.putNumber("left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-    SmartDashboard.putNumber("right turret offset", Constants.ScorerConstants.kRightTurretOffset);
 
-    SmartDashboard.putData(
-        "Left Turret Offset +1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kLeftTurretOffset += 1.0;
-                  SmartDashboard.putNumber(
-                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-                  System.out.println(
-                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Right Turret Offset +1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kRightTurretOffset += 1.0;
-                  SmartDashboard.putNumber(
-                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
-                  System.out.println(
-                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Left Turret Offset -1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kLeftTurretOffset -= 1.0;
-                  SmartDashboard.putNumber(
-                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-                  System.out.println(
-                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Right Turret Offset -1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kRightTurretOffset -= 1.0;
-                  SmartDashboard.putNumber(
-                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
-                  System.out.println(
-                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
-                })
-            .ignoringDisable(true));
+    // Removed individual turret offset controls; only the global turret offset remains adjustable.
 
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
@@ -581,11 +536,14 @@ public class RobotContainer {
         .andThen(
             Commands.runOnce(
                 () -> {
-                  java.util.function.DoubleSupplier feedRpm = turretAimManager::getVerticalFeedRPM;
+                  java.util.function.DoubleSupplier leftFeedRpm =
+                      turretAimManager::getLeftVerticalFeedRPM;
+                  java.util.function.DoubleSupplier rightFeedRpm =
+                      turretAimManager::getRightVerticalFeedRPM;
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(verticalFeedLeft.setRPMCommand(feedRpm));
+                      .schedule(verticalFeedLeft.setRPMCommand(leftFeedRpm));
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(verticalFeedRight.setRPMCommand(feedRpm));
+                      .schedule(verticalFeedRight.setRPMCommand(rightFeedRpm));
                 }))
         .withName("SnowblowEnableVertical");
   }
@@ -629,45 +587,30 @@ public class RobotContainer {
     return leftErr < tol && rightErr < tol;
   }
 
-  private boolean isFlywheelWithinTolerance(double currentRpm, double targetRpm) {
-    return Math.abs(currentRpm - targetRpm) <= Constants.ScorerConstants.kFlywheelRPMTolerance;
-  }
-
-  /*private Command buildShootWhileHeldCommand() {
+  private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
-    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
+    java.util.function.DoubleSupplier leftVerticalFeedTargetRpm =
+        turretAimManager::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightVerticalFeedTargetRpm =
+        turretAimManager::getRightVerticalFeedRPM;
 
     return Commands.parallel(
-            Commands.startEnd( -
+            Commands.startEnd(
                 () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
             Commands.parallel(
                     flywheelLeft.setRPMCommand(leftTargetRpm),
                     flywheelRight.setRPMCommand(rightTargetRpm))
                 .alongWith(
-                    Commands.run(
-                        () -> {
-                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                          double leftErr =
-                              Math.abs(
-                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
-                          double rightErr =
-                              Math.abs(
-                                  flywheelRight.getCurrentVelocity()
-                                      - rightTargetRpm.getAsDouble());
-                          if (leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget()) {
+                    new WaitCommand(Constants.ScorerConstants.kWaitTime)
+                        .andThen(
+                            // Use Commands.parallel so subsystem requirements are properly held
+                            // and commands stay running — never schedule() inside run().
                             Commands.parallel(
-                                verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
-                                verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
+                                verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
+                                verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
                                 agitatorLeft.snowblowCommand(),
-                                agitatorRight.snowblowCommand());
-                          } else {
-                            CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                            CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                            CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                            CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                          }
-                        })))
+                                agitatorRight.snowblowCommand()))))
         .finallyDo(
             () -> {
               CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
@@ -678,38 +621,6 @@ public class RobotContainer {
               CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
               Robot.stateRefreshRequested = true;
             });
-  }*/
-
-  private Command buildShootWhileHeldCommand() {
-    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
-    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
-    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
-
-    return Commands.parallel(
-        Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
-        Commands.parallel(
-                flywheelLeft.setRPMCommand(leftTargetRpm),
-                flywheelRight.setRPMCommand(rightTargetRpm))
-            .alongWith(
-                new WaitCommand(Constants.ScorerConstants.kWaitTime)
-                    .andThen(
-                        // Use Commands.parallel so subsystem requirements are properly held
-                        // and commands stay running — never schedule() inside run().
-                        Commands.parallel(
-                            verticalFeedLeft.setRPMCommand(verticalFeedTargetRpm),
-                            verticalFeedRight.setRPMCommand(verticalFeedTargetRpm),
-                            agitatorLeft.snowblowCommand(),
-                            agitatorRight.snowblowCommand())))
-            .finallyDo(
-                () -> {
-                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  Robot.stateRefreshRequested = true;
-                }));
   }
 
   private void configureButtonBindings() {
@@ -726,6 +637,7 @@ public class RobotContainer {
     // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
+    roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
         flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(

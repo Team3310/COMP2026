@@ -20,8 +20,8 @@ public interface TurretAimIO {
     /** Left flywheel speed in RPM. */
     public double leftFlywheelRPM = 0.0;
 
-    /** Vertical feed speed in RPM. */
-    public double verticalFeedRPM = 0.0;
+    /** Left vertical feed speed in RPM. */
+    public double leftVerticalFeedRPM = 0.0;
 
     public double rightTurretAngleDeg = 0.0;
 
@@ -30,6 +30,9 @@ public interface TurretAimIO {
 
     /** Right flywheel speed in RPM. */
     public double rightFlywheelRPM = 0.0;
+
+    /** Right vertical feed speed in RPM. */
+    public double rightVerticalFeedRPM = 0.0;
 
     // ---- Debug / diagnostics ----
     /** Current zone: "OWN_ALLIANCE", "NEUTRAL", or "OPPONENT". */
@@ -53,8 +56,11 @@ public interface TurretAimIO {
     /** Robot heading at time of calculation (degrees). */
     public double robotHeadingDeg = 0.0;
 
-    /** Horizontal distance from robot center to target (meters). */
-    public double distanceToTargetMeters = 0.0;
+    /** Horizontal distance from the left shooter to target (meters). */
+    public double leftDistanceToTargetMeters = 0.0;
+
+    /** Horizontal distance from the right shooter to target (meters). */
+    public double rightDistanceToTargetMeters = 0.0;
   }
 
   /** Called once per cycle to update the inputs struct. */

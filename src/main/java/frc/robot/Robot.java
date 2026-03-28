@@ -271,12 +271,6 @@ public class Robot extends LoggedRobot {
               "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
       Constants.ScorerConstants.kTurretOffsetDegrees =
           SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
-      Constants.ScorerConstants.kLeftTurretOffset =
-          SmartDashboard.getNumber(
-              "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-      Constants.ScorerConstants.kRightTurretOffset =
-          SmartDashboard.getNumber(
-              "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
     }
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
@@ -588,16 +582,18 @@ public class Robot extends LoggedRobot {
     // Deploy intake to snowblow, and run motors to snowblow.
     CommandScheduler.getInstance().schedule(deploy(true));
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    java.util.function.DoubleSupplier feedRpm =
-        robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    java.util.function.DoubleSupplier leftFeedRpm =
+        robotContainer.getTurretAimManager()::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightFeedRpm =
+        robotContainer.getTurretAimManager()::getRightVerticalFeedRPM;
     snowblowGateCommand =
         new WaitCommand(Constants.ScorerConstants.kWaitTime)
             .andThen(
                 Commands.parallel(
                     robotContainer.getAgitatorLeft().snowblowCommand(),
                     robotContainer.getAgitatorRight().snowblowCommand(),
-                    robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm),
-                    robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm)))
+                    robotContainer.getVerticalFeedLeft().setRPMCommand(leftFeedRpm),
+                    robotContainer.getVerticalFeedRight().setRPMCommand(rightFeedRpm)))
             .ignoringDisable(false);
     CommandScheduler.getInstance().schedule(snowblowGateCommand);
   }
