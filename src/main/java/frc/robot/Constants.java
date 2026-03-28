@@ -940,7 +940,7 @@ public final class Constants {
     // Output Top Speed = 75 RPS (4500 RPM) from design sheet
     // TESTING: Increased speed to make velocity control more noticeable
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kFloorRollerSnowblowRPM = 4000.0; // RPM at output (increased for testing)
+    public static double kFloorRollerSnowblowRPM = 2000.0; // RPM at output (increased for testing)
     public static double kFloorRollerCollectRPM =
         500.0; // RPM while intaking (Decreased for Collect mode)
     public static double kFloorRollerReverseRPM =
