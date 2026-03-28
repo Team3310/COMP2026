@@ -194,8 +194,8 @@ public final class Constants {
     //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
     // Order matches kCameraNames: {front, rear, right, left}
     public static final double[] kCameraStdDevFactors = {
-      0.5, // Front  — centered, high mount, faces forward → trust MORE
-      0.5, // Rear   — centered, high mount, faces hub tags directly → trust MORE
+      1.0, // Front  — centered, high mount, faces forward → trust MORE
+      999999.0, // Rear — LL 3G MT2 broken after firmware update, effectively disabled
       1.0, // Right  — side-mount, upside-down, may have slightly noisier results
       1.0, // Left   — side-mount, symmetric to right
     };
