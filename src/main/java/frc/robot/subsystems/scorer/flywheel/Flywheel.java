@@ -41,16 +41,16 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs flywheel forward
    */
   public Command shootCommand() {
-    return velocitySetpointCommand(() -> Constants.ScorerConstants.kShootRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.ScorerConstants.kShootRPM)
         .withName("Flywheel Forward");
   }
 
   public Command setRPMCommand(double rpm) {
-    return velocitySetpointCommand(() -> rpm).withName("Flywheel Set RPM");
+    return velocityTorqueCurrentFOCSetpointCommand(() -> rpm).withName("Flywheel Set RPM");
   }
 
   public Command setRPMCommand(DoubleSupplier rpmSupplier) {
-    return velocitySetpointCommand(rpmSupplier).withName("Flywheel Track RPM");
+    return velocityTorqueCurrentFOCSetpointCommand(rpmSupplier).withName("Flywheel Track RPM");
   }
 
   /**
@@ -59,7 +59,7 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs flywheel backward
    */
   public Command reverseCommand() {
-    return velocitySetpointCommand(() -> Constants.ScorerConstants.kReverseShootRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.ScorerConstants.kReverseShootRPM)
         .withName("Flywheel Reverse");
   }
 
