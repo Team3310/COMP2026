@@ -251,8 +251,8 @@ public final class Constants {
     // Excluded: 1, 6, 7, 12 (red coral stations / unreliable)
     //           17, 22, 23, 28 (blue coral stations / unreliable)
     public static final int[] kValidTagIds = {
-      2, 3, 4, 5, 8, 9, 10, 11, 13, 14, 15, 16,
-      18, 19, 20, 21, 24, 25, 26, 27, 29, 30, 31, 32
+      2, 3, 4, 5, 8, 9, 10, 11, // 13, 14, //15, 16,
+      18, 19, 20, 21, 24, 25, 26, 27 // , //29, 30, 31, 32
     };
 
     // ---- Filtering thresholds ----
