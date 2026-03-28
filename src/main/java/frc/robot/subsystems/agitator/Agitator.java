@@ -143,7 +143,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs roller in intake direction
    */
   public Command snowblowCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerSnowblowRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerSnowblowRPM)
         .withName(getName() + " Snowblow");
   }
 
@@ -153,7 +153,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs roller in outtake direction
    */
   public Command collectCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerCollectRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerCollectRPM)
         .withName(getName() + " Collect");
   }
 
@@ -163,7 +163,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs floor roller in reverse
    */
   public Command reverseCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerReverseRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kFloorRollerReverseRPM)
         .withName(getName() + " Reverse");
   }
 
@@ -173,7 +173,7 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs vertical feed in intake direction
    */
   public Command verticalFeedIntakeCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedIntakeRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedIntakeRPM)
         .withName(getName() + " VertFeed Intake");
   }
 
@@ -183,12 +183,12 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs vertical feed in outtake direction
    */
   public Command verticalFeedOuttakeCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedOuttakeRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedOuttakeRPM)
         .withName(getName() + " VertFeed Outtake");
   }
 
   public Command verticalFeedCollectCommand() {
-    return velocitySetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedCollectRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.AgitatorConstants.kVerticalFeedCollectRPM)
         .withName(getName() + " VertFeed Collect");
   }
 
@@ -203,10 +203,10 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
    * @return Command that runs roller at the specified velocity
    */
   public Command setRPMCommand(double velocityRPM) {
-    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+    return velocityTorqueCurrentFOCSetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
   }
 
   public Command setRPMCommand(DoubleSupplier velocitySupplierRPM) {
-    return velocitySetpointCommand(velocitySupplierRPM).withName(getName() + " Custom Velocity");
+    return velocityTorqueCurrentFOCSetpointCommand(velocitySupplierRPM).withName(getName() + " Custom Velocity");
   }
 }
