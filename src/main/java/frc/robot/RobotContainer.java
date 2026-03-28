@@ -805,16 +805,15 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // right bumper = jam-clear outtake override while held in both modes
-    driver.rightBumper().whileTrue(buildOperatorJamClearOverrideCommand());
+    // right bumper = unbound
 
-    // left bumper = hood cross override while held in both modes
+    // left bumper = intake roller outtake only while held in both modes
+    driver.leftBumper().whileTrue(intakeRollers.outtakeCommand());
 
-    // right trigger = intake while held in both modes
-    driver.rightTrigger().whileTrue(intakeRollers.intakeCommand());
+    // right trigger = unbound
 
-    // left trigger = shoot while held in both modes
-    driver.leftTrigger().whileTrue(buildShootWhileHeldCommand());
+    // left trigger = intake roller only while held in both modes
+    driver.leftTrigger().whileTrue(intakeRollers.intakeCommand());
 
     driver
         .povDown()
@@ -951,7 +950,7 @@ public class RobotContainer {
         .whileTrue(buildOperatorJamClearOverrideCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
-      Trigger crossOverrideTrigger = operator.povDown().or(driver.leftBumper());
+      Trigger crossOverrideTrigger = operator.povDown();
 
       // D-Pad Up/Down: same in normal and mirrored pit. Legacy pit keeps old preset behavior.
       operator
