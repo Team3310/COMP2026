@@ -132,60 +132,60 @@ public final class Constants {
     public static final String[] kCameraNames = {
       kLimelightFront, kLimelightRear, kLimelightRight, kLimelightLeft
     };
-/*  REMOVE from camera position setting, keep values for reference
-    // ---- Camera #1  (Front-facing) ----
-    // SDS: X = 0.37 in (forward), Y = 0 in (centered), Z = 20.138 in (up)
-    //      Yaw = 0° (forward), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=+0.0094 m, side=0.0 m, up=+0.5115 m
-    public static final double kFrontForwardM = 0.0094;
-    public static final double kFrontSideM = 0.0;
-    public static final double kFrontUpM = 0.5115;
-    public static final double kFrontRollDeg = 0.0;
-    public static final double kFrontPitchDeg = 20.0;
-    public static final double kFrontYawDeg = 0.0;
+    /*  REMOVE from camera position setting, keep values for reference
+        // ---- Camera #1  (Front-facing) ----
+        // SDS: X = 0.37 in (forward), Y = 0 in (centered), Z = 20.138 in (up)
+        //      Yaw = 0° (forward), Pitch = 20° (tilted up), Roll = 0°
+        // LL Robot-Space: forward=+0.0094 m, side=0.0 m, up=+0.5115 m
+        public static final double kFrontForwardM = 0.0094;
+        public static final double kFrontSideM = 0.0;
+        public static final double kFrontUpM = 0.5115;
+        public static final double kFrontRollDeg = 0.0;
+        public static final double kFrontPitchDeg = 20.0;
+        public static final double kFrontYawDeg = 0.0;
 
-    // ---- Camera #2  (Rear-facing) ----
-    // SDS: X = -12.953 in (behind center), Y = 0 in (centered), Z = 15.567 in (up)
-    //      Yaw = 180° (facing rear), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=-0.329 m, side=0.0 m, up=+0.3954 m
-    public static final double kRearForwardM = -0.329;
-    public static final double kRearSideM = 0.0;
-    public static final double kRearUpM = 0.3954;
-    public static final double kRearRollDeg = 0.0;
-    public static final double kRearPitchDeg = 20.0;
-    public static final double kRearYawDeg = 180.0;
+        // ---- Camera #2  (Rear-facing) ----
+        // SDS: X = -12.953 in (behind center), Y = 0 in (centered), Z = 15.567 in (up)
+        //      Yaw = 180° (facing rear), Pitch = 20° (tilted up), Roll = 0°
+        // LL Robot-Space: forward=-0.329 m, side=0.0 m, up=+0.3954 m
+        public static final double kRearForwardM = -0.329;
+        public static final double kRearSideM = 0.0;
+        public static final double kRearUpM = 0.3954;
+        public static final double kRearRollDeg = 0.0;
+        public static final double kRearPitchDeg = 20.0;
+        public static final double kRearYawDeg = 180.0;
 
-    // ---- Camera #3  (Right-side) ----
-    // SDS: X = -3.068 in (behind center), Y = 13.079 in (right of center), Z = 13.323 in (up)
-    //      Yaw = 90° (facing right), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=-0.07787 m, side=-0.3322 m (right = negative Y), up=+0.3383 m
-    public static final double kRightForwardM = -0.07787;
-    public static final double kRightSideM = -0.3322;
-    public static final double kRightUpM = 0.3383;
-    public static final double kRightRollDeg = 0.0;
-    public static final double kRightPitchDeg = 20.0;
-    public static final double kRightYawDeg = 90.0;
+        // ---- Camera #3  (Right-side) ----
+        // SDS: X = -3.068 in (behind center), Y = 13.079 in (right of center), Z = 13.323 in (up)
+        //      Yaw = 90° (facing right), Pitch = 20° (tilted up), Roll = 0°
+        // LL Robot-Space: forward=-0.07787 m, side=-0.3322 m (right = negative Y), up=+0.3383 m
+        public static final double kRightForwardM = -0.07787;
+        public static final double kRightSideM = -0.3322;
+        public static final double kRightUpM = 0.3383;
+        public static final double kRightRollDeg = 0.0;
+        public static final double kRightPitchDeg = 20.0;
+        public static final double kRightYawDeg = 90.0;
 
-    // ---- Camera #4  (Left-side) ----
-    // SDS: X = -3.068 in (behind center), Y = -13.079 in (left of center), Z = 13.323 in (up)
-    //      Yaw = -90° (facing left), Pitch = 20° (tilted up), Roll = 0°
-    // LL Robot-Space: forward=-0.07787 m, side=+0.3322 m (left = positive Y), up=+0.3383 m
-    public static final double kLeftForwardM = -0.07787;
-    public static final double kLeftSideM = 0.3322;
-    public static final double kLeftUpM = 0.3383;
-    public static final double kLeftRollDeg = 0.0;
-    public static final double kLeftPitchDeg = 20.0;
-    public static final double kLeftYawDeg = -90.0;
+        // ---- Camera #4  (Left-side) ----
+        // SDS: X = -3.068 in (behind center), Y = -13.079 in (left of center), Z = 13.323 in (up)
+        //      Yaw = -90° (facing left), Pitch = 20° (tilted up), Roll = 0°
+        // LL Robot-Space: forward=-0.07787 m, side=+0.3322 m (left = positive Y), up=+0.3383 m
+        public static final double kLeftForwardM = -0.07787;
+        public static final double kLeftSideM = 0.3322;
+        public static final double kLeftUpM = 0.3383;
+        public static final double kLeftRollDeg = 0.0;
+        public static final double kLeftPitchDeg = 20.0;
+        public static final double kLeftYawDeg = -90.0;
 
-    // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
-    // LimelightHelpers.setCameraPose_RobotSpace()
-    public static final double[][] kCameraPoses = {
-      {kFrontForwardM, kFrontSideM, kFrontUpM, kFrontRollDeg, kFrontPitchDeg, kFrontYawDeg},
-      {kRearForwardM, kRearSideM, kRearUpM, kRearRollDeg, kRearPitchDeg, kRearYawDeg},
-      {kRightForwardM, kRightSideM, kRightUpM, kRightRollDeg, kRightPitchDeg, kRightYawDeg},
-      {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
-    };
-*/
+        // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
+        // LimelightHelpers.setCameraPose_RobotSpace()
+        public static final double[][] kCameraPoses = {
+          {kFrontForwardM, kFrontSideM, kFrontUpM, kFrontRollDeg, kFrontPitchDeg, kFrontYawDeg},
+          {kRearForwardM, kRearSideM, kRearUpM, kRearRollDeg, kRearPitchDeg, kRearYawDeg},
+          {kRightForwardM, kRightSideM, kRightUpM, kRightRollDeg, kRightPitchDeg, kRightYawDeg},
+          {kLeftForwardM, kLeftSideM, kLeftUpM, kLeftRollDeg, kLeftPitchDeg, kLeftYawDeg}
+        };
+    */
     // ---- Per-camera trust weighting ----
     // Each camera can have a different trust factor that multiplies its stddevs.
     // Higher value = less trust (wider stddev = smoother but slower convergence).
@@ -415,12 +415,12 @@ public final class Constants {
 
     // Maximum measured yaw rate (rad/s) allowed before heading hold can engage in joystickDrive().
     // If robot rotates faster than this, hold setpoint tracks current heading instead of locking.
-    public static final double kHoldEngageMaxRateRadPerSec = Units.degreesToRadians(90.0);
+    public static final double kHoldEngageMaxRateRadPerSec = Units.degreesToRadians(30.0);
 
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
     public static final double kAngleHoldKp =
-        3.0; // was 5.0. PDC put it to 3 on 3-18 before practice
+        1.0; // was 5.0. PDC put it to 3 on 3-18 before practice
     public static final double kAngleHoldKd = 0.4;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
