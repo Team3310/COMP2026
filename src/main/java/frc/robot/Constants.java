@@ -164,7 +164,7 @@ public final class Constants {
         public static final double kRightUpM = 0.3383;
         public static final double kRightRollDeg = 0.0;
         public static final double kRightPitchDeg = 20.0;
-        public static final double kRightYawDeg = 90.0;
+        public static final double kRightYawDeg = -90.0;
 
         // ---- Camera #4  (Left-side) ----
         // SDS: X = -3.068 in (behind center), Y = -13.079 in (left of center), Z = 13.323 in (up)
@@ -175,7 +175,7 @@ public final class Constants {
         public static final double kLeftUpM = 0.3383;
         public static final double kLeftRollDeg = 0.0;
         public static final double kLeftPitchDeg = 20.0;
-        public static final double kLeftYawDeg = -90.0;
+        public static final double kLeftYawDeg = 90.0;
 
         // Camera poses packed as {forward, side, up, roll, pitch, yaw} for
         // LimelightHelpers.setCameraPose_RobotSpace()
@@ -199,6 +199,12 @@ public final class Constants {
       1.0, // Right  — side-mount, upside-down, may have slightly noisier results
       1.0, // Left   — side-mount, symmetric to right
     };
+
+    // ---- Per-tag trust weighting ----
+    // Reef tags (large, close, high-confidence geometry) get 5× more trust.
+    // Factor < 1.0 = tighter stddev = more trust.
+    public static final java.util.Set<Integer> kHighTrustTagIds = java.util.Set.of(9, 10, 25, 26);
+    public static final double kHighTrustTagFactor = 0.2; // 5× more trust (1/5 stddev scale)
 
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
@@ -259,7 +265,7 @@ public final class Constants {
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
     // Increase to reduce jitter (less trust in vision, smoother pose).
-    public static double kMT2StdDevMultiplier = 0.2;
+    public static double kMT2StdDevMultiplier = 0.4;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.

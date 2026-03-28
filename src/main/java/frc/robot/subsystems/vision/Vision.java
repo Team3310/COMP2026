@@ -201,9 +201,8 @@ public class Vision extends SubsystemBase {
           LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-          processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
-          // Log MT2 after processCameraPreMatch so any heading broadcast from a seed
-          // has already been sent before we read back the MT2 result for display.
+          // MT1 pre-match seeding disabled — assume (0, 0) + gyro heading.
+          // Still log MT2 poses for AdvantageScope diagnostics.
           logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
         }
       }
@@ -398,9 +397,19 @@ public class Vision extends SubsystemBase {
       return null;
     }
 
-    // 4. Apply per-camera trust factor and return.
+    // 4. Apply per-camera and per-tag trust factors.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
-    double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor;
+    double tagFactor = 1.0;
+    // If ANY visible tag is a high-trust reef tag, boost trust for this measurement.
+    if (estimate.rawFiducials != null) {
+      for (var fid : estimate.rawFiducials) {
+        if (VisionConstants.kHighTrustTagIds.contains(fid.id)) {
+          tagFactor = VisionConstants.kHighTrustTagFactor;
+          break;
+        }
+      }
+    }
+    double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor * tagFactor;
 
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);
