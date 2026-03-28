@@ -199,6 +199,23 @@ public class Vision extends SubsystemBase {
 
     if (shouldLog) {
       Logger.recordOutput("Vision/pushedYawDeg", robotYawDeg);
+      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+        String name = VisionConstants.kCameraNames[i];
+        String prefix = "Vision/" + name + "/";
+
+        // IMU array — element [0] = robot_yaw the LL is working with.
+        // 3G has no IMU so this will be empty (-9999).
+        double[] imuData = LimelightHelpers.getLimelightNTDoubleArray(name, "imu");
+        double llYaw = (imuData.length > 0) ? imuData[0] : -9999;
+        Logger.recordOutput(prefix + "llReportedYaw", llYaw);
+
+        // Log MT1 pose alongside MT2 for direct comparison on the 3G.
+        LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+        if (mt1 != null && mt1.tagCount > 0 && mt1.pose != null) {
+          Logger.recordOutput(prefix + "mt1Pose", mt1.pose);
+          Logger.recordOutput(prefix + "mt1YawDeg", mt1.pose.getRotation().getDegrees());
+        }
+      }
     }
 
     // While disabled, downsample the expensive per-camera work
