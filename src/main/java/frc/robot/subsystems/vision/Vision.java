@@ -237,8 +237,36 @@ public class Vision extends SubsystemBase {
           // LL4s mask this problem because their internal IMU provides a heading
           // reference even before seeding.
           processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
-          // Still log MT2 poses for AdvantageScope diagnostics.
-          logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
+        }
+
+        // Once seeded, run the full MT2 processing pipeline and inject into
+        // odometry even while disabled.  This keeps the pose estimator warm
+        // so it doesn't drift on wheel slip / encoder error during pre-match
+        // repositioning, and gives AdvantageScope a live fused pose ghost.
+        if (hasSeed) {
+          List<AcceptedObservation> disabledAccepted = new ArrayList<>();
+          for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+            AcceptedObservation obs =
+                processCamera(
+                    VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
+            if (obs != null) {
+              disabledAccepted.add(obs);
+            }
+          }
+          disabledAccepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+          for (AcceptedObservation obs : disabledAccepted) {
+            if (visionEnabled) {
+              drive.addVisionMeasurement(
+                  obs.pose(),
+                  obs.timestampSeconds(),
+                  VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+            }
+          }
+        } else {
+          // Not yet seeded — just log MT2 for diagnostics.
+          for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+            logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
+          }
         }
       }
       return;
@@ -432,26 +460,9 @@ public class Vision extends SubsystemBase {
       return null;
     }
 
-    // 4. Apply per-camera and per-tag trust factors.
-    //    Use the best (lowest) tag factor among all visible tags — if any tag
-    //    in the frame is high-trust, the whole MegaTag2 solve benefits.
-    //    If any tag is "ignored" (999999), it only matters if it's the ONLY tag;
-    //    a good tag in the same frame will pull the factor down.
+    // 4. Apply per-camera trust factor.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
-    double tagFactor = 1.0;
-    if (estimate.rawFiducials != null && estimate.rawFiducials.length > 0) {
-      double bestFactor = Double.MAX_VALUE;
-      for (var fid : estimate.rawFiducials) {
-        int idx = fid.id - 1; // tags are 1-indexed, array is 0-indexed
-        if (idx >= 0 && idx < VisionConstants.kTagStdDevFactors.length) {
-          bestFactor = Math.min(bestFactor, VisionConstants.kTagStdDevFactors[idx]);
-        }
-      }
-      if (bestFactor < Double.MAX_VALUE) {
-        tagFactor = bestFactor;
-      }
-    }
-    double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor * tagFactor;
+    double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);

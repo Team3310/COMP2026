@@ -200,51 +200,6 @@ public final class Constants {
       1.0, // Left   — side-mount, symmetric to right
     };
 
-    // ---- Per-tag trust weighting ----
-    // Factor applied per AprilTag ID.  Indexed by (tagID - 1) so tag 1 = index 0.
-    // < 1.0 = more trust (tighter stddev), 1.0 = default, 999999 = effectively ignored.
-    //
-    // 2025 Reefscape field — 32 tags:
-    //   Reef face tags (close, large, high-confidence): 5× trust
-    //   Normal tags: default trust
-    //   Ignored tags (far field / coral station / unreliable): effectively disabled
-    public static final double[] kTagStdDevFactors = {
-      // Red alliance side
-      1.0, //      Tag  1 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag  2 — processor
-      1.0, //      Tag  3 — reef
-      1.0, //      Tag  4 — reef
-      1.0, //      Tag  5 — reef
-      1.0, //      Tag  6 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag  7 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag  8 — reef
-      0.2, //      Tag  9 — reef face (5× trust)
-      0.2, //      Tag 10 — reef face (5× trust)
-      1.0, //      Tag 11 — reef
-      1.0, //      Tag 12 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag 13 — reef
-      1.0, //      Tag 14 — field
-      1.0, //      Tag 15 — field
-      1.0, //      Tag 16 — field
-      // Blue alliance side
-      1.0, //      Tag 17 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag 18 — processor
-      1.0, //      Tag 19 — reef
-      1.0, //      Tag 20 — reef
-      1.0, //      Tag 21 — reef
-      1.0, //      Tag 22 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag 23 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag 24 — reef
-      0.2, //      Tag 25 — reef face (5× trust)
-      0.2, //      Tag 26 — reef face (5× trust)
-      1.0, //      Tag 27 — reef
-      1.0, //      Tag 28 — (filtered out by SetFiducialIDFiltersOverride)
-      1.0, //      Tag 29 — reef
-      1.0, //      Tag 30 — field
-      1.0, //      Tag 31 — field
-      1.0, //      Tag 32 — field
-    };
-
     // Tags the Limelights are allowed to track. Pushed via SetFiducialIDFiltersOverride
     // on boot.  Tags NOT in this list are completely ignored at the hardware level —
     // they never enter the MT1/MT2 solve.
@@ -314,12 +269,12 @@ public final class Constants {
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
     // Increase to reduce jitter (less trust in vision, smoother pose).
-    public static double kMT2StdDevMultiplier = 0.8;
+    public static double kMT2StdDevMultiplier = 0.3;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
     // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
-    public static double kMT1StdDevMultiplier = 10.0;
+    public static double kMT1StdDevMultiplier = 5.0;
 
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
