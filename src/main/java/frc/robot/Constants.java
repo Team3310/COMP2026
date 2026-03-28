@@ -879,7 +879,7 @@ public final class Constants {
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
-    public static final double kIntakePivotDeployDegrees = 160.0;
+    public static final double kIntakePivotDeployDegrees = 125.0;
     public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
@@ -956,10 +956,7 @@ public final class Constants {
 
     // Units = degrees
     kIntakePivotConfig.unitToRotorRatio =
-        kIsPracticeBot
-            ? (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0
-            : // per design sheet, convert rotations to degrees
-            (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
+        (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0;
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
     kIntakePivotConfig.kMaxPositionUnits = 160.0; // degrees (fully deployed)

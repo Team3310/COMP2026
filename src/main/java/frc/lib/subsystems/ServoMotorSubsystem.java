@@ -244,22 +244,22 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   }
 
   public Command motionMagicSetpointCommand(DoubleSupplier unitSupplier, int slot) {
-    return runEnd(
-            () -> {
-              setMotionMagicSetpointImpl(unitSupplier.getAsDouble(), slot);
-            },
-            () -> {})
-        .withName(getName() + " motionMagicSetpointCommand");
+    Command cmd =
+        new RunCommand(() -> setMotionMagicSetpointImpl(unitSupplier.getAsDouble(), slot), this)
+            .withName(getName() + " motionMagicSetpointCommand");
+    return cmd;
   }
 
   public Command motionMagicSetpointCommand(
       DoubleSupplier unitSupplier, Supplier<MotionMagicConfigs> configSupplier, int slot) {
-    return runEnd(
-            () -> {
-              setMotionMagicSetpointImpl(unitSupplier.getAsDouble(), configSupplier.get(), slot);
-            },
-            () -> {})
-        .withName(getName() + " dynamicMotionMagicSetpointCommand");
+    Command cmd =
+        new RunCommand(
+                () ->
+                    setMotionMagicSetpointImpl(
+                        unitSupplier.getAsDouble(), configSupplier.get(), slot),
+                this)
+            .withName(getName() + " dynamicMotionMagicSetpointCommand");
+    return cmd;
   }
 
   public Command motionMagicSetpointCommand(
@@ -267,13 +267,14 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
       Supplier<MotionMagicConfigs> configSupplier,
       Supplier<Double> feedforwards,
       int slot) {
-    return runEnd(
-            () -> {
-              setMotionMagicSetpointImpl(
-                  unitSupplier.getAsDouble(), configSupplier.get(), feedforwards.get(), slot);
-            },
-            () -> {})
-        .withName(getName() + " dynamicMotionMagicSetpointCommand");
+    Command cmd =
+        new RunCommand(
+                () ->
+                    setMotionMagicSetpointImpl(
+                        unitSupplier.getAsDouble(), configSupplier.get(), feedforwards.get(), slot),
+                this)
+            .withName(getName() + " dynamicMotionMagicSetpointCommand");
+    return cmd;
   }
 
   public Command motionMagicSetpointCommandBlocking(

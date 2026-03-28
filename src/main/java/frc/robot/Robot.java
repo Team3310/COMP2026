@@ -572,10 +572,10 @@ public class Robot extends LoggedRobot {
         defenseOut();
         break;
       case DEPLOY:
-        deploy();
+        CommandScheduler.getInstance().schedule(deploy());
         break;
       case RETRACT:
-        retract();
+        CommandScheduler.getInstance().schedule(retract());
         break;
       case PIT:
         // In pit mode, manual controls drive behavior.
@@ -586,8 +586,7 @@ public class Robot extends LoggedRobot {
   private void snowblow() {
 
     // Deploy intake to snowblow, and run motors to snowblow.
-    deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
+    CommandScheduler.getInstance().schedule(deploy(true));
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     java.util.function.DoubleSupplier feedRpm =
         robotContainer.getTurretAimManager()::getVerticalFeedRPM;
@@ -606,8 +605,7 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
+    CommandScheduler.getInstance().schedule(deploy(false));
     // Only kill flywheels during teleop — in autonomous, flywheelsOn() is
     // running in parallel and must not be cancelled.  The auton shoot
     // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
@@ -625,13 +623,7 @@ public class Robot extends LoggedRobot {
   private void defenseIn() {
 
     // Raise the roof before retracting the intake to avoid mechanism interference.
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getRoof()
-                .motionMagicSetpointCommandBlocking(
-                    () -> Constants.RoofConstants.kRoofMaxHeightInches, 0.25)
-                .andThen(Commands.runOnce(this::retract)));
+    CommandScheduler.getInstance().schedule(retract());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
@@ -655,41 +647,41 @@ public class Robot extends LoggedRobot {
 
   private void defenseOut() {
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
-
-    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance()
-          .schedule(
-              Commands.deadline(
-                      robotContainer
-                          .getIntakePivot()
-                          .motionMagicSetpointCommandBlocking(
-                              () -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 2.0),
-                      robotContainer.getIntakeRollers().deployCommand())
-                  .andThen(robotContainer.getIntakeRollers().offCommand()));
-    } else {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
-    }
+    CommandScheduler.getInstance().schedule(deploy(false));
   }
 
-  private void deploy() {
-    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
-    }
+  private Command deploy() {
+    return deploy(false);
   }
 
-  private void retract() {
-    if (robotContainer.getIntakePivot().getCurrentPosition() > 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
-    }
+  private Command deploy(boolean keepRollersOnAfter) {
+    Command pivotMotion =
+        Commands.deadline(
+            robotContainer
+                .getIntakePivot()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 2.0),
+            robotContainer.getIntakeRollers().deployCommand());
+    return keepRollersOnAfter
+        ? pivotMotion
+        : pivotMotion.andThen(robotContainer.getIntakeRollers().offCommand());
+  }
+
+  private Command retract() {
+    Command retractMotion =
+        Commands.deadline(
+            robotContainer
+                .getIntakePivot()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotStowedDegrees, 2.0),
+            robotContainer.getIntakeRollers().retractCommand());
+    return retractMotion.andThen(robotContainer.getIntakeRollers().offCommand());
   }
 
   // #endregion

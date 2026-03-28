@@ -726,7 +726,6 @@ public class RobotContainer {
     // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
-    roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
         flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(
