@@ -197,6 +197,10 @@ public class Vision extends SubsystemBase {
     double robotYawDeg = drive.getRawGyroRotation().getDegrees();
     double yawRateDps = drive.getRawGyroYawRateDegPerSec();
 
+    if (shouldLog) {
+      Logger.recordOutput("Vision/pushedYawDeg", robotYawDeg);
+    }
+
     // While disabled, downsample the expensive per-camera work
     // (SetRobotOrientation flushes + getBotPoseEstimate NT reads) so we don't
     // blow the 20 ms loop budget.  The cameras are throttled to low FPS anyway,
@@ -211,6 +215,10 @@ public class Vision extends SubsystemBase {
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
           // MT1 pre-match seeding: attempt to seed full pose (XY + heading) from
           // MegaTag 1 while disabled.  Only seeds once (hasSeed flag).
+          // This is critical for the LL 3G — it has no internal IMU, so MT2
+          // produces garbage until the Pigeon is seeded to the real field heading.
+          // LL4s mask this problem because their internal IMU provides a heading
+          // reference even before seeding.
           processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
           // Still log MT2 poses for AdvantageScope diagnostics.
           logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);

@@ -314,7 +314,7 @@ public final class Constants {
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
     // Increase to reduce jitter (less trust in vision, smoother pose).
-    public static double kMT2StdDevMultiplier = 0.4;
+    public static double kMT2StdDevMultiplier = 0.8;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
