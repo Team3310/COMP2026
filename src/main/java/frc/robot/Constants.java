@@ -533,8 +533,8 @@ public final class Constants {
   public static final class ScorerConstants {
     public static final double kWaitTime = 0.5; // seconds before teleop feed engages
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kShootRPM = 5700.0;
-    public static double kReverseShootRPM = -5700.0;
+    public static double kShootRPM = 5400.0;
+    public static double kReverseShootRPM = -5400.0;
 
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */
     public static final double kFlywheelRPMTolerance = 50.0;
@@ -838,7 +838,7 @@ public final class Constants {
     kLeftFlywheelConfig.name = "Left Flywheel";
     kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, CanBusNames.superstructureFor(24));
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
-    kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
+    kLeftFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
     kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
@@ -859,7 +859,7 @@ public final class Constants {
     kRightFlywheelConfig.name = "Right Flywheel";
     kRightFlywheelConfig.talonCANID = new CANDeviceId(29, CanBusNames.superstructureFor(29));
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
-    kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
+    kRightFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
     kRightFlywheelConfig.fxConfig.Slot0.kP = 0.5;
     kRightFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
