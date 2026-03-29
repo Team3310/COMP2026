@@ -803,7 +803,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -824,7 +824,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
     kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
