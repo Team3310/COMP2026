@@ -279,6 +279,13 @@ public class RobotContainer {
     // Right floor roller follows the left floor roller so the left remains
     // the only floor roller running VelocityTorqueCurrentFOC closed-loop control.
     agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true);
+    agitatorRight.setDefaultCommand(
+        Commands.run(
+                () ->
+                    agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true),
+                agitatorRight)
+            .ignoringDisable(true)
+            .withName("RightFloorRoller Follow LeftFloorRoller"));
 
     // Register PathPlanner named commands (must be before any path loading)
     NamedCommands.registerCommand(
