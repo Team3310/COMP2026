@@ -168,7 +168,9 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new SequentialCommandGroup(
             new ParallelCommandGroup(
                 robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
-                robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
+                // Right floor roller now follows the left floor roller.
+                // Keep the old direct command commented out so follower mode is not overridden.
+                // robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
                 robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
                 robotContainer
                     .getVerticalFeedRight()

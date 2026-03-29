@@ -595,7 +595,9 @@ public class Robot extends LoggedRobot {
             .andThen(
                 Commands.parallel(
                     robotContainer.getAgitatorLeft().snowblowCommand(),
-                    robotContainer.getAgitatorRight().snowblowCommand(),
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct command commented out so follower mode is not overridden.
+                    // robotContainer.getAgitatorRight().snowblowCommand(),
                     robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm),
                     robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm)))
             .ignoringDisable(false);
@@ -627,7 +629,9 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
+    // Right floor roller now follows the left floor roller.
+    // Keep the old direct off command commented out so follower mode is not overridden.
+    // CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getTurretLeft().setDegreesCommand(0.0));
@@ -649,7 +653,9 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
+    // Right floor roller now follows the left floor roller.
+    // Keep the old direct off command commented out so follower mode is not overridden.
+    // CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
     CommandScheduler.getInstance().schedule(deploy(false));

@@ -276,6 +276,10 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Right floor roller follows the left floor roller so the left remains
+    // the only floor roller running VelocityTorqueCurrentFOC closed-loop control.
+    agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true);
+
     // Register PathPlanner named commands (must be before any path loading)
     NamedCommands.registerCommand(
         "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
@@ -314,7 +318,9 @@ public class RobotContainer {
             verticalFeedLeft.verticalFeedIntakeCommand(),
             verticalFeedRight.verticalFeedIntakeCommand(),
             agitatorLeft.snowblowCommand(),
-            agitatorRight.snowblowCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.snowblowCommand(),
             hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
             hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     SmartDashboard.putData(
@@ -348,12 +354,19 @@ public class RobotContainer {
         intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees));
     SmartDashboard.putData(
         "floors on",
-        Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()));
+        Commands.parallel(
+            agitatorLeft.snowblowCommand()
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // , agitatorRight.snowblowCommand()
+            ));
     SmartDashboard.putData(
         "spit balls",
         Commands.parallel(
             agitatorLeft.reverseCommand(),
-            agitatorRight.reverseCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.reverseCommand(),
             intakeRollers.outtakeCommand()));
     SmartDashboard.putData(
         "vertical feed on",
@@ -600,7 +613,9 @@ public class RobotContainer {
     return Commands.parallel(
             intakeRollers.outtakeCommand(),
             agitatorLeft.reverseCommand(),
-            agitatorRight.reverseCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.reverseCommand(),
             verticalFeedLeft.verticalFeedOuttakeCommand(),
             verticalFeedRight.verticalFeedOuttakeCommand())
         .finallyDo(() -> Robot.stateRefreshRequested = true);
@@ -698,8 +713,12 @@ public class RobotContainer {
                         Commands.parallel(
                             verticalFeedLeft.setRPMCommand(verticalFeedTargetRpm),
                             verticalFeedRight.setRPMCommand(verticalFeedTargetRpm),
-                            agitatorLeft.snowblowCommand(),
-                            agitatorRight.snowblowCommand())))
+                            agitatorLeft.snowblowCommand()
+                            // Right floor roller now follows the left floor roller.
+                            // Keep the old direct command commented out so follower mode is not
+                            // overridden.
+                            // , agitatorRight.snowblowCommand()
+                            )))
             .finallyDo(
                 () -> {
                   CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
@@ -707,7 +726,10 @@ public class RobotContainer {
                   CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                  // Right floor roller now follows the left floor roller.
+                  // Keep the old direct off command commented out so follower mode is not
+                  // overridden.
+                  // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
                   Robot.stateRefreshRequested = true;
                 }));
   }
@@ -897,7 +919,12 @@ public class RobotContainer {
         .b()
         .toggleOnTrue(
             Commands.either(
-                Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
+                Commands.parallel(
+                    agitatorLeft.snowblowCommand()
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct command commented out so follower mode is not overridden.
+                    // , agitatorRight.snowblowCommand()
+                    ),
                 buildOverrideStateCommand(Robot.OverrideState.COLLECT),
                 this::isUsingLegacyPitOperatorMode));
 
@@ -906,7 +933,13 @@ public class RobotContainer {
         .a()
         .toggleOnTrue(
             Commands.either(
-                Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
+                Commands.parallel(
+                    agitatorLeft.offCommand()
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct off command commented out so follower mode is not
+                    // overridden.
+                    // , agitatorRight.offCommand()
+                    ),
                 buildOverrideStateCommand(Robot.OverrideState.DEFENCEIN),
                 this::isUsingLegacyPitOperatorMode));
 

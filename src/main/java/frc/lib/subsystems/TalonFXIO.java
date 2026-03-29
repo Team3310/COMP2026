@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -31,8 +32,7 @@ public class TalonFXIO implements MotorIO {
   private final MotionMagicVoltage motionMagicPositionControl = new MotionMagicVoltage(0.0);
   private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage =
       new DynamicMotionMagicVoltage(0.0, 0.0, 0.0);
-  // TODO: Fix Follower API for Phoenix 6
-  // private final Follower followerControl = null;
+  private final Follower followerControl = new Follower(0, MotorAlignmentValue.Aligned);
   private final MotionMagicTorqueCurrentFOC motionMagicTorqueFOCPositionControl =
       new MotionMagicTorqueCurrentFOC(0.0);
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
@@ -207,8 +207,11 @@ public class TalonFXIO implements MotorIO {
 
   @Override
   public void follow(CANDeviceId masterId, boolean opposeMasterDirection) {
-    // TODO: Implement follower mode for Phoenix 6
-    // The Follower API has changed in Phoenix 6
+    talon.setControl(
+        followerControl
+            .withLeaderID(masterId.getDeviceNumber())
+            .withMotorAlignment(
+                opposeMasterDirection ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned));
   }
 
   @Override

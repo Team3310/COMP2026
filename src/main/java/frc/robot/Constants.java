@@ -875,7 +875,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -927,7 +927,7 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0; // Per design sheet
-    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -975,10 +975,10 @@ public final class Constants {
 
     // Velocity PID gains - SIGNIFICANTLY INCREASED for better response
     // Phoenix Tuner confirmed velocity control works at these higher gains
-    kRightFloorRollerConfig.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
+    kRightFloorRollerConfig.fxConfig.Slot0.kP = 4.0; // Increased from 0.5
     kRightFloorRollerConfig.fxConfig.Slot0.kI = 0.0;
     kRightFloorRollerConfig.fxConfig.Slot0.kD = 0.0;
-    kRightFloorRollerConfig.fxConfig.Slot0.kS = 0.02; // Increased from 0.02 - overcome friction
+    kRightFloorRollerConfig.fxConfig.Slot0.kS = 7.5; // Increased from 0.02 - overcome friction
     kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
     kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
 
@@ -1002,8 +1002,8 @@ public final class Constants {
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
     kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 20.0) * 60; // gear ratio 1.66667:1
 
-    kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
-    kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kP = 4.0;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kS = 7.5;
     kLeftFloorRollerConfig.fxConfig.Slot0.kV = 0.1;
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -1026,9 +1026,10 @@ public final class Constants {
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
     kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.45;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.125;
+    // These constants are for VelocityTorqueCurrentFOC
+    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 4.0;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kS = 6.1;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -1049,9 +1050,9 @@ public final class Constants {
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
     kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.45;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.125;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 4.0;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 6.1;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
