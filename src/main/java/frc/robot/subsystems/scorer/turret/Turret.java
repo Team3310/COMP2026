@@ -8,10 +8,8 @@ import java.util.function.DoubleSupplier;
 
 /** The {@code Turret} controls the pivoting mechanism of the robot's launcher turret. */
 public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
-  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
-
   public MotorIO motorIO;
-  private int dashboardCounter = 0;
+  private int dashboardCounter = 2; // staggered offset 2
 
   public Turret(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
@@ -55,7 +53,8 @@ public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> 
 
   @Override
   public void periodic() {
-    if (++dashboardCounter % DASHBOARD_INTERVAL == 0) {
+    if (++dashboardCounter >= Constants.kLogInterval) {
+      dashboardCounter = 0;
       SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
     }
     super.periodic();

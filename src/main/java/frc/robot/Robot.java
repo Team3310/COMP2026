@@ -87,8 +87,9 @@ public class Robot extends LoggedRobot {
   // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
   private int dashboardReadCounter = 0;
   private static final int DASHBOARD_READ_INTERVAL = 10; // Every 10th cycle (~5 Hz)
-  // Dashboard write rate-limiting — telemetry doesn't need 50 Hz updates either.
-  private int dashboardWriteCounter = 0;
+  // Dashboard write rate-limiting — staggered offset 5 so reads (cycle 0) and
+  // writes (cycle 5) never fire on the same tick.
+  private int dashboardWriteCounter = 5;
 
   public Robot() {
     // Record metadata
