@@ -18,18 +18,34 @@ public class FieldConstants {
   public static final double kFieldLength = Units.inchesToMeters(651.0);
   public static final double kFieldWidth = Units.inchesToMeters(318.0);
 
+  public static final double kBlueTrenchMidSideLine = Units.inchesToMeters(160.0);
+  public static final double kBlueTrenchCenterLine = Units.inchesToMeters(183.0);
+  public static final double kBlueTrenchHomeSideLine = Units.inchesToMeters(206.5);
+
+  public static final double kRedTrenchMidSideLine = Units.inchesToMeters(kFieldLength - 160.0);
+  public static final double kRedTrenchCenterLine = Units.inchesToMeters(kFieldLength - 183.0);
+  public static final double kRedTrenchHomeSideLine = Units.inchesToMeters(kFieldLength - 206.5);
+
+  public static final double kBlueShootLine = Units.inchesToMeters(245.0);
+  public static final double kRedShootLine = Units.inchesToMeters(kFieldLength - 245.0);
+
   // Bias (meters) that shifts the DEP-vs-OUT decision line in pass mode.
   // Positive = prefer DEP; the robot must be farther toward the OUT side
   // before it switches to aiming at OUT.  0 = equal (pure midpoint).
   public static final double kMidBiasMeters = Units.inchesToMeters(24.0); // ~0.6 m
 
   public static enum StartingPosition { // measured with sim
-    BLUEDEP(new Translation2d(3.570, 7.617)),
+    BLUEDEPHOME(new Translation2d(3.570, 7.247)),
+    BLUEDEPMID(new Translation2d(4.407, 7.247)),
     BLUEHUB(new Translation2d(3.570, 3.977)),
-    BLUEOUT(new Translation2d(3.750, 0.463)),
-    REDDEP(new Translation2d(13.0, 0.463)),
+    BLUEOUTHOME(new Translation2d(3.750, 0.841)),
+    BLUEOUTMID(new Translation2d(4.407, 0.841)),
+
+    REDDEPHOME(new Translation2d(13.0, 0.841)),
+    REDDEPMID(new Translation2d(12.201, 0.841)),
     REDHUB(new Translation2d(13.0, 3.977)),
-    REDOUT(new Translation2d(13.0, 7.617));
+    REDOUTHOME(new Translation2d(13.0, 7.247)),
+    REDOUTMID(new Translation2d(12.201, 7.247));
 
     private Translation2d translation;
 
@@ -46,9 +62,9 @@ public class FieldConstants {
       LandingZone { // landing zones of where we want the balls to land when passing (little bit out
     // from
     // corner)
-    BLUEOUT(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(79.5))),
-    BLUEDEP(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
-    BLUEMID(new Translation2d(Units.inchesToMeters(80.0), Units.inchesToMeters(159))),
+    BLUEOUT(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(100.0))),
+    BLUEDEP(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(218.0))),
+    BLUEMID(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(159))),
     REDOUT(
         new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
     REDDEP(

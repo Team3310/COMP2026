@@ -120,38 +120,24 @@ public class TurretAimManager extends SubsystemBase {
     double fieldVx = robotSpeeds.vxMetersPerSecond * cosH - robotSpeeds.vyMetersPerSecond * sinH;
     double fieldVy = robotSpeeds.vxMetersPerSecond * sinH + robotSpeeds.vyMetersPerSecond * cosH;
 
-    // Midpoint of the two shooter exits (robot-relative)
-    double midShooterX =
-        (Constants.ScorerConstants.kLeftShooterXOffsetMeters
-                + Constants.ScorerConstants.kRightShooterXOffsetMeters)
-            / 2.0;
-    double midShooterY =
-        (Constants.ScorerConstants.kLeftShooterYOffsetMeters
-                + Constants.ScorerConstants.kRightShooterYOffsetMeters)
-            / 2.0;
-
-    // Shooter position in field space at release.
-    Translation2d shooterField =
-        TurretAimCalculator.robotToField(releasePose, midShooterX, midShooterY);
     Translation2d target = initialResult.target;
     boolean home = initialResult.home;
 
-    // Iterative convergence loop
-    double convergedTof = 0.0;
-    Translation2d lookaheadShooter = shooterField;
-    double lookaheadDist = shooterField.getDistance(target);
+    Translation2d leftShooterFieldRelease =
+        TurretAimCalculator.robotToField(
+            releasePose,
+            Constants.ScorerConstants.kLeftShooterXOffsetMeters,
+            Constants.ScorerConstants.kLeftShooterYOffsetMeters);
+    Translation2d rightShooterFieldRelease =
+        TurretAimCalculator.robotToField(
+            releasePose,
+            Constants.ScorerConstants.kRightShooterXOffsetMeters,
+            Constants.ScorerConstants.kRightShooterYOffsetMeters);
 
-    for (int i = 0; i < ScorerConstants.kTofIterations; i++) {
-      convergedTof = TurretAimCalculator.estimateTimeOfFlight(lookaheadDist, home);
-      if (convergedTof <= 0.0) break; // No lead (pass mode or zero TOF)
-
-      // Extrapolate shooter position by field velocity × TOF
-      lookaheadShooter =
-          new Translation2d(
-              shooterField.getX() + fieldVx * convergedTof,
-              shooterField.getY() + fieldVy * convergedTof);
-      lookaheadDist = lookaheadShooter.getDistance(target);
-    }
+    double leftConvergedTof =
+        convergeTimeOfFlight(leftShooterFieldRelease, target, home, fieldVx, fieldVy);
+    double rightConvergedTof =
+        convergeTimeOfFlight(rightShooterFieldRelease, target, home, fieldVx, fieldVy);
 
     // ================================================================
     // Step 4: Final ballistic compensation
@@ -159,19 +145,14 @@ public class TurretAimManager extends SubsystemBase {
     // Translate the release pose by field velocity × TOF so the aim accounts
     // for the robot's translational carry during flight. Keep the release
     // heading — continued robot rotation after launch does not rotate the ball.
-    Pose2d ballisticPose;
-    if (convergedTof > 0.0) {
-      ballisticPose =
-          new Pose2d(
-              releasePose.getX() + fieldVx * convergedTof,
-              releasePose.getY() + fieldVy * convergedTof,
-              releasePose.getRotation());
-    } else {
-      ballisticPose = releasePose;
-    }
+    Pose2d ballisticPoseLeft =
+        applyBallisticTranslation(releasePose, fieldVx, fieldVy, leftConvergedTof);
+    Pose2d ballisticPoseRight =
+        applyBallisticTranslation(releasePose, fieldVx, fieldVy, rightConvergedTof);
 
-    // Run the aim calculator on the ballistically compensated pose.
-    TurretAimCalculator.AimResult result = TurretAimCalculator.calculate(ballisticPose);
+    // Run the aim calculator on the ballistically compensated poses.
+    TurretAimCalculator.AimResult result =
+        TurretAimCalculator.calculate(ballisticPoseLeft, ballisticPoseRight);
     latestResult = result;
 
     // ---- Simulated turret inertia ----
@@ -184,7 +165,7 @@ public class TurretAimManager extends SubsystemBase {
     double dt = (prevTimestamp < 0) ? 0.02 : (now - prevTimestamp);
     prevTimestamp = now;
 
-    double targetAngleDeg = result.leftTurretDeg; // both sides are identical
+    double targetAngleDeg = result.leftTurretDeg; // simulate left turret for field ghost
 
     // First-order exponential lag: how far we'd *like* to move this tick
     double tau = SimPhysicsConstants.kTurretSimTauSeconds;
@@ -221,10 +202,11 @@ public class TurretAimManager extends SubsystemBase {
     inputs.leftTurretAngleDeg = outLeftTurret;
     inputs.leftHoodAngleDeg = result.leftHoodDeg;
     inputs.leftFlywheelRPM = result.leftFlywheelRPM;
-    inputs.verticalFeedRPM = result.verticalFeedRPM;
+    inputs.leftVerticalFeedRPM = result.leftVerticalFeedRPM;
     inputs.rightTurretAngleDeg = outRightTurret;
     inputs.rightHoodAngleDeg = result.rightHoodDeg;
     inputs.rightFlywheelRPM = result.rightFlywheelRPM;
+    inputs.rightVerticalFeedRPM = result.rightVerticalFeedRPM;
 
     inputs.allianceColor = String.valueOf(alliance);
 
@@ -235,7 +217,8 @@ public class TurretAimManager extends SubsystemBase {
     inputs.robotYMeters = pose.getY();
     inputs.robotHeadingDeg = pose.getRotation().getDegrees();
 
-    inputs.distanceToTargetMeters = pose.getTranslation().getDistance(result.target);
+    inputs.leftDistanceToTargetMeters = result.leftDistanceToTargetMeters;
+    inputs.rightDistanceToTargetMeters = result.rightDistanceToTargetMeters;
 
     // Log with AdvantageKit so values appear in AdvantageScope under "TurretAim/"
     Logger.processInputs("TurretAim", inputs);
@@ -245,19 +228,29 @@ public class TurretAimManager extends SubsystemBase {
       Logger.recordOutput("TurretAim/LeftTurretDeg", result.leftTurretDeg);
       Logger.recordOutput("TurretAim/LeftHoodDeg", result.leftHoodDeg);
       Logger.recordOutput("TurretAim/LeftFlywheelRPM", result.leftFlywheelRPM);
-      Logger.recordOutput("TurretAim/VerticalFeedRPM", result.verticalFeedRPM);
+      Logger.recordOutput("TurretAim/LeftVerticalFeedRPM", result.leftVerticalFeedRPM);
       Logger.recordOutput("TurretAim/RightTurretDeg", result.rightTurretDeg);
       Logger.recordOutput("TurretAim/RightHoodDeg", result.rightHoodDeg);
       Logger.recordOutput("TurretAim/RightFlywheelRPM", result.rightFlywheelRPM);
-      Logger.recordOutput("TurretAim/DistToTarget", inputs.distanceToTargetMeters);
+      Logger.recordOutput("TurretAim/RightVerticalFeedRPM", result.rightVerticalFeedRPM);
+      Logger.recordOutput(
+          "TurretAim/VerticalFeedRPM",
+          (result.leftVerticalFeedRPM + result.rightVerticalFeedRPM) / 2.0);
+      Logger.recordOutput("TurretAim/LeftDistToTarget", inputs.leftDistanceToTargetMeters);
+      Logger.recordOutput("TurretAim/RightDistToTarget", inputs.rightDistanceToTargetMeters);
 
       // ---- TOF aim-ahead logging ----
-      Logger.recordOutput("TurretAim/ConvergedTofSeconds", convergedTof);
+      double representativeTof = Math.max(leftConvergedTof, rightConvergedTof);
+      Logger.recordOutput("TurretAim/ConvergedTofSeconds", representativeTof);
+      Logger.recordOutput("TurretAim/LeftConvergedTofSeconds", leftConvergedTof);
+      Logger.recordOutput("TurretAim/RightConvergedTofSeconds", rightConvergedTof);
       Logger.recordOutput("TurretAim/PhaseDelaySeconds", phaseDelay);
       Logger.recordOutput("TurretAim/ReleaseDelaySeconds", releaseDelay);
       Logger.recordOutput("TurretAim/PhaseCorrectedPose", phaseCorrectedPose);
       Logger.recordOutput("TurretAim/ReleasePose", releasePose);
-      Logger.recordOutput("TurretAim/BallisticPose", ballisticPose);
+      Logger.recordOutput("TurretAim/BallisticPose", ballisticPoseLeft);
+      Logger.recordOutput("TurretAim/BallisticPoseLeft", ballisticPoseLeft);
+      Logger.recordOutput("TurretAim/BallisticPoseRight", ballisticPoseRight);
       Logger.recordOutput("TurretAim/FieldVelocityMps", Math.hypot(fieldVx, fieldVy));
       Logger.recordOutput("TurretAim/Home", home);
 
@@ -322,8 +315,20 @@ public class TurretAimManager extends SubsystemBase {
     return inputs.rightFlywheelRPM;
   }
 
+  public double getLeftVerticalFeedRPM() {
+    return inputs.leftVerticalFeedRPM;
+  }
+
+  public double getRightVerticalFeedRPM() {
+    return inputs.rightVerticalFeedRPM;
+  }
+
+  /**
+   * @deprecated Use {@link #getLeftVerticalFeedRPM()} or {@link #getRightVerticalFeedRPM()}.
+   */
+  @Deprecated
   public double getVerticalFeedRPM() {
-    return inputs.verticalFeedRPM;
+    return (inputs.leftVerticalFeedRPM + inputs.rightVerticalFeedRPM) / 2.0;
   }
 
   /** Returns the simulated (lagged) turret angle in degrees, for visualization. */
@@ -347,5 +352,45 @@ public class TurretAimManager extends SubsystemBase {
   /** Returns 'B' or 'R' based on the active alliance used for field logic. */
   private static char getAllianceChar() {
     return Robot.getEffectiveAlliance() == Alliance.Red ? 'R' : 'B';
+  }
+
+  private static double convergeTimeOfFlight(
+      Translation2d shooterField,
+      Translation2d target,
+      boolean home,
+      double fieldVx,
+      double fieldVy) {
+    if (!home) {
+      return 0.0;
+    }
+
+    double tof = 0.0;
+    Translation2d lookaheadShooter = shooterField;
+    double lookaheadDist = lookaheadShooter.getDistance(target);
+
+    for (int i = 0; i < ScorerConstants.kTofIterations; i++) {
+      tof = TurretAimCalculator.estimateTimeOfFlight(lookaheadDist, home);
+      if (tof <= 0.0) {
+        return 0.0;
+      }
+
+      lookaheadShooter =
+          new Translation2d(
+              shooterField.getX() + fieldVx * tof, shooterField.getY() + fieldVy * tof);
+      lookaheadDist = lookaheadShooter.getDistance(target);
+    }
+
+    return tof;
+  }
+
+  private static Pose2d applyBallisticTranslation(
+      Pose2d releasePose, double fieldVx, double fieldVy, double tofSeconds) {
+    if (tofSeconds <= 0.0) {
+      return releasePose;
+    }
+    return new Pose2d(
+        releasePose.getX() + fieldVx * tofSeconds,
+        releasePose.getY() + fieldVy * tofSeconds,
+        releasePose.getRotation());
   }
 }

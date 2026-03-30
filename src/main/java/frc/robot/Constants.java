@@ -117,20 +117,20 @@ public final class Constants {
 
   // #region Vision
   // -------------------------------------------------------------------------
-  // MegaTag 2 Vision Constants — 3× Limelight 4 cameras
+  // MegaTag 2 Vision Constants — 4× Limelight 4 cameras
   // Camera positions are from the Practice Robot Software Design Sheet.
-  // Coordinate system: LL Robot-Space — forward(+X), side(+Y left), up(+Z).
+  // Coordinate system: LL Robot-Space — forward(+X), side(+Y right), up(+Z).
   // All linear values converted from inches to meters.
   // -------------------------------------------------------------------------
   public static final class VisionConstants {
     // Camera hostnames (must match Limelight web UI / network config)
+    public static final String kLimelightFront = "limelight-front";
     public static final String kLimelightRear = "limelight-rear";
     public static final String kLimelightRight = "limelight-right";
     public static final String kLimelightLeft = "limelight-left";
 
-    public static final String[] kCameraNames = {kLimelightRear, kLimelightRight, kLimelightLeft};
-    public static final int[] kSideCameraAllowedTagIds = {
-      1, 3, 4, 6, 9, 10, 17, 19, 20, 22, 25, 26
+    public static final String[] kCameraNames = {
+      kLimelightFront, kLimelightRear, kLimelightRight, kLimelightLeft
     };
 
     // ---- Camera #1  (Rear-facing) ----
@@ -177,11 +177,22 @@ public final class Constants {
     //   1.0 = default trust
     //   >1.0 = trust this camera LESS  (e.g., poor mounting, lower res, frequent occlusion)
     //   <1.0 = trust this camera MORE  (e.g., best-positioned, highest quality)
-    // Order matches kCameraNames: {rear, right, left}
+    // Order matches kCameraNames: {front, rear, right, left}
     public static final double[] kCameraStdDevFactors = {
-      1.0, // Rear   — centered, high mount, good tag visibility
-      1.0, // Right  — side-mount, upside-down, may have slightly noisier results
+      1.0, // Front  — centered, high mount, faces forward
+      1.0, // Rear   — LL 3G, re-enabled for all 4 cameras seeding odometry
+      1.0, // Right  — side-mount
       1.0, // Left   — side-mount, symmetric to right
+    };
+
+    // Tags the Limelights are allowed to track. Pushed via SetFiducialIDFiltersOverride
+    // on boot.  Tags NOT in this list are completely ignored at the hardware level —
+    // they never enter the MT1/MT2 solve.
+    // Excluded: 1, 6, 7, 12 (red coral stations / unreliable)
+    //           17, 22, 23, 28 (blue coral stations / unreliable)
+    public static final int[] kValidTagIds = {
+      2, 3, 4, 5, 8, 9, 10, 11, // 13, 14, //15, 16,
+      18, 19, 20, 21, 24, 25, 26, 27 // , //29, 30, 31, 32
     };
 
     // ---- Filtering thresholds ----
@@ -243,12 +254,12 @@ public final class Constants {
     // MegaTag 2 multiplier — applied during enabled mode (auto / teleop).
     // Scales the XY stddevs fed to addVisionMeasurement().
     // Increase to reduce jitter (less trust in vision, smoother pose).
-    public static double kMT2StdDevMultiplier = 10.0;
+    public static double kMT2StdDevMultiplier = 0.05;
 
     // MegaTag 1 multiplier — applied during disabled pre-match refinement.
     // Scales both XY and yaw stddevs in the addVisionMeasurement() path.
     // Does NOT affect the initial setPose() hard reset (that ignores stddevs).
-    public static double kMT1StdDevMultiplier = 10.0;
+    public static double kMT1StdDevMultiplier = 5.0;
 
     // ---- Pre-match pose seeding (while disabled, using MegaTag 1) ----
     // While disabled the cameras run throttled but still produce MegaTag 1
@@ -277,6 +288,12 @@ public final class Constants {
     // by kMT1StdDevMultiplier and barely nudge the estimate.
     public static final double kPreMatchMaxYawStdDevDeg = 50.0;
 
+    // Maximum yaw std dev (degrees) required to seed the Pigeon2 heading from
+    // MT1 while disabled.  Much tighter than kPreMatchMaxYawStdDevDeg —
+    // we only touch the gyro when MT1 is very confident about rotation.
+    // Typical multi-tag MT1 yaw stddev is ~0.5–2° when close to the tags.
+    public static final double kGyroSeedMaxYawStdDevDeg = 3.0;
+
     // Limelight frame throttle while disabled. Higher values skip more frames
     // to reduce thermals during long disabled periods.
     // 0 = process every frame.  LL4 handles heat fine for pre-match.
@@ -299,6 +316,7 @@ public final class Constants {
     // the seed to continue counting as stable.
     public static final double kPreMatchStableSeedYawDeltaDeg = 2.0;
   }
+
   // #endregion
 
   // #region Sim Physics
@@ -368,6 +386,7 @@ public final class Constants {
     // Prevents the simulated turret from slewing unrealistically fast.
     public static double kTurretSimMaxVelocityDegPerSec = 360.0;
   }
+
   // #endregion
 
   // #region Drive Command Tuning
@@ -391,13 +410,13 @@ public final class Constants {
 
     // Maximum measured yaw rate (rad/s) allowed before heading hold can engage in joystickDrive().
     // If robot rotates faster than this, hold setpoint tracks current heading instead of locking.
-    public static final double kHoldEngageMaxRateRadPerSec = Units.degreesToRadians(90.0);
+    public static final double kHoldEngageMaxRateRadPerSec = Units.degreesToRadians(15.0);
 
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
     public static final double kAngleHoldKp =
-        3.0; // was 5.0. PDC put it to 3 on 3-18 before practice
-    public static final double kAngleHoldKd = 0.4;
+        1.0; // was 5.0. PDC put it to 3 on 3-18 before practice
+    public static final double kAngleHoldKd = 0.0;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
     public static final double kAngleProfileMaxVelocityRadPerSec = 12.0;
@@ -431,32 +450,34 @@ public final class Constants {
 
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
-    public static double kNormalMaxLinearSpeedMps = 6.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 10.0;
-    public static double kNormalMaxLinearAccelMetersPerSec2 = 12.0;
+    public static double kNormalMaxLinearSpeedMps = 4.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 2.0;
+    public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
-    public static double kNormalMaxAngularDecelRadPerSec2 = 45.0;
+    public static double kNormalMaxAngularDecelRadPerSec2 = 60.0;
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
-    public static double kHomeScoringMaxLinearSpeedMps = 2.8;
-    public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
+    public static double kHomeScoringMaxLinearSpeedMps = 2.5;
+    public static double kHomeScoringMaxAngularSpeedRadPerSec = 1.0;
     public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
-    public static double kHomeScoringMaxAngularAccelRadPerSec2 = 6.0;
+    public static double kHomeScoringMaxAngularAccelRadPerSec2 = 30.0;
     public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
     public static double kHomeScoringMaxAngularDecelRadPerSec2 = 45.0;
   }
+
   // #endregion
 
   // #region Scorer Subsystems
   public static final class ScorerConstants {
-    public static final double kWaitTime = 0.5; // seconds after flywheels are up to speed
+    public static final double kWaitTime = 0.5; // seconds before teleop feed engages
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kShootRPM = 5700.0;
-    public static double kReverseShootRPM = -5700.0;
+    public static double kShootRPM = 5400.0;
+    public static double kReverseShootRPM = -5400.0;
+
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */
-    public static final double kFlywheelRPMTolerance = 200.0;
+    public static final double kFlywheelRPMTolerance = 50.0;
 
     public static final double kHoodDegreesTolerance = 1.5;
 
@@ -482,12 +503,21 @@ public final class Constants {
     public static final double kTurretMomentOfInertia = 0.01; // kg*m^2 (estimate for tuning)
 
     public static double kTurretOffsetDegrees = 0.0;
-    public static double kLeftTurretOffset = 0.0;
-    public static double kRightTurretOffset = 0.0;
+
+    public static double kOverrideRobotLockOnToleranceDeg = 3.0;
 
     // Lock-on tolerance — the turret must be within this many degrees of the
     // commanded angle before the feeders are allowed to run (snowblow/shoot).
     public static final double kTurretLockOnToleranceDeg = 60.0;
+
+    // ---- Turret-lock tag-based aiming ----
+    // AprilTag IDs the turret lock is allowed to track, per alliance.
+    public static final int[] kTurretLockRedTagIds = {5, 10, 2};
+    public static final int[] kTurretLockBlueTagIds = {18, 21, 26};
+    // Height of the turret-lock target tags above the carpet (meters).
+    public static double kTurretLockTagHeightMeters = Units.inchesToMeters(72.0);
+    // Distance from the tag face to the hub center (meters).
+    public static double kTurretLockTagToHubCenterOffsetMeters = 1.0;
 
     // Turret command deadband — if the new aim command is within this many
     // degrees of the previous command, hold the previous value.  Prevents the
@@ -556,56 +586,56 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds, verticalFeedRPM }
-      {1.219, 5.0, 3350, 1.5, 1000.0},
-      {1.524, 5.6, 3450, 1.5, 1200.0},
-      {1.829, 6.7, 3500.0, 1.5, 1500.0},
-      {2.134, 7.8, 3750.0, 1.5, 3000.0},
-      {2.438, 8.9, 3800.0, 1.5, 3000.0},
-      {2.743, 10.0, 3850.0, 1.5, 3000.0},
-      {3.048, 11.0, 3900.0, 1.5, 4000.0},
-      {3.353, 12.1, 4000.0, 1.5, 4000.0},
-      {3.658, 13.2, 4050.0, 1.5, 4000.0},
-      {3.962, 14.2, 4200.0, 1.5, 4000.0},
-      {4.267, 15.3, 4300.0, 1.5, 4000.0},
-      {4.572, 16.3, 4600.0, 1.5, 4000.0},
-      {4.877, 17.3, 4650.0, 1.5, 4000.0},
-      {5.182, 18.3, 4700.0, 1.5, 4000.0},
-      {5.486, 19.3, 4800.0, 1.5, 4000.0},
-      {5.791, 20.3, 4900.0, 1.5, 4000.0},
-      {6.096, 21.3, 5000.0, 1.5, 4000.0},
-      {6.401, 22.3, 5100.0, 1.5, 4000.0},
-      {6.706, 23.2, 5200.0, 1.5, 4000.0},
-      {7.010, 24.2, 5300.0, 1.5, 4000.0},
-      {7.315, 25.1, 5400.0, 1.5, 4000.0},
-      {7.620, 26.0, 5500.0, 1.5, 4000.0},
-      {7.925, 26.9, 5600.0, 1.5, 4000.0},
-      {8.230, 27.8, 5700.0, 1.5, 4000.0},
-      {8.534, 28.6, 5800.0, 1.5, 4000.0},
-      {8.839, 29.5, 5900.0, 1.5, 4000.0},
-      {9.144, 30.3, 6000.0, 1.5, 4000.0},
-      {9.449, 31.2, 6100.0, 1.5, 4000.0},
-      {9.754, 32.0, 6200.0, 1.5, 4000.0},
-      {10.058, 32.8, 6300.0, 1.5, 4000.0},
-      {10.363, 33.6, 6400.0, 1.5, 4000.0},
-      {10.668, 34.3, 6500.0, 1.5, 4000.0},
-      {10.973, 35.0, 6600.0, 1.5, 4000.0},
-      {11.278, 35.0, 6700.0, 1.5, 4000.0},
-      {11.582, 35.0, 6800.0, 1.5, 4000.0},
-      {11.887, 35.0, 6900.0, 1.5, 4000.0},
-      {12.192, 35.0, 7000.0, 1.5, 4000.0},
-      {12.497, 35.0, 7100.0, 1.5, 4000.0},
-      {12.802, 35.0, 7200.0, 1.5, 4000.0},
-      {13.106, 35.0, 7300.0, 1.6, 4000.0},
-      {13.411, 35.0, 7400.0, 1.7, 4000.0},
-      {13.716, 35.0, 7500.0, 1.8, 4000.0},
-      {14.021, 35.0, 7600.0, 1.9, 4000.0},
-      {14.326, 35.0, 7700.0, 2.0, 4000.0},
-      {14.630, 35.0, 7800.0, 2.1, 4000.0},
-      {14.935, 35.0, 7900.0, 2.2, 4000.0},
-      {15.240, 35.0, 8000.0, 2.3, 4000.0},
-      {15.545, 35.0, 8100.0, 2.4, 4000.0},
-      {15.850, 35.0, 8200.0, 2.5, 4000.0},
-      {16.154, 35.0, 8300.0, 2.6, 4000.0},
+      {1.219, 6.5, 3700, 1.4, 3000.0},
+      {1.524, 8.1, 3754, 1.4, 3000.0},
+      {1.829, 9.7, 3769.0, 1.4, 3000.0},
+      {2.134, 11.3, 3787.0, 1.4, 3000.0},
+      {2.438, 12.9, 3807.0, 1.4, 3000.0},
+      {2.743, 14.4, 3830.0, 1.4, 3000.0},
+      {3.048, 15.9, 3900.0, 1.4, 3000.0},
+      {3.353, 17.4, 4000.0, 1.4, 3000.0},
+      {3.658, 18.9, 4100.0, 1.4, 3000.0},
+      {3.962, 20.3, 4200.0, 1.4, 3000.0},
+      {4.267, 21.8, 4300.0, 1.4, 3000.0},
+      {4.572, 23.2, 4400.0, 1.4, 3000.0},
+      {4.877, 24.5, 4700.0, 1.4, 3000.0},
+      {5.182, 25.9, 4800.0, 1.4, 3000.0},
+      {5.486, 27.2, 4900.0, 1.4, 3000.0},
+      {5.791, 28.5, 5000.0, 1.4, 3000.0},
+      {6.096, 29.7, 5000.0, 1.4, 3000.0},
+      {6.401, 30.9, 5000.0, 1.4, 3000.0},
+      {6.706, 32.1, 5100.0, 1.4, 3000.0},
+      {7.010, 33.3, 5200.0, 1.4, 3000.0},
+      {7.315, 34.4, 5300.0, 1.4, 3000.0},
+      {7.620, 35.0, 5400.0, 1.4, 3000.0},
+      {7.925, 35.0, 5400.0, 1.4, 3000.0},
+      {8.230, 35.0, 5400.0, 1.4, 3000.0},
+      {8.534, 35.0, 5400.0, 1.5, 3000.0},
+      {8.839, 35.0, 5400.0, 1.5, 3000.0},
+      {9.144, 35.0, 5400.0, 1.5, 3000.0},
+      {9.449, 35.0, 5400.0, 1.5, 3000.0},
+      {9.754, 35.0, 5400.0, 1.6, 3000.0},
+      {10.058, 35.0, 5400.0, 1.6, 3000.0},
+      {10.363, 35.0, 5400.0, 1.6, 3000.0},
+      {10.668, 35.0, 5400.0, 1.7, 3000.0},
+      {10.973, 35.0, 5400.0, 1.7, 3000.0},
+      {11.278, 35.0, 5400.0, 1.7, 3000.0},
+      {11.582, 35.0, 5400.0, 1.7, 3000.0},
+      {11.887, 35.0, 5400.0, 1.8, 3000.0},
+      {12.192, 35.0, 5400.0, 1.8, 3000.0},
+      {12.497, 35.0, 5400.0, 1.8, 3000.0},
+      {12.802, 35.0, 5400.0, 1.9, 3000.0},
+      {13.106, 35.0, 5400.0, 1.9, 3000.0},
+      {13.411, 35.0, 5400.0, 1.9, 3000.0},
+      {13.716, 35.0, 5400.0, 1.9, 3000.0},
+      // {14.021, 35.0, 7600.0, 1.9, 2000.0},
+      // {14.326, 35.0, 7700.0, 2.0, 2000.0},
+      // {14.630, 35.0, 7800.0, 2.1, 2000.0},
+      // {14.935, 35.0, 7900.0, 2.2, 2000.0},
+      // {15.240, 35.0, 8000.0, 2.3, 2000.0},
+      // {15.545, 35.0, 8100.0, 2.4, 2000.0},
+      // {15.850, 35.0, 8200.0, 2.5, 2000.0},
+      // {16.154, 35.0, 8300.0, 2.6, 2000.0},
     };
 
     // Default feeder speed when stowing (turret idle / trench zone).
@@ -639,7 +669,9 @@ public final class Constants {
     kLeftHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightHoodConfig = new ServoMotorSubsystemConfig();
@@ -667,7 +699,9 @@ public final class Constants {
     kRightHoodConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightHoodConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightHoodConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kLeftTurretConfig = new ServoMotorSubsystemConfig();
@@ -698,7 +732,9 @@ public final class Constants {
     kLeftTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightTurretConfig =
@@ -728,7 +764,9 @@ public final class Constants {
     kRightTurretConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kRightTurretConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightTurretConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kLeftFlywheelConfig =
@@ -738,16 +776,18 @@ public final class Constants {
     kLeftFlywheelConfig.name = "Left Flywheel";
     kLeftFlywheelConfig.talonCANID = new CANDeviceId(24, CanBusNames.superstructureFor(24));
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
-    kLeftFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
+    kLeftFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kLeftFlywheelConfig.fxConfig.Slot0.kP = 0.75;
-    kLeftFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.125;
+    kLeftFlywheelConfig.fxConfig.Slot0.kP = 11.0;
+    kLeftFlywheelConfig.fxConfig.Slot0.kS = 6.5;
+    kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
     kLeftFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   public static final ServoMotorSubsystemConfig kRightFlywheelConfig =
@@ -757,16 +797,18 @@ public final class Constants {
     kRightFlywheelConfig.name = "Right Flywheel";
     kRightFlywheelConfig.talonCANID = new CANDeviceId(29, CanBusNames.superstructureFor(29));
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
-    kRightFlywheelConfig.unitToRotorRatio = (24.0 / 18.0) * 60; // gear ratio * 60 for RPM to RPS
+    kRightFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kRightFlywheelConfig.fxConfig.Slot0.kP = 0.7;
-    kRightFlywheelConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.125;
+    kRightFlywheelConfig.fxConfig.Slot0.kP = 11.0;
+    kRightFlywheelConfig.fxConfig.Slot0.kS = 6.5;
+    kRightFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
     kRightFlywheelConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #endregion
@@ -775,7 +817,7 @@ public final class Constants {
   public static final class IntakeConstants {
 
     public static final double kIntakePivotStowedDegrees = 0.0; // degrees
-    public static final double kIntakePivotDeployDegrees = 160.0;
+    public static final double kIntakePivotDeployDegrees = 125.0;
     public static final double kHeadButtDegrees = 100.0;
 
     public static final double kIntakeDutyCycleIntake = 1.0;
@@ -815,7 +857,9 @@ public final class Constants {
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
   }
@@ -850,10 +894,7 @@ public final class Constants {
 
     // Units = degrees
     kIntakePivotConfig.unitToRotorRatio =
-        kIsPracticeBot
-            ? (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0
-            : // per design sheet, convert rotations to degrees
-            (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0 * 1.8125; // bravo
+        (12.0 / 32.0) * (18.0 / 36.0) * (16.0 / 40.0) * (12.0 / 18.0) * 360.0;
 
     // Position limits in degrees — design sheet: 0 → 145 degrees
     kIntakePivotConfig.kMaxPositionUnits = 160.0; // degrees (fully deployed)
@@ -869,6 +910,8 @@ public final class Constants {
     kIntakePivotConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakePivotConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0; // Per design sheet
+    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    kIntakePivotConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #endregion
@@ -893,7 +936,7 @@ public final class Constants {
         kFloorRollerReverseRPM / 60.0; // RPS while reversing = -8.33 RPS
     // Vertical Feed Roller speeds (Velocity Voltage Control)
     // Output Top Speed = 83.33 RPS (5000 RPM) from design sheet
-    public static double kVerticalFeedIntakeRPM = 4000.0; // RPM at output
+    public static double kVerticalFeedIntakeRPM = 2000.0; // RPM at output
     public static double kVerticalFeedOuttakeRPM = -2000.0; // RPM at output (reverse)
 
     public static double kVerticalFeedCollectRPM = -300.0; // RPM while collecting
@@ -911,14 +954,14 @@ public final class Constants {
     kRightFloorRollerConfig.name = "RightFloorRoller";
     kRightFloorRollerConfig.talonCANID = new CANDeviceId(25, CanBusNames.superstructureFor(25));
     kRightFloorRollerConfig.momentOfInertia = 0.00132536;
-    kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
+    kRightFloorRollerConfig.unitToRotorRatio = (12.0 / 20.0) * 60; // gear ratio 1.66667:1
 
     // Velocity PID gains - SIGNIFICANTLY INCREASED for better response
     // Phoenix Tuner confirmed velocity control works at these higher gains
-    kRightFloorRollerConfig.fxConfig.Slot0.kP = 0.5; // Increased from 0.5
+    kRightFloorRollerConfig.fxConfig.Slot0.kP = 4.0; // Increased from 0.5
     kRightFloorRollerConfig.fxConfig.Slot0.kI = 0.0;
     kRightFloorRollerConfig.fxConfig.Slot0.kD = 0.0;
-    kRightFloorRollerConfig.fxConfig.Slot0.kS = 0.02; // Increased from 0.02 - overcome friction
+    kRightFloorRollerConfig.fxConfig.Slot0.kS = 7.5; // Increased from 0.02 - overcome friction
     kRightFloorRollerConfig.fxConfig.Slot0.kV = 0.1; // Increased from 0.1 - velocity feedforward
     kRightFloorRollerConfig.fxConfig.Slot0.kA = 0.0;
 
@@ -926,7 +969,9 @@ public final class Constants {
 
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Left Floor Roller (CAN 20, CANivore #2) ----
@@ -938,17 +983,19 @@ public final class Constants {
     kLeftFloorRollerConfig.name = "LeftFloorRoller";
     kLeftFloorRollerConfig.talonCANID = new CANDeviceId(20, CanBusNames.superstructureFor(20));
     kLeftFloorRollerConfig.momentOfInertia = 0.00132536;
-    kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 120.0) * 60; // gear ratio 1.66667:1
+    kLeftFloorRollerConfig.unitToRotorRatio = (12.0 / 20.0) * 60; // gear ratio 1.66667:1
 
-    kLeftFloorRollerConfig.fxConfig.Slot0.kP = 0.5;
-    kLeftFloorRollerConfig.fxConfig.Slot0.kS = 0.02;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kP = 4.0;
+    kLeftFloorRollerConfig.fxConfig.Slot0.kS = 7.5;
     kLeftFloorRollerConfig.fxConfig.Slot0.kV = 0.1;
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Right Vertical Feed Roller (CAN 26, CANivore #2) ----
@@ -962,14 +1009,17 @@ public final class Constants {
     kRightVerticalFeedConfig.momentOfInertia = 0.00132536;
     kRightVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
+    // These constants are for VelocityTorqueCurrentFOC
+    kRightVerticalFeedConfig.fxConfig.Slot0.kP = 4.0;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kS = 6.1;
+    kRightVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
     kRightVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     kRightVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kRightVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // ---- Left Vertical Feed Roller (CAN 21, CANivore #2) ----
@@ -983,14 +1033,16 @@ public final class Constants {
     kLeftVerticalFeedConfig.momentOfInertia = 0.00132536;
     kLeftVerticalFeedConfig.unitToRotorRatio = (12.0 / 18.0) * 60; // gear ratio 1.5:1
 
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 0.5;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 0.0915;
-    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.144;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kP = 4.0;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kS = 6.1;
+    kLeftVerticalFeedConfig.fxConfig.Slot0.kV = 0.1;
 
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     kLeftVerticalFeedConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kLeftVerticalFeedConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
   // #region Roof Subsystem
@@ -1038,6 +1090,7 @@ public final class Constants {
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRoofConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 40.0;
   }
+
   // #endregion
 
   // #endregion
@@ -1059,7 +1112,7 @@ public final class Constants {
       return Bot.COMP;
     }
 
-    return Bot.PRACTICE;
+    return Bot.COMP;
   }
 
   public static boolean hasMacAddress(final String macAddress) {

@@ -14,12 +14,12 @@ import frc.robot.RobotContainer;
  */
 public class Forward2m extends AutonCommandBase {
   private static final double kTargetDistanceMeters = 2.0;
-  private static final double kForwardSpeedMetersPerSecond = 5.0;
+  private static final double kForwardSpeedMetersPerSecond = 1.0;
   private static final double kDistanceToleranceMeters = 0.05;
-  private static final double kTimeoutSeconds = 4.0;
+  private static final double kTimeoutSeconds = 10.0;
 
   public Forward2m(RobotContainer robotContainer) {
-    super(robotContainer, (Rotation2d) null);
+    super(robotContainer, (Pose2d) null);
 
     var drive = robotContainer.getDrive();
     Translation2d[] startTranslation = new Translation2d[] {Translation2d.kZero};

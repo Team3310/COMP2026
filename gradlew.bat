@@ -33,8 +33,8 @@ set APP_HOME=%DIRNAME%
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
-@rem Use a repo-local Gradle cache in sandboxed environments unless explicitly set.
-if not defined GRADLE_USER_HOME set GRADLE_USER_HOME=%APP_HOME%\.gradle-user-home
+@rem Use the standard per-user Gradle cache unless explicitly overridden.
+if not defined GRADLE_USER_HOME if defined USERPROFILE set GRADLE_USER_HOME=%USERPROFILE%\.gradle
 
 @rem Default to WPILib JDK when JAVA_HOME is not already configured.
 if not defined JAVA_HOME set JAVA_HOME=C:\Users\Public\wpilib\2026\jdk

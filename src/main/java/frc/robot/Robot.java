@@ -8,7 +8,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
@@ -16,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.lib.limelight.LimelightHelpers;
 import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
@@ -71,6 +71,7 @@ public class Robot extends LoggedRobot {
   public static OverrideState overrideState = OverrideState.OFF;
   public static boolean stateRefreshRequested = false;
   public static boolean crossOverrideActive = false;
+
   public static boolean deploying = false;
   public static boolean retracting = false;
   public static boolean activeHub = true;
@@ -107,8 +108,8 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL:
-        // Running on a real robot, log to a USB stick ("/U/logs")
-        Logger.addDataReceiver(new WPILOGWriter());
+        // Running on a real robot, log to the roboRIO internal storage.
+        Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs"));
         Logger.addDataReceiver(new NT4Publisher());
         break;
 
@@ -137,10 +138,6 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
-    // Optionally switch the thread to high priority to improve loop
-    // timing (see the template project documentation for details)
-    // Threads.setCurrentThreadPriority(true, 99);
-
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
     // finished or interrupted commands, and running subsystem periodic() methods.
@@ -160,11 +157,6 @@ public class Robot extends LoggedRobot {
     double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
 
     updateZone();
-
-    // activeHub is still updated here because the broader robot state machine
-    // still references it, but teleop drive slowdown no longer depends on
-    // FMS/hub state.
-    updateHub();
 
     // This basically says if we are not deploying or retracting, then we can change
     // states.
@@ -279,16 +271,11 @@ public class Robot extends LoggedRobot {
               "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
       Constants.ScorerConstants.kTurretOffsetDegrees =
           SmartDashboard.getNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
-      Constants.ScorerConstants.kLeftTurretOffset =
-          SmartDashboard.getNumber(
-              "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-      Constants.ScorerConstants.kRightTurretOffset =
-          SmartDashboard.getNumber(
-              "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
     }
 
     if (dashboardWriteCounter++ % DASHBOARD_READ_INTERVAL == 0) {
       SmartDashboard.putBoolean("inPit", inPit);
+      SmartDashboard.putBoolean("ShootButtonHeld", shootButtonHeld);
       SmartDashboard.putBoolean("PitMode/Active", inPit);
       SmartDashboard.putString("PitMode/Status", inPit ? "IN PIT" : "NORMAL");
       SmartDashboard.putString("currentState", "" + currentState);
@@ -304,6 +291,10 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("matchTime", DriverStation.getMatchTime());
       SmartDashboard.putBoolean("normalFlywheels", robotContainer.normalFlywheelsEnabled);
       SmartDashboard.putBoolean("pitFlywheels", robotContainer.pitFlywheelsEnabled);
+
+      SmartDashboard.putBoolean("trenchCheckActive", AutonCommandBase.trenchCheckActive);
+      SmartDashboard.putBoolean("spinUp", AutonCommandBase.spinUp);
+      SmartDashboard.putBoolean("setShoot", AutonCommandBase.setShoot);
 
       // Per-subsystem supply current (amps)
       double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
@@ -365,9 +356,6 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putNumber("Current/TotalDrivetrain_A", totalDriveCurrent);
       SmartDashboard.putNumber("Current/TotalRobot_A", totalMotorCurrent + totalDriveCurrent);
     }
-
-    // Return to non-RT thread priority (do not modify the first argument)
-    // Threads.setCurrentThreadPriority(false, 10);
   }
 
   /** This function is called once when the robot is disabled. */
@@ -397,22 +385,24 @@ public class Robot extends LoggedRobot {
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
-    robotContainer.getVision().setVisionEnabled(!selectedAuto.disablesVisionSeeding());
+    robotContainer.getVision().setVisionEnabled(false);
 
     // Use the pre-built command from disabledPeriodic, or build now as fallback.
     AutonCommandBase autoCommand =
         (cachedAutoMode == selectedAuto && cachedAutoCommand != null)
             ? cachedAutoCommand
             : selectedAuto.getCommand();
-    Rotation2d startingRotation = autoCommand.getStartingRotation();
-    if (startingRotation != null) {
-      Pose2d seededPose =
-          new Pose2d(robotContainer.getDrive().getPose().getTranslation(), startingRotation);
-      robotContainer.getDrive().setPose(seededPose);
+    Pose2d startingPose = autoCommand.getStartingPose();
+    if (startingPose != null) {
+      // Always override rotation with the auto path's starting heading.
+      // If MT1 already seeded XY pre-match, keep that translation but
+      // replace the heading so MT2's gyro prior is exactly what the path
+      // expects.  If MT1 never seeded, use the full starting pose.
+      robotContainer.getDrive().setPose(startingPose);
 
-      // Push the same heading to every Limelight so MegaTag 2's IMU is
+      // Push the auto heading to every Limelight so MegaTag 2's IMU is
       // correctly seeded at the moment auto begins.
-      double yawDeg = startingRotation.getDegrees();
+      double yawDeg = startingPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
         LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
@@ -434,13 +424,13 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    robotContainer.getVision().setVisionEnabled(true);
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-    robotContainer.getVision().setVisionEnabled(true);
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
@@ -480,79 +470,6 @@ public class Robot extends LoggedRobot {
       currentZone = Zone.MID;
     } else {
       currentZone = Zone.RED;
-    }
-  }
-
-  public void updateHub() {
-    // If manually overridden OFF via SmartDashboard button, skip automatic
-    // calculation
-    if (hubOverride) {
-      activeHub = false;
-      return;
-    }
-
-    // Hub is always enabled in autonomous.
-    if (DriverStation.isAutonomousEnabled()) {
-      activeHub = true;
-      return;
-    }
-    // At this point, if we're not teleop enabled, there is no hub.
-    if (!DriverStation.isTeleopEnabled()) {
-      return;
-    }
-
-    // We're teleop enabled, compute.
-    double matchTime = DriverStation.getMatchTime();
-    String gameData = DriverStation.getGameSpecificMessage();
-    // If we have no game data, we cannot compute, assume hub is active, as its
-    // likely early in
-    // teleop.
-    if (matchTime < 0 && (gameData == null || gameData.isEmpty())) {
-      activeHub = true;
-      return;
-    }
-    boolean redInactiveFirst = false;
-    switch (gameData.charAt(0)) {
-      case 'R' -> redInactiveFirst = true;
-      case 'B' -> redInactiveFirst = false;
-      default -> {
-        // If we have invalid game data, assume hub is active.
-        activeHub = true;
-        return;
-      }
-    }
-
-    // Shift was is active for blue if red won auto, or red if blue won auto.
-    boolean shift1Active =
-        switch (currentAlliance) {
-          case Red -> !redInactiveFirst;
-          case Blue -> redInactiveFirst;
-        };
-
-    if (matchTime > 130) {
-      // Transition shift, hub is active.
-      activeHub = true;
-      return;
-    } else if (matchTime > 105) {
-      // Shift 1
-      activeHub = shift1Active;
-      return;
-    } else if (matchTime > 80) {
-      // Shift 2
-      activeHub = !shift1Active;
-      return;
-    } else if (matchTime > 55) {
-      // Shift 3
-      activeHub = shift1Active;
-      return;
-    } else if (matchTime > 30) {
-      // Shift 4
-      activeHub = !shift1Active;
-      return;
-    } else {
-      // End game, hub always active.
-      activeHub = true;
-      return;
     }
   }
 
@@ -598,7 +515,7 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
         CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
       }
-    } else if (currentState == BotState.SNOWBLOW) {
+    } else if (currentState == BotState.SNOWBLOW && !shootButtonHeld) {
       double leftTargetRpm = robotContainer.getTurretAimManager().getLeftFlywheelRPM();
       double rightTargetRpm = robotContainer.getTurretAimManager().getRightFlywheelRPM();
       CommandScheduler.getInstance()
@@ -649,10 +566,10 @@ public class Robot extends LoggedRobot {
         defenseOut();
         break;
       case DEPLOY:
-        deploy();
+        CommandScheduler.getInstance().schedule(deploy());
         break;
       case RETRACT:
-        retract();
+        CommandScheduler.getInstance().schedule(retract());
         break;
       case PIT:
         // In pit mode, manual controls drive behavior.
@@ -663,37 +580,22 @@ public class Robot extends LoggedRobot {
   private void snowblow() {
 
     // Deploy intake to snowblow, and run motors to snowblow.
-    deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMinHeightCommand());
+    CommandScheduler.getInstance().schedule(deploy(true));
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
-    // Gate agitators and vertical feeds on turret position — off while the turret flips.
-    java.util.function.DoubleSupplier feedRpm =
-        robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    java.util.function.DoubleSupplier leftFeedRpm =
+        robotContainer.getTurretAimManager()::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightFeedRpm =
+        robotContainer.getTurretAimManager()::getRightVerticalFeedRPM;
     snowblowGateCommand =
-        Commands.run(
-                () -> {
-                  if (robotContainer.isTurretOnTarget()) {
-                    CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedLeft().customVelocityCommand(feedRpm));
-                    CommandScheduler.getInstance()
-                        .schedule(
-                            robotContainer.getVerticalFeedRight().customVelocityCommand(feedRpm));
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().snowblowCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().snowblowCommand());
-                  } else {
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedLeft().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getVerticalFeedRight().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorLeft().offCommand());
-                    CommandScheduler.getInstance()
-                        .schedule(robotContainer.getAgitatorRight().offCommand());
-                  }
-                })
+        new WaitCommand(Constants.ScorerConstants.kWaitTime)
+            .andThen(
+                Commands.parallel(
+                    robotContainer.getAgitatorLeft().snowblowCommand(),
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct command commented out so follower mode is not overridden.
+                    // robotContainer.getAgitatorRight().snowblowCommand(),
+                    robotContainer.getVerticalFeedLeft().setRPMCommand(leftFeedRpm),
+                    robotContainer.getVerticalFeedRight().setRPMCommand(rightFeedRpm)))
             .ignoringDisable(false);
     CommandScheduler.getInstance().schedule(snowblowGateCommand);
   }
@@ -701,10 +603,14 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    deploy();
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    CommandScheduler.getInstance().schedule(deploy(false));
+    // Only kill flywheels during teleop — in autonomous, flywheelsOn() is
+    // running in parallel and must not be cancelled.  The auton shoot
+    // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
+    if (DriverStation.isTeleop()) {
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    }
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
@@ -715,18 +621,13 @@ public class Robot extends LoggedRobot {
   private void defenseIn() {
 
     // Raise the roof before retracting the intake to avoid mechanism interference.
-    CommandScheduler.getInstance()
-        .schedule(
-            robotContainer
-                .getRoof()
-                .motionMagicSetpointCommandBlocking(
-                    () -> Constants.RoofConstants.kRoofMaxHeightInches, 0.25)
-                .andThen(Commands.runOnce(this::retract)));
+    CommandScheduler.getInstance().schedule(retract());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
+    // Right floor roller now follows the left floor roller.
+    // Keep the old direct off command commented out so follower mode is not overridden.
+    // CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getTurretLeft().setDegreesCommand(0.0));
@@ -744,30 +645,46 @@ public class Robot extends LoggedRobot {
   }
 
   private void defenseOut() {
-    deploy();
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
-    CommandScheduler.getInstance().schedule(robotContainer.getRoof().setMaxHeightCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
+    // Right floor roller now follows the left floor roller.
+    // Keep the old direct off command commented out so follower mode is not overridden.
+    // CommandScheduler.getInstance().schedule(robotContainer.getAgitatorRight().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedLeft().offCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getVerticalFeedRight().offCommand());
+    CommandScheduler.getInstance().schedule(deploy(false));
   }
 
-  private void deploy() {
-    if (robotContainer.getIntakePivot().getCurrentPosition() < 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().deployCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().deployCommand());
-    }
+  private Command deploy() {
+    return deploy(false);
   }
 
-  private void retract() {
-    if (robotContainer.getIntakePivot().getCurrentPosition() > 40.0) {
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakePivot().retractCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().retractCommand());
-    }
+  private Command deploy(boolean keepRollersOnAfter) {
+    Command pivotMotion =
+        Commands.deadline(
+            robotContainer
+                .getIntakePivot()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 2.0),
+            robotContainer.getIntakeRollers().deployCommand());
+    return keepRollersOnAfter
+        ? pivotMotion
+        : pivotMotion.andThen(robotContainer.getIntakeRollers().offCommand());
+  }
+
+  private Command retract() {
+    // Handles both pivot motion and roller sequencing, so callers shouldn't
+    // re-command the intake rollers separately (that would interrupt the motion).
+    Command retractMotion =
+        Commands.deadline(
+            robotContainer
+                .getIntakePivot()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotStowedDegrees, 2.0),
+            robotContainer.getIntakeRollers().retractCommand());
+    return retractMotion.andThen(robotContainer.getIntakeRollers().offCommand());
   }
 
   // #endregion

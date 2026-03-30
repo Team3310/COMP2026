@@ -2,7 +2,9 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.limelight.LimelightHelpers;
@@ -17,33 +19,31 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Vision subsystem using 3× Limelight 4 cameras with a two-phase MegaTag strategy:
+ * Vision subsystem using 4× Limelight 4 cameras with a two-phase MegaTag strategy:
  *
- * <h3>Phase 1 — Disabled (pre-match): MegaTag 1</h3>
+ * <h3>Phase 1 — Disabled (pre-match): MegaTag 1 + IMU Mode 0</h3>
  *
- * <p>While the robot is disabled, cameras run throttled (~0.6 fps) and produce <b>MegaTag 1</b>
- * estimates (full 6-DOF including rotation). This lets the robot determine its field position
- * <b>and heading</b> without manual gyro alignment. The first high-confidence multi-tag result
- * hard-resets the pose estimator (via {@link Drive#setPose}), which also sets the Pigeon2 gyro
- * offset. Subsequent MT1 results refine the estimate. The corrected heading is continuously pushed
- * to the Limelight IMUs via {@code SetRobotOrientation()} so they are seeded with the correct
- * heading by the time the match starts.
+ * <p>While the robot is disabled, cameras run in <b>IMU Mode 0 (External Only)</b> — the LL ignores
+ * its internal IMU and uses exactly the heading from {@code SetRobotOrientation()}. MT1 (full
+ * 6-DOF) estimates are filtered for high yaw confidence and used to hard-reset the pose estimator
+ * via {@link Drive#setPose}, which also sets the Pigeon2 offset. On each seed, the corrected
+ * heading is immediately broadcast to all cameras so every MT2 solve reflects the true field
+ * heading.
  *
- * <h3>Phase 2 — Enabled (auto / teleop): MegaTag 2</h3>
+ * <h3>Phase 2 — Enabled (auto / teleop): MegaTag 2 + IMU Mode 0</h3>
  *
- * <p>Once enabled, the system switches to <b>MegaTag 2</b> which uses the now-correct gyro heading
- * to constrain its solve (XY only). The LL4's internal 1 kHz IMU (seeded during Phase 1) tracks
- * orientation between the 50 Hz robot-code updates for frame-accurate rotation.
+ * <p>Once enabled, cameras remain in <b>IMU Mode 0 (External Only)</b>. The raw Pigeon2 heading is
+ * pushed to all cameras every cycle at 50 Hz via {@code SetRobotOrientation()}, which is more than
+ * sufficient for accurate MT2 XY solves. Mode 4 (Internal + External Assist) was previously used
+ * but caused heading corruption on the disabled→enabled transition.
  *
  * <p>Each enabled loop we:
  *
  * <ol>
- *   <li>Push IMU mode 4 (Internal + External Assist) and feed gyro yaw + yaw rate.
+ *   <li>Push raw Pigeon2 yaw + yaw rate via {@code SetRobotOrientation()} to all cameras.
  *   <li>Query {@code getBotPoseEstimate_wpiBlue_MegaTag2()} for each camera.
- *   <li>Filter out bad results (no tags, spinning too fast, off-field, big jumps).
- *   <li>Read the Limelight's own MegaTag 2 standard deviations and use {@code max(xStd, yStd)} as
- *       the XY trust weight.
- *   <li>Feed accepted measurements into {@code Drive.addVisionMeasurement()}.
+ *   <li>Filter out bad results (no tags, spinning too fast, off-field, stale timestamp).
+ *   <li>Scale stddevs and feed accepted measurements into {@code Drive.addVisionMeasurement()}.
  * </ol>
  *
  * <p>Theta std dev is set to 999999 during enabled mode because MegaTag 2 does <b>not</b> estimate
@@ -55,8 +55,6 @@ public class Vision extends SubsystemBase {
   private static final String kVisionSeedStableKey = "Vision/SeedStable";
 
   private final Drive drive;
-  private int configCounter = CONFIG_INTERVAL; // Start at threshold so first loop configures
-  private static final int CONFIG_INTERVAL = 250; // Re-send config every 250 loops (~5 seconds)
 
   // Log rate-limiting — Logger.recordOutput is expensive (NT write per call).
   // We have ~15 log calls per camera × 3 cameras = ~45 writes per loop at 50 Hz.
@@ -81,13 +79,17 @@ public class Vision extends SubsystemBase {
   private int disabledCycleCounter = 0;
   private static final int DISABLED_PROCESS_INTERVAL = 5; // run every 5th cycle (~10 Hz)
 
-  // Pre-match pose seeding state.
-  // The first accepted seed uses setPose() (hard reset); subsequent seeds use
-  // addVisionMeasurement() so the estimator converges smoothly.
+  // Pre-match pose seeding state — seed fires once on first high-confidence MT1 result.
   private boolean hasSeed = false;
   private boolean seedStable = false;
-  private Pose2d lastAcceptedPreMatchPose = null;
-  private int stableSeedSampleCount = 0;
+
+  // AdvantageScope QoL: track the last time each camera saw tags so we can
+  // log an off-screen pose when a camera goes stale.  This keeps the field
+  // view clean instead of showing frozen ghost poses from the last sighting.
+  private static final double STALE_TIMEOUT_SEC = 1.0;
+  private static final Pose2d OFF_SCREEN_POSE = new Pose2d(100, 100, new Rotation2d());
+  private final double[] lastMT2SeenTime;
+  private double lastFinalFilteredTime = 0.0;
 
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
@@ -106,8 +108,10 @@ public class Vision extends SubsystemBase {
    */
   public Vision(Drive drive) {
     this.drive = drive;
+    this.lastMT2SeenTime = new double[VisionConstants.kCameraNames.length];
     // Publish the default value so the toggle appears on the dashboard immediately.
-    SmartDashboard.putBoolean(kVisionEnabledKey, true);
+    // TODO: Re-enable vision seeding once camera coordinates are verified on the real robot.
+    SmartDashboard.putBoolean(kVisionEnabledKey, false);
     SmartDashboard.putBoolean(kVisionSeededKey, false);
     SmartDashboard.putBoolean(kVisionSeedStableKey, false);
     // Whether to reset the pre-match seed when transitioning back to disabled.
@@ -119,6 +123,11 @@ public class Vision extends SubsystemBase {
 
   public void setVisionEnabled(boolean enabled) {
     SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
+  }
+
+  /** Returns true if the odometry has already been seeded by limelight pre-match. */
+  public boolean isSeeded() {
+    return seedStable;
   }
 
   // -----------------------------------------------------------------------
@@ -141,22 +150,12 @@ public class Vision extends SubsystemBase {
 
     // Read the dashboard toggle — when false, cameras still run and log but
     // do NOT inject measurements into the pose estimator.  Useful for debugging.
-    boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, true);
-    if (shouldLog) {
-      Logger.recordOutput("Vision/enabled", visionEnabled);
-      Logger.recordOutput("Vision/Seeded", hasSeed);
-      Logger.recordOutput("Vision/SeedStable", seedStable);
-      Logger.recordOutput("Vision/StableSeedSampleCount", stableSeedSampleCount);
-    }
+    boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, false);
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
-    // Periodically re-send camera config so cameras that boot late or power-cycle
-    // mid-match still get the correct poses and IMU mode.
-    configCounter++;
-    if (configCounter >= CONFIG_INTERVAL) {
-      configureCameras();
-      configCounter = 0;
+    if (shouldLog) {
+      Logger.recordOutput("VisionEnabled", visionEnabled);
     }
 
     // Always push IMU mode every cycle so the transition from mode 1 → 4
@@ -175,29 +174,53 @@ public class Vision extends SubsystemBase {
       for (String name : VisionConstants.kCameraNames) {
         LimelightHelpers.SetThrottle(name, throttle);
       }
+      // Tell each camera which AprilTag IDs to track.  Tags NOT in this list
+      // are completely ignored at the hardware level (never enter the MT2
+      // solve), so we don't need to gate them with huge stddev factors.
+      if (firstLoop) {
+        for (String name : VisionConstants.kCameraNames) {
+          LimelightHelpers.SetFiducialIDFiltersOverride(name, VisionConstants.kValidTagIds);
+        }
+      }
       // Reset pre-match seed when transitioning back to disabled only if the
       // dashboard toggle is enabled. Older behavior always reset which caused
       // re-seeding and visible jumps after enable→disable cycles. Default is
       // false so a previously-seeded pose remains stable across brief toggles.
       if (isDisabled && !firstLoop) {
-        boolean resetOnDisable = SmartDashboard.getBoolean("Vision/ResetOnDisable", false);
-        if (resetOnDisable) {
-          resetSeedState();
-          // Preserve existing seed state; log event for debugging.
-          Logger.recordOutput("Vision/resetSkippedOnDisable", true);
-        }
         disabledCycleCounter = 0; // reset so first disabled cycle processes immediately
       }
       wasDisabled = isDisabled;
       firstLoop = false;
     }
 
-    // Always feed robot orientation so that IMU seeding (mode 1) works while disabled
-    // and MegaTag 2 has up-to-date yaw while enabled.
-    // Pass yaw rate so the Limelight can predict orientation between NT updates.
-    // Flush after each camera so every Limelight receives its update immediately.
-    double robotYawDeg = drive.getRotation().getDegrees();
-    double yawRateDps = Math.toDegrees(drive.getChassisSpeeds().omegaRadiansPerSecond);
+    // Always feed the raw Pigeon2 heading to SetRobotOrientation — NOT the
+    // fused pose-estimator heading. Using the fused heading creates a feedback
+    // loop: a bad vision measurement corrupts the pose, which corrupts the
+    // heading we report back to the LL, which corrupts the next MT2 solve.
+    // The raw gyro is immune to vision errors and is what the LL actually needs.
+    double robotYawDeg = drive.getRawGyroRotation().getDegrees();
+    double yawRateDps = drive.getRawGyroYawRateDegPerSec();
+
+    if (shouldLog) {
+      Logger.recordOutput("Vision/pushedYawDeg", robotYawDeg);
+      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+        String name = VisionConstants.kCameraNames[i];
+        String prefix = "Vision/" + name + "/";
+
+        // IMU array — element [0] = robot_yaw the LL is working with.
+        // 3G has no IMU so this will be empty (-9999).
+        double[] imuData = LimelightHelpers.getLimelightNTDoubleArray(name, "imu");
+        double llYaw = (imuData.length > 0) ? imuData[0] : -9999;
+        Logger.recordOutput(prefix + "llReportedYaw", llYaw);
+
+        // Log MT1 pose alongside MT2 for direct comparison on the 3G.
+        LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+        if (mt1 != null && mt1.tagCount > 0 && mt1.pose != null) {
+          Logger.recordOutput(prefix + "mt1Pose", mt1.pose);
+          Logger.recordOutput(prefix + "mt1YawDeg", mt1.pose.getRotation().getDegrees());
+        }
+      }
+    }
 
     // While disabled, downsample the expensive per-camera work
     // (SetRobotOrientation flushes + getBotPoseEstimate NT reads) so we don't
@@ -208,10 +231,46 @@ public class Vision extends SubsystemBase {
       if (disabledCycleCounter >= DISABLED_PROCESS_INTERVAL) {
         disabledCycleCounter = 0;
         for (String name : VisionConstants.kCameraNames) {
-          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+          // MT1 pre-match seeding: attempt to seed full pose (XY + heading) from
+          // MegaTag 1 while disabled.  Only seeds once (hasSeed flag).
+          // This is critical for the LL 3G — it has no internal IMU, so MT2
+          // produces garbage until the Pigeon is seeded to the real field heading.
+          // LL4s mask this problem because their internal IMU provides a heading
+          // reference even before seeding.
           processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
+        }
+
+        // Once seeded, run the full MT2 processing pipeline and inject into
+        // odometry even while disabled.  This keeps the pose estimator warm
+        // so it doesn't drift on wheel slip / encoder error during pre-match
+        // repositioning, and gives AdvantageScope a live fused pose ghost.
+        if (hasSeed) {
+          List<AcceptedObservation> disabledAccepted = new ArrayList<>();
+          for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+            AcceptedObservation obs =
+                processCamera(
+                    VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
+            if (obs != null) {
+              disabledAccepted.add(obs);
+            }
+          }
+          disabledAccepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+          for (AcceptedObservation obs : disabledAccepted) {
+            if (visionEnabled) {
+              drive.addVisionMeasurement(
+                  obs.pose(),
+                  obs.timestampSeconds(),
+                  VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+            }
+          }
+        } else {
+          // Not yet seeded — just log MT2 for diagnostics.
+          for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+            logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
+          }
         }
       }
       return;
@@ -234,7 +293,9 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // Sort by timestamp (oldest first) and inject into pose estimator.
+    // Sort by timestamp (oldest first) and inject into pose estimator via WPILib's
+    // built-in Kalman filter (SwerveDrivePoseEstimator). Each camera's stddev weight
+    // controls how much it influences the fused pose — lower stddev = more trust.
     accepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
     for (AcceptedObservation obs : accepted) {
       if (visionEnabled) {
@@ -245,64 +306,91 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // Log injection count (rate-limited).
+    // Log the final filtered pose feeding odometry (rate-limited).
     if (shouldLog) {
-      Logger.recordOutput("Vision/acceptedCount", accepted.size());
-      Logger.recordOutput("Vision/injected", visionEnabled && !accepted.isEmpty());
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  //  Camera configuration (called once)
-  // -----------------------------------------------------------------------
-  /**
-   * Pushes the measured camera poses into each Limelight. Called periodically so cameras that boot
-   * late or power-cycle mid-match still get the correct poses.
-   */
-  private void configureCameras() {
-    for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-      String name = VisionConstants.kCameraNames[i];
-      double[] pose = VisionConstants.kCameraPoses[i];
-
-      // Set camera position relative to robot center.
-      // Args: forward, side, up, roll, pitch, yaw (meters / degrees)
-      LimelightHelpers.setCameraPose_RobotSpace(
-          name, pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
-
-      if (VisionConstants.kLimelightLeft.equals(name)
-          || VisionConstants.kLimelightRight.equals(name)) {
-        LimelightHelpers.SetFiducialIDFiltersOverride(
-            name, VisionConstants.kSideCameraAllowedTagIds);
+      // Log the combined accepted pose that is actually feeding the pose
+      // estimator this cycle.  When multiple cameras pass filters we compute a
+      // stddev-weighted average so AdvantageScope can show a single "what
+      // odometry sees" ghost alongside the per-camera raw ghosts.
+      if (!accepted.isEmpty()) {
+        lastFinalFilteredTime = Timer.getFPGATimestamp();
+        double weightSum = 0.0;
+        double sumX = 0.0;
+        double sumY = 0.0;
+        double sumCos = 0.0;
+        double sumSin = 0.0;
+        for (AcceptedObservation obs : accepted) {
+          // Weight = 1/stddev² — lower stddev → higher weight.
+          double w = 1.0 / (obs.scaledXYStdDev() * obs.scaledXYStdDev());
+          weightSum += w;
+          sumX += obs.pose().getX() * w;
+          sumY += obs.pose().getY() * w;
+          double r = obs.pose().getRotation().getRadians();
+          sumCos += Math.cos(r) * w;
+          sumSin += Math.sin(r) * w;
+        }
+        double avgX = sumX / weightSum;
+        double avgY = sumY / weightSum;
+        double avgYaw = Math.atan2(sumSin / weightSum, sumCos / weightSum);
+        Pose2d combinedAccepted = new Pose2d(avgX, avgY, new Rotation2d(avgYaw));
+        Logger.recordOutput("Vision/finalFilteredPose", combinedAccepted);
+        Logger.recordOutput("Vision/finalFilteredXYStdDev", Math.sqrt(1.0 / weightSum));
+      } else if (Timer.getFPGATimestamp() - lastFinalFilteredTime > STALE_TIMEOUT_SEC) {
+        // No cameras accepted — move the combined ghost off-screen after 1s.
+        Logger.recordOutput("Vision/finalFilteredPose", OFF_SCREEN_POSE);
       }
     }
   }
 
   /**
-   * Sets the IMU mode on every camera. Uses a two-phase strategy recommended by the official
-   * Limelight docs:
+   * Sets the IMU mode on every camera. Uses a two-phase strategy:
    *
    * <ul>
-   *   <li><b>Disabled (pre-match):</b> Mode 1 — "External Seed". The LL4's internal IMU is
-   *       continuously calibrated to match the gyro heading we send via {@code
-   *       SetRobotOrientation()}.
-   *   <li><b>Enabled (auto / teleop):</b> Mode 4 — "Internal + External Assist". The LL4 uses its 1
-   *       kHz internal IMU for frame-by-frame motion while the robot's gyro gently corrects drift.
+   *   <li><b>All modes:</b> Mode 0 — "External Only". The LL ignores its internal IMU entirely and
+   *       uses exactly the heading supplied via {@code SetRobotOrientation()} for every MT2 solve.
+   *       This ensures MT2 output is always consistent with the Pigeon2 heading we feed it, with no
+   *       internal drift or IMU fighting on enable transitions.
    * </ul>
+   *
+   * <p>Mode 4 (Internal + External Assist) was previously used while enabled but caused heading
+   * corruption on the disabled→enabled transition — the LL's internal IMU would disagree with the
+   * Pigeon and pull MT2 heading off. Since we push raw Pigeon2 yaw every cycle at 50 Hz, Mode 0 is
+   * sufficient and eliminates the issue entirely.
    */
   private void setIMUModes() {
-    // Mode 1 (External Seed) while disabled for pre-match heading calibration.
-    // Mode 4 (Internal + External Assist) while enabled for match play.
-    int mode = DriverStation.isDisabled() ? 1 : 4;
-    // Only push the IMU mode when it actually changes (or on the very first
-    // call).  Spamming SetIMUMode at 50 Hz can disrupt the Limelight's
-    // internal complementary filter and cause cameras to enter a bad state
-    // after a few minutes of play.
+    // Mode 0 (External Only) always — MT2 uses exactly what we pass to SetRobotOrientation.
+    // The Pigeon2 heading is pushed every cycle at 50 Hz which is more than sufficient.
+    int mode = 0;
     if (mode == lastIMUMode) {
       return;
     }
     lastIMUMode = mode;
     for (String name : VisionConstants.kCameraNames) {
       LimelightHelpers.SetIMUMode(name, mode);
+    }
+  }
+
+  private void logRawMegaTag2Pose(String cameraName, int cameraIndex) {
+    String prefix = "Vision/" + cameraName + "/";
+    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+    if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
+      lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
+      // Read real LL-reported stddevs for diagnostic logging.
+      double xyStdDev = -1.0;
+      double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+      if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
+        double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
+        double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
+        xyStdDev = Math.max(xStdDev, yStdDev);
+      }
+      Logger.recordOutput(prefix + "mt2Pose", estimate.pose);
+      Logger.recordOutput(prefix + "mt2XYStdDev", xyStdDev);
+    } else {
+      // No tags — if stale for > 1s, log off-screen so AdvantageScope clears the ghost.
+      if (Timer.getFPGATimestamp() - lastMT2SeenTime[cameraIndex] > STALE_TIMEOUT_SEC) {
+        Logger.recordOutput(prefix + "mt2Pose", OFF_SCREEN_POSE);
+      }
+      Logger.recordOutput(prefix + "mt2XYStdDev", -1.0);
     }
   }
 
@@ -318,6 +406,14 @@ public class Vision extends SubsystemBase {
    * @param robotYawDeg Current gyro yaw in degrees
    * @param yawRateDegPerSec Current angular velocity in deg/s
    * @param cameraIndex Index into kCameraNames (for logging and per-camera stddev factor)
+   * @param shouldLog Whether to emit Logger output this cycle (rate-limited) /** Queries one
+   *     Limelight for a MegaTag 2 pose estimate, applies minimal filtering, and — if accepted —
+   *     returns an {@link AcceptedObservation} ready for injection.
+   *     <p>Filters kept: null/no-tag guard, off-field bounds check. Everything else (stddev array,
+   *     yaw rate, timestamp age, single-tag area) removed — with 4 cameras and stable hardware the
+   *     LL stddevs are reliable and extra filters just drop good data.
+   * @param cameraName Limelight hostname
+   * @param cameraIndex Index into kCameraNames (for per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
    * @return An accepted observation, or {@code null} if rejected.
    */
@@ -333,127 +429,49 @@ public class Vision extends SubsystemBase {
     // 1. Read the MegaTag 2 pose estimate.
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
 
-    // Publish raw (unfiltered) pose to SmartDashboard for the drive team.
-    if (estimate != null && estimate.tagCount > 0 && estimate.pose != null) {
-      SmartDashboard.putString(prefix + "rawPose", estimate.pose.toString());
-    } else {
-      SmartDashboard.putString(prefix + "rawPose", "No tags");
-    }
-
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
-      if (shouldLog) Logger.recordOutput(prefix + "accepted", false);
+      // No tags — if stale for > 1s, log off-screen so AdvantageScope clears the ghost.
+      if (shouldLog
+          && Timer.getFPGATimestamp() - lastMT2SeenTime[cameraIndex] > STALE_TIMEOUT_SEC) {
+        Logger.recordOutput(prefix + "mt2Pose", OFF_SCREEN_POSE);
+      }
       return null;
     }
 
     Pose2d visionPose = estimate.pose;
+    lastMT2SeenTime[cameraIndex] = Timer.getFPGATimestamp();
 
-    // 3. Reject stale measurements — if the timestamp is too old the pose
-    //    estimator will "rewind" and replay with bad data.
-    double age = Logger.getTimestamp() / 1.0e6 - estimate.timestampSeconds;
-    if (age > VisionConstants.kMaxMeasurementAgeSec) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stale_timestamp");
-        Logger.recordOutput(prefix + "measurementAgeSec", age);
+    // Log raw MT2 pose and real LL-reported stddevs (diagnostic only).
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt2Pose", visionPose);
+      double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+      if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
+        double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
+        double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
+        Logger.recordOutput(prefix + "mt2XYStdDev", Math.max(xStdDev, yStdDev));
       }
-      return null;
     }
 
-    // 4. Reject if the robot is spinning too fast (motion blur degrades detection).
-    if (Math.abs(yawRateDegPerSec) > VisionConstants.kMaxAngularVelocityDegPerSec) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "yaw_rate");
-      }
-      return null;
-    }
-
-    // 5. Reject single-tag results that are too small (far away / ambiguous).
-    if (estimate.tagCount == 1 && estimate.avgTagArea < VisionConstants.kMinTagAreaForSingleTag) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "single_tag_area");
-      }
-      return null;
-    }
-
-    // 6. Reject poses that are clearly off the field (with small margin to reject origin).
+    // 3. Reject poses clearly off the field.
     if (visionPose.getX() < 0.01
         || visionPose.getX() > Constants.kFieldLengthMeters
         || visionPose.getY() < 0.01
         || visionPose.getY() > Constants.kFieldWidthMeters) {
       if (shouldLog) {
         Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "off_field");
       }
       return null;
     }
 
-    // 7. Read the Limelight's own MegaTag 2 std devs from NetworkTables.
-    double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
-
-    if (stddevs.length < VisionConstants.kExpectedStdDevArrayLength) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stddevs_missing");
-      }
-      return null;
-    }
-
-    double xStdDev = stddevs[VisionConstants.kMT2XStdDevIndex];
-    double yStdDev = stddevs[VisionConstants.kMT2YStdDevIndex];
-    double xyStdDev = Math.max(xStdDev, yStdDev);
-
-    if (xyStdDev <= 0.0) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stddevs_zero");
-      }
-      return null;
-    }
-
-    // 8. Reject measurements with excessively high std devs.
-    if (VisionConstants.kMT2MaxAcceptedStdDev > 0.0
-        && xyStdDev > VisionConstants.kMT2MaxAcceptedStdDev) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "stddev_too_high");
-        Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
-      }
-      return null;
-    }
-
-    // 9. Reject large jumps from the current pose estimate.
-    double poseJump = drive.getPose().getTranslation().getDistance(visionPose.getTranslation());
-    if (shouldLog) Logger.recordOutput(prefix + "poseJumpM", poseJump);
-    if (poseJump > VisionConstants.kMaxPoseJumpMeters) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "accepted", false);
-        Logger.recordOutput(prefix + "rejectReason", "pose_jump");
-      }
-      return null;
-    }
-
-    // 10. Apply the MT2 filter-strength multiplier and per-camera trust factor.
+    // 4. Apply per-camera trust factor.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
-    double scaledXYStdDev = xyStdDev * VisionConstants.kMT2StdDevMultiplier * cameraFactor;
+    double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
-    // 11. Logging for AdvantageScope (rate-limited).
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);
-      Logger.recordOutput(prefix + "pose", visionPose);
-      Logger.recordOutput(prefix + "tagCount", estimate.tagCount);
-      Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
-      Logger.recordOutput(prefix + "avgTagArea", estimate.avgTagArea);
-      Logger.recordOutput(prefix + "xyStdDev", scaledXYStdDev);
-      Logger.recordOutput(prefix + "rawXYStdDev", xyStdDev);
-      Logger.recordOutput(prefix + "cameraFactor", cameraFactor);
-      Logger.recordOutput(prefix + "llXStdDev", xStdDev);
-      Logger.recordOutput(prefix + "llYStdDev", yStdDev);
     }
 
-    // 12. Return the accepted observation for timestamp-sorted injection.
     return new AcceptedObservation(
         visionPose, estimate.timestampSeconds, scaledXYStdDev, VisionConstants.kThetaStdDev);
   }
@@ -462,36 +480,18 @@ public class Vision extends SubsystemBase {
   //  Pre-match pose seeding (while disabled, MegaTag 1)
   // -----------------------------------------------------------------------
   /**
-   * Process a single camera while disabled to seed the pose estimator before auto using <b>MegaTag
-   * 1</b> (full 6-DOF solve including rotation).
+   * Process a single camera while disabled to seed the full pose (XY + heading) from MT1. Only runs
+   * once — after the first high-confidence seed, subsequent calls are no-ops.
    *
-   * <p>This eliminates the need to laser-align the gyro before every match. MT1 determines the
-   * robot's heading from tag geometry alone. The first accepted measurement hard-resets the pose
-   * estimator (including the gyro offset) so the Pigeon2 and LL4 IMUs are automatically aligned to
-   * the correct field heading.
-   *
-   * <p>Filters are stricter than normal match processing:
-   *
-   * <ul>
-   *   <li>Requires multi-tag (≥ {@link VisionConstants#kPreMatchMinTagCount} tags).
-   *   <li>Requires low XY std devs (≤ {@link VisionConstants#kPreMatchMaxStdDev}).
-   *   <li>Requires low yaw std dev (≤ {@link VisionConstants#kPreMatchMaxYawStdDevDeg}).
-   *   <li>Still rejects off-field poses.
-   *   <li><b>Does NOT</b> reject based on pose jump — the estimator starts at (0,0) so the first
-   *       real estimate would always be a "jump".
-   * </ul>
-   *
-   * <p>The first accepted measurement uses {@link Drive#setPose} to hard-reset the estimator
-   * (including gyro offset). Subsequent measurements use {@link Drive#addVisionMeasurement} so the
-   * estimate converges smoothly across multiple cameras and frames.
-   *
-   * @param cameraName Limelight hostname.
-   * @param cameraIndex Index into kCameraNames (for logging).
-   * @param visionEnabled Whether to inject the measurement into the pose estimator.
-   * @param shouldLog Whether to emit Logger output this cycle (rate-limited).
+   * <p>Filters: null/no-tag guard, off-field bounds, yaw stddev gate (kGyroSeedMaxYawStdDevDeg).
    */
   private void processCameraPreMatch(
       String cameraName, int cameraIndex, boolean visionEnabled, boolean shouldLog) {
+
+    // Only seed once per power cycle.
+    if (hasSeed) {
+      return;
+    }
 
     String prefix = "Vision/" + cameraName + "/";
 
@@ -500,158 +500,49 @@ public class Vision extends SubsystemBase {
 
     // 2. Null / no-tag guard.
     if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
-      if (shouldLog) Logger.recordOutput(prefix + "preMatch", false);
       return;
     }
 
     Pose2d visionPose = estimate.pose;
-
-    // 3. Require multi-tag for high confidence (especially important for yaw).
-    if (estimate.tagCount < VisionConstants.kPreMatchMinTagCount) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "tag_count");
-      }
-      return;
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt1Pose", visionPose);
     }
 
-    // 4. Reject poses that are off the field.
+    // 3. Reject poses off the field.
     if (visionPose.getX() < 0.01
         || visionPose.getX() > Constants.kFieldLengthMeters
         || visionPose.getY() < 0.01
         || visionPose.getY() > Constants.kFieldWidthMeters) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "off_field");
-      }
       return;
     }
 
-    // 5. Read Limelight MT1 std devs and require high confidence in XY and yaw.
+    // 4. Read yaw stddev — only seed when MT1 rotation confidence is very high.
     double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
     if (stddevs.length < VisionConstants.kExpectedStdDevArrayLength) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "stddevs_missing");
-      }
       return;
     }
-
-    double xStdDev = stddevs[VisionConstants.kMT1XStdDevIndex];
-    double yStdDev = stddevs[VisionConstants.kMT1YStdDevIndex];
     double yawStdDev = stddevs[VisionConstants.kMT1YawStdDevIndex];
-    double xyStdDev = Math.max(xStdDev, yStdDev);
-
-    if (xyStdDev <= 0.0) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "stddevs_zero");
-      }
-      return;
-    }
-
-    if (xyStdDev > VisionConstants.kPreMatchMaxStdDev) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "xy_stddev_too_high");
-      }
-      return;
-    }
-
-    if (yawStdDev > VisionConstants.kPreMatchMaxYawStdDevDeg) {
-      if (shouldLog) {
-        Logger.recordOutput(prefix + "preMatch", false);
-        Logger.recordOutput(prefix + "preMatchReject", "yaw_stddev_too_high");
-      }
-      return;
-    }
-
-    // 6. Update stable-seed tracking from accepted MT1 poses.
-    updateStableSeedState(visionPose, shouldLog, prefix);
-
-    // 7. Seed the pose estimator.
-    if (!hasSeed) {
-      if (visionEnabled) {
-        drive.setPose(visionPose);
-        hasSeed = true;
-      }
-      if (shouldLog) {
-        Logger.recordOutput(
-            prefix + "preMatchAction", visionEnabled ? "setPose" : "setPose_suppressed");
-        Logger.recordOutput(prefix + "preMatchSeededYawDeg", visionPose.getRotation().getDegrees());
-      }
-    } else {
-      double scaledXYStdDev = xyStdDev * VisionConstants.kMT1StdDevMultiplier;
-      double scaledYawStdDev = yawStdDev * VisionConstants.kMT1StdDevMultiplier;
-      if (visionEnabled) {
-        drive.addVisionMeasurement(
-            visionPose,
-            estimate.timestampSeconds,
-            VecBuilder.fill(scaledXYStdDev, scaledXYStdDev, Math.toRadians(scaledYawStdDev)));
-      }
-      if (shouldLog) {
-        Logger.recordOutput(
-            prefix + "preMatchAction", visionEnabled ? "refine" : "refine_suppressed");
-      }
-    }
-
-    if (!hasSeed && !visionEnabled) {
-      seedStable = false;
-    } else if (hasSeed && stableSeedSampleCount >= VisionConstants.kPreMatchStableSeedMinSamples) {
-      seedStable = true;
-    }
-
-    // 8. Logging (rate-limited).
     if (shouldLog) {
-      Logger.recordOutput(prefix + "preMatch", true);
-      Logger.recordOutput(prefix + "preMatchInjected", visionEnabled);
-      Logger.recordOutput(prefix + "preMatchHasSeed", hasSeed);
-      Logger.recordOutput(prefix + "preMatchSeedStable", seedStable);
-      Logger.recordOutput(prefix + "preMatchStableSamples", stableSeedSampleCount);
-      Logger.recordOutput(prefix + "preMatchPose", visionPose);
-      Logger.recordOutput(prefix + "preMatchTagCount", estimate.tagCount);
-      Logger.recordOutput(prefix + "preMatchXYStdDev", xyStdDev);
-      Logger.recordOutput(prefix + "preMatchYawStdDev", yawStdDev);
+      Logger.recordOutput(prefix + "mt1YawStdDev", yawStdDev);
     }
-  }
-
-  private void resetSeedState() {
-    hasSeed = false;
-    seedStable = false;
-    lastAcceptedPreMatchPose = null;
-    stableSeedSampleCount = 0;
-  }
-
-  private void updateStableSeedState(Pose2d visionPose, boolean shouldLog, String prefix) {
-    double xyDeltaMeters = 0.0;
-    double yawDeltaDeg = 0.0;
-
-    if (lastAcceptedPreMatchPose == null) {
-      stableSeedSampleCount = 1;
-      seedStable = false;
-    } else {
-      xyDeltaMeters =
-          lastAcceptedPreMatchPose.getTranslation().getDistance(visionPose.getTranslation());
-      yawDeltaDeg =
-          Math.abs(
-              visionPose.getRotation().minus(lastAcceptedPreMatchPose.getRotation()).getDegrees());
-
-      boolean xyStable = xyDeltaMeters <= VisionConstants.kPreMatchStableSeedXYDeltaMeters;
-      boolean yawStable = yawDeltaDeg <= VisionConstants.kPreMatchStableSeedYawDeltaDeg;
-
-      if (xyStable && yawStable) {
-        stableSeedSampleCount++;
-      } else {
-        stableSeedSampleCount = 1;
-        seedStable = false;
-      }
+    if (yawStdDev > VisionConstants.kGyroSeedMaxYawStdDevDeg) {
+      return;
     }
 
-    lastAcceptedPreMatchPose = visionPose;
+    // 5. High-confidence seed — hard-reset pose estimator (XY + Pigeon heading).
+    drive.setPose(visionPose);
+    hasSeed = true;
+    seedStable = true;
+
+    // Immediately broadcast the new heading to ALL cameras so MT2 is re-anchored right away.
+    double newYawDeg = visionPose.getRotation().getDegrees();
+    for (String cam : VisionConstants.kCameraNames) {
+      LimelightHelpers.SetRobotOrientation(cam, newYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+    }
 
     if (shouldLog) {
-      Logger.recordOutput(prefix + "preMatchXYDeltaMeters", xyDeltaMeters);
-      Logger.recordOutput(prefix + "preMatchYawDeltaDeg", yawDeltaDeg);
+      Logger.recordOutput(prefix + "poseSeeded", true);
+      Logger.recordOutput(prefix + "poseSeedYawDeg", newYawDeg);
     }
   }
 }

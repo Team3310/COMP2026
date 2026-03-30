@@ -47,6 +47,14 @@ public interface MotorIO {
 
   void setVelocitySetpoint(double unitsPerSecond, int slot);
 
+  default void setVelocityTorqueCurrentFOCSetpoint(double unitsPerSecond) {
+    setVelocityTorqueCurrentFOCSetpoint(unitsPerSecond, 0);
+  }
+
+  default void setVelocityTorqueCurrentFOCSetpoint(double unitsPerSecond, int slot) {
+    throw new UnsupportedOperationException("Velocity torque-current FOC not implemented");
+  }
+
   void setVoltageOutput(double voltage);
 
   void setCurrentPositionAsZero();

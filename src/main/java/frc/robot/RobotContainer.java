@@ -254,6 +254,7 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return autonomousChooser.getCommand();
   }
+
   // #endregion
 
   // Controllers
@@ -275,6 +276,17 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Right floor roller follows the left floor roller so the left remains
+    // the only floor roller running VelocityTorqueCurrentFOC closed-loop control.
+    agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true);
+    agitatorRight.setDefaultCommand(
+        Commands.run(
+                () ->
+                    agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true),
+                agitatorRight)
+            .ignoringDisable(true)
+            .withName("RightFloorRoller Follow LeftFloorRoller"));
+
     // Register PathPlanner named commands (must be before any path loading)
     NamedCommands.registerCommand(
         "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
@@ -315,7 +327,9 @@ public class RobotContainer {
             verticalFeedLeft.verticalFeedIntakeCommand(),
             verticalFeedRight.verticalFeedIntakeCommand(),
             agitatorLeft.snowblowCommand(),
-            agitatorRight.snowblowCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.snowblowCommand(),
             hoodLeft.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees),
             hoodRight.setDegreesCommand(Constants.ScorerConstants.kHoodStowedDegrees)));
     SmartDashboard.putData(
@@ -349,12 +363,19 @@ public class RobotContainer {
         intakePivot.setDegreesCommand(Constants.IntakeConstants.kIntakePivotStowedDegrees));
     SmartDashboard.putData(
         "floors on",
-        Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()));
+        Commands.parallel(
+            agitatorLeft.snowblowCommand()
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // , agitatorRight.snowblowCommand()
+            ));
     SmartDashboard.putData(
         "spit balls",
         Commands.parallel(
             agitatorLeft.reverseCommand(),
-            agitatorRight.reverseCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.reverseCommand(),
             intakeRollers.outtakeCommand()));
     SmartDashboard.putData(
         "vertical feed on",
@@ -450,53 +471,8 @@ public class RobotContainer {
     SmartDashboard.putNumber(
         "VisionTune/MT2MaxAcceptedStdDev", Constants.VisionConstants.kMT2MaxAcceptedStdDev);
     SmartDashboard.putNumber("turret offset", Constants.ScorerConstants.kTurretOffsetDegrees);
-    SmartDashboard.putNumber("left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-    SmartDashboard.putNumber("right turret offset", Constants.ScorerConstants.kRightTurretOffset);
 
-    SmartDashboard.putData(
-        "Left Turret Offset +1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kLeftTurretOffset += 1.0;
-                  SmartDashboard.putNumber(
-                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-                  System.out.println(
-                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Right Turret Offset +1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kRightTurretOffset += 1.0;
-                  SmartDashboard.putNumber(
-                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
-                  System.out.println(
-                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Left Turret Offset -1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kLeftTurretOffset -= 1.0;
-                  SmartDashboard.putNumber(
-                      "left turret offset", Constants.ScorerConstants.kLeftTurretOffset);
-                  System.out.println(
-                      "Left turret offset: " + Constants.ScorerConstants.kLeftTurretOffset);
-                })
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Right Turret Offset -1",
-        new InstantCommand(
-                () -> {
-                  Constants.ScorerConstants.kRightTurretOffset -= 1.0;
-                  SmartDashboard.putNumber(
-                      "right turret offset", Constants.ScorerConstants.kRightTurretOffset);
-                  System.out.println(
-                      "Right turret offset: " + Constants.ScorerConstants.kRightTurretOffset);
-                })
-            .ignoringDisable(true));
+    // Removed individual turret offset controls; only the global turret offset remains adjustable.
 
     // Light color buttons — work even while disabled
     SmartDashboard.putData(
@@ -565,6 +541,35 @@ public class RobotContainer {
         });
   }
 
+  /**
+   * Waits until both floor rollers are at snowblow speed (live from the SmartDashboard table), then
+   * enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
+   * PathPlanner named command {@code "snowblow"}.
+   */
+  private Command buildSnowblowCommand() {
+    return new edu.wpi.first.wpilibj2.command.WaitUntilCommand(
+            () -> {
+              double target = Constants.AgitatorConstants.kFloorRollerSnowblowRPM;
+              double tol = Constants.ScorerConstants.kFlywheelRPMTolerance;
+              return Math.abs(agitatorLeft.getCurrentVelocity() - target) < tol
+                  && Math.abs(agitatorRight.getCurrentVelocity() - target) < tol;
+            })
+        .withTimeout(3.0)
+        .andThen(
+            Commands.runOnce(
+                () -> {
+                  java.util.function.DoubleSupplier leftFeedRpm =
+                      turretAimManager::getLeftVerticalFeedRPM;
+                  java.util.function.DoubleSupplier rightFeedRpm =
+                      turretAimManager::getRightVerticalFeedRPM;
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(verticalFeedLeft.setRPMCommand(leftFeedRpm));
+                  edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
+                      .schedule(verticalFeedRight.setRPMCommand(rightFeedRpm));
+                }))
+        .withName("SnowblowEnableVertical");
+  }
+
   private boolean isOperatorJamClearOverrideAllowed() {
     return isUsingLegacyPitOperatorMode()
         || Robot.currentState == Robot.BotState.DEFENCEOUT
@@ -575,7 +580,9 @@ public class RobotContainer {
     return Commands.parallel(
             intakeRollers.outtakeCommand(),
             agitatorLeft.reverseCommand(),
-            agitatorRight.reverseCommand(),
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not overridden.
+            // agitatorRight.reverseCommand(),
             verticalFeedLeft.verticalFeedOuttakeCommand(),
             verticalFeedRight.verticalFeedOuttakeCommand())
         .finallyDo(() -> Robot.stateRefreshRequested = true);
@@ -607,52 +614,28 @@ public class RobotContainer {
   private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
-    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
+    java.util.function.DoubleSupplier leftVerticalFeedTargetRpm = turretAimManager::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightVerticalFeedTargetRpm = turretAimManager::getRightVerticalFeedRPM;
+
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
                 flywheelLeft.setRPMCommand(leftTargetRpm),
                 flywheelRight.setRPMCommand(rightTargetRpm))
             .alongWith(
-                Commands.waitUntil(
-                        () -> {
-                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                          double leftErr =
-                              Math.abs(
-                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
-                          double rightErr =
-                              Math.abs(
-                                  flywheelRight.getCurrentVelocity()
-                                      - rightTargetRpm.getAsDouble());
-                          return leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget();
-                        })
-                    .andThen(new WaitCommand(Constants.ScorerConstants.kWaitTime))
+                new WaitCommand(Constants.ScorerConstants.kWaitTime)
                     .andThen(
-                        // Gate feeds and agitators — off while turret is flipping.
-                        Commands.run(
-                            () -> {
-                              if (isTurretOnTarget()) {
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedLeft.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(
-                                        verticalFeedRight.customVelocityCommand(
-                                            verticalFeedTargetRpm));
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorLeft.snowblowCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(agitatorRight.snowblowCommand());
-                              } else {
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedLeft.offCommand());
-                                CommandScheduler.getInstance()
-                                    .schedule(verticalFeedRight.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                                CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                              }
-                            })))
+                        // Use Commands.parallel so subsystem requirements are properly held
+                        // and commands stay running — never schedule() inside run().
+                        Commands.parallel(
+                            verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
+                            verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
+                            agitatorLeft.snowblowCommand()
+                            // Right floor roller now follows the left floor roller.
+                            // Keep the old direct command commented out so follower mode is not
+                            // overridden.
+                            // , agitatorRight.snowblowCommand()
+                            )))
             .finallyDo(
                 () -> {
                   CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
@@ -660,7 +643,10 @@ public class RobotContainer {
                   CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                  // Right floor roller now follows the left floor roller.
+                  // Keep the old direct off command commented out so follower mode is not
+                  // overridden.
+                  // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
                   Robot.stateRefreshRequested = true;
                 }));
   }
@@ -758,16 +744,15 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // right bumper = jam-clear outtake override while held in both modes
-    driver.rightBumper().whileTrue(buildOperatorJamClearOverrideCommand());
+    // right bumper = unbound
 
-    // left bumper = hood cross override while held in both modes
+    // left bumper = intake roller outtake only while held in both modes
+    driver.leftBumper().whileTrue(intakeRollers.outtakeCommand());
 
-    // right trigger = intake while held in both modes
-    driver.rightTrigger().whileTrue(intakeRollers.intakeCommand());
+    // right trigger = unbound
 
-    // left trigger = shoot while held in both modes
-    driver.leftTrigger().whileTrue(buildShootWhileHeldCommand());
+    // left trigger = intake roller only while held in both modes
+    driver.leftTrigger().whileTrue(intakeRollers.intakeCommand());
 
     driver
         .povDown()
@@ -852,7 +837,12 @@ public class RobotContainer {
         .b()
         .toggleOnTrue(
             Commands.either(
-                Commands.parallel(agitatorLeft.snowblowCommand(), agitatorRight.snowblowCommand()),
+                Commands.parallel(
+                    agitatorLeft.snowblowCommand()
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct command commented out so follower mode is not overridden.
+                    // , agitatorRight.snowblowCommand()
+                    ),
                 buildOverrideStateCommand(Robot.OverrideState.COLLECT),
                 this::isUsingLegacyPitOperatorMode));
 
@@ -861,7 +851,13 @@ public class RobotContainer {
         .a()
         .toggleOnTrue(
             Commands.either(
-                Commands.parallel(agitatorLeft.offCommand(), agitatorRight.offCommand()),
+                Commands.parallel(
+                    agitatorLeft.offCommand()
+                    // Right floor roller now follows the left floor roller.
+                    // Keep the old direct off command commented out so follower mode is not
+                    // overridden.
+                    // , agitatorRight.offCommand()
+                    ),
                 buildOverrideStateCommand(Robot.OverrideState.DEFENCEIN),
                 this::isUsingLegacyPitOperatorMode));
 
@@ -904,7 +900,7 @@ public class RobotContainer {
         .whileTrue(buildOperatorJamClearOverrideCommand());
 
     if (flywheelLeft != null && hoodLeft != null) {
-      Trigger crossOverrideTrigger = operator.povDown().or(driver.leftBumper());
+      Trigger crossOverrideTrigger = operator.povDown();
 
       // D-Pad Up/Down: same in normal and mirrored pit. Legacy pit keeps old preset behavior.
       operator

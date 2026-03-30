@@ -426,6 +426,23 @@ public class Drive extends SubsystemBase {
     return getPose().getRotation();
   }
 
+  /**
+   * Returns the raw Pigeon2 yaw — NOT fused with vision. Use this when feeding
+   * SetRobotOrientation() so that a bad vision measurement cannot corrupt the heading we send back
+   * to the Limelight for MegaTag 2.
+   */
+  public Rotation2d getRawGyroRotation() {
+    return rawGyroRotation;
+  }
+
+  /**
+   * Returns the raw Pigeon2 yaw rate in degrees per second. Comes directly from the IMU signal, not
+   * from kinematics, so it is valid even while stationary.
+   */
+  public double getRawGyroYawRateDegPerSec() {
+    return Math.toDegrees(gyroInputs.yawVelocityRadPerSec);
+  }
+
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     odometryLock.lock();
@@ -433,6 +450,25 @@ public class Drive extends SubsystemBase {
       gyroIO.setYaw(pose.getRotation());
       rawGyroRotation = pose.getRotation();
       poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+    } finally {
+      odometryLock.unlock();
+    }
+  }
+
+  /**
+   * Seeds only the gyro heading from a vision-derived yaw, without touching XY odometry. The pose
+   * estimator is updated so its rotation matches the new gyro heading, but X/Y remain unchanged.
+   * Use this during disabled pre-match when MT1 has a very confident yaw but XY is not yet trusted.
+   */
+  public void setGyroYaw(Rotation2d yaw) {
+    odometryLock.lock();
+    try {
+      gyroIO.setYaw(yaw);
+      rawGyroRotation = yaw;
+      // Re-anchor the pose estimator at the same XY with the new heading.
+      Pose2d currentPose = poseEstimator.getEstimatedPosition();
+      Pose2d correctedPose = new Pose2d(currentPose.getTranslation(), yaw);
+      poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), correctedPose);
     } finally {
       odometryLock.unlock();
     }

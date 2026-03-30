@@ -8,7 +8,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 /**
  * Container class for all PathPlanner paths and autonomous routines. Paths are loaded from
- * deploy/pathplanner/paths and autos from deploy/pathplanner/autos.
+ * deploy/pathplanner/paths and autos from depliy/pathplanner/autos.
  */
 public class Paths {
   // Individual paths (loaded from .path files)
@@ -37,7 +37,24 @@ public class Paths {
 
   public static PathPlannerPath snowblowOutpostBumpToTrench;
   public static PathPlannerPath snowblowOutpostTrenchToBump;
-  public static PathPlannerPath snowblowMidShort;
+  public static PathPlannerPath outSnowblowMidShort;
+  public static PathPlannerPath outSnowblowMidShort2;
+  public static PathPlannerPath outCollectMidShort;
+  public static PathPlannerPath outCollectMidShort2;
+
+  public static PathPlannerPath depSnowblowMidShort;
+  public static PathPlannerPath depCollect;
+  public static PathPlannerPath depCollect2;
+
+  public static PathPlannerPath outCollect;
+  public static PathPlannerPath outCollect2;
+  public static PathPlannerPath outCollectFull;
+
+  public static PathPlannerPath citrus1;
+  public static PathPlannerPath citrus2;
+
+  public static PathPlannerPath depCitrus1;
+  public static PathPlannerPath depCitrus2;
 
   public static boolean loaded;
 
@@ -64,9 +81,27 @@ public class Paths {
     // DepSnowShoot = loadPath("DepSnowShoot");
     // OutSnowShoot = loadPath("OutSnowShoot");
     // TrenchToOut = loadPath("TrenchToOut");
-    snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
-    snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
-    snowblowMidShort = loadPath("SnowblowMidShort");
+
+    // depSnowblowMidShort = loadPath("DepSnowblowMidShort");
+    depCollect = loadPath("DepCollect");
+    depCollect2 = loadPath("DepCollect2");
+
+    outCollect = loadPath("OutCollect");
+    outCollect2 = loadPath("OutCollect2");
+    outCollectFull = loadPath("OutCollectFull");
+
+    // snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
+    // snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
+    // outSnowblowMidShort = loadPath("OutSnowblowMidShort");
+    // outSnowblowMidShort2 = loadPath("OutSnowblowMidShort2");
+    // outCollectMidShort = loadPath("OutCollectMidShort");
+    outCollectMidShort2 = loadPath("OutCollectMidShort2");
+
+    citrus1 = loadPath("OutCitrus1");
+    citrus2 = loadPath("Citrus2");
+
+    depCitrus1 = loadPath("DepCitrus1");
+    depCitrus2 = loadPath("DepCitrus2");
   }
 
   /** Load a single path from a PathPlanner .path file. */
