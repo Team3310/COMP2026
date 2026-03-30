@@ -24,16 +24,16 @@ import org.littletonrobotics.junction.Logger;
  * </ul>
  */
 public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> {
-  private static final int DASHBOARD_INTERVAL = 10; // ~5 Hz at a 20 ms main loop
-
   public MotorIO motorIO;
   private static final String SNOWBLOW_RPM_KEY = "Agitator/SnowblowRPM";
   private static final String COLLECT_RPM_KEY = "Agitator/CollectRPM";
-  private int dashboardCounter = 0;
+  private int dashboardCounter;
 
-  public Agitator(final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO) {
+  public Agitator(
+      final ServoMotorSubsystemConfig motorConfig, final MotorIO motorIO, int logOffset) {
     super(motorConfig, new MotorInputsAutoLogged(), motorIO);
     this.motorIO = motorIO;
+    this.dashboardCounter = logOffset; // stagger per-instance
 
     // Initialize SmartDashboard with default RPM values (converting from RPS)
     SmartDashboard.putNumber(
@@ -90,9 +90,10 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
   public void periodic() {
     super.periodic();
 
-    if (++dashboardCounter % DASHBOARD_INTERVAL != 0) {
+    if (++dashboardCounter < Constants.kLogInterval) {
       return;
     }
+    dashboardCounter = 0;
 
     String dashboardPrefix = getName() + "/";
 

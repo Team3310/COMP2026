@@ -74,11 +74,11 @@ public class RobotContainer {
     }
   }
 
-  private Agitator buildAgitatorSystem(ServoMotorSubsystemConfig config) {
+  private Agitator buildAgitatorSystem(ServoMotorSubsystemConfig config, int logOffset) {
     if (Constants.currentMode == Constants.Mode.REAL) {
-      return new Agitator(config, new TalonFXIO(config));
+      return new Agitator(config, new TalonFXIO(config), logOffset);
     } else {
-      return new Agitator(config, new SimTalonFXIO(config));
+      return new Agitator(config, new SimTalonFXIO(config), logOffset);
     }
   }
 
@@ -137,11 +137,12 @@ public class RobotContainer {
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
 
-  private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig);
-  private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig);
+  private final Agitator agitatorRight = buildAgitatorSystem(Constants.kRightFloorRollerConfig, 0);
+  private final Agitator agitatorLeft = buildAgitatorSystem(Constants.kLeftFloorRollerConfig, 2);
   private final Agitator verticalFeedRight =
-      buildAgitatorSystem(Constants.kRightVerticalFeedConfig);
-  private final Agitator verticalFeedLeft = buildAgitatorSystem(Constants.kLeftVerticalFeedConfig);
+      buildAgitatorSystem(Constants.kRightVerticalFeedConfig, 5);
+  private final Agitator verticalFeedLeft =
+      buildAgitatorSystem(Constants.kLeftVerticalFeedConfig, 7);
 
   private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
   private final IntakePivot intakePivot = buildIntakePivotSystem();

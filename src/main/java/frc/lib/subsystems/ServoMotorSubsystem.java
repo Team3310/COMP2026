@@ -5,6 +5,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.lib.time.RobotTime;
 import frc.lib.util.Util;
+import frc.robot.Constants;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -25,6 +26,9 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   protected ServoMotorSubsystemConfig conf;
   private int latencyLogCounter = 0;
   private String lastLoggedCommandName = "";
+  /** True on the one cycle per kLogInterval where API-level Logger calls fire. */
+  private boolean shouldLogAPI = false;
+  private int apiLogCounter = 0;
 
   public ServoMotorSubsystem(ServoMotorSubsystemConfig config, T inputs, U io) {
     super(config.name);
@@ -41,6 +45,12 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     double timestamp = RobotTime.getTimestampSeconds();
     io.readInputs(inputs);
     Logger.processInputs(getName(), inputs);
+
+    // Rate-limit API-level Logger.recordOutput calls to ~5 Hz.
+    apiLogCounter++;
+    shouldLogAPI = apiLogCounter >= Constants.kLogInterval;
+    if (shouldLogAPI) apiLogCounter = 0;
+
     if (++latencyLogCounter >= LATENCY_LOG_INTERVAL) {
       latencyLogCounter = 0;
       Logger.recordOutput(
@@ -60,30 +70,33 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   }
 
   protected void setOpenLoopDutyCycleImpl(double dutyCycle) {
-    Logger.recordOutput(getName() + "/API/setOpenLoopDutyCycle/dutyCycle", dutyCycle);
+    if (shouldLogAPI)
+      Logger.recordOutput(getName() + "/API/setOpenLoopDutyCycle/dutyCycle", dutyCycle);
     io.setOpenLoopDutyCycle(dutyCycle);
   }
 
   protected void setVoltageImpl(double voltage) {
-    Logger.recordOutput(getName() + "/API/setVoltageImpl/voltage", voltage);
+    if (shouldLogAPI) Logger.recordOutput(getName() + "/API/setVoltageImpl/voltage", voltage);
     io.setVoltageOutput(voltage);
   }
 
   protected void setPositionSetpointImpl(double units) {
     positionSetpointUnits = units;
-    Logger.recordOutput(getName() + "/API/setPositionSetpointImp/Units", units);
+    if (shouldLogAPI) Logger.recordOutput(getName() + "/API/setPositionSetpointImp/Units", units);
     io.setPositionSetpoint(units);
   }
 
   protected void setNeutralModeImpl(NeutralModeValue mode) {
-    Logger.recordOutput(getName() + "/API/setNeutralModeImpl/Mode", mode);
+    if (shouldLogAPI) Logger.recordOutput(getName() + "/API/setNeutralModeImpl/Mode", mode);
     io.setNeutralMode(mode);
   }
 
   protected void setMotionMagicSetpointImpl(double units, int slot) {
     positionSetpointUnits = units;
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImp/Units", units);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImp/Slot", slot);
+    if (shouldLogAPI) {
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImp/Units", units);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImp/Slot", slot);
+    }
     io.setMotionMagicSetpoint(units, slot);
   }
 
@@ -93,11 +106,14 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     double acceleration = config.MotionMagicAcceleration;
     double jerk = config.MotionMagicJerk;
 
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
+    if (shouldLogAPI) {
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
+      Logger.recordOutput(
+          getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
+    }
     io.setMotionMagicSetpoint(units, velocity, acceleration, jerk, slot);
   }
 
@@ -108,24 +124,29 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     double acceleration = config.MotionMagicAcceleration;
     double jerk = config.MotionMagicJerk;
 
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
-    Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
-    Logger.recordOutput(
-        getName() + "/API/setMotionMagicSetpointImpDynamic/Feedforwards", feedfowards);
+    if (shouldLogAPI) {
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
+      Logger.recordOutput(
+          getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
+      Logger.recordOutput(
+          getName() + "/API/setMotionMagicSetpointImpDynamic/Feedforwards", feedfowards);
+    }
     io.setMotionMagicSetpoint(units, velocity, acceleration, jerk, slot, feedfowards);
   }
 
   protected void setVelocitySetpointImpl(double unitsPerSecond, int slot) {
-    Logger.recordOutput(getName() + "/API/setVelocitySetpointImpl/UnitsPerS", unitsPerSecond);
+    if (shouldLogAPI)
+      Logger.recordOutput(getName() + "/API/setVelocitySetpointImpl/UnitsPerS", unitsPerSecond);
     io.setVelocitySetpoint(unitsPerSecond, slot);
   }
 
   protected void setVelocityTorqueCurrentFOCSetpointImpl(double unitsPerSecond, int slot) {
-    Logger.recordOutput(
-        getName() + "/API/setVelocityTorqueCurrentFOCSetpointImpl/UnitsPerS", unitsPerSecond);
+    if (shouldLogAPI)
+      Logger.recordOutput(
+          getName() + "/API/setVelocityTorqueCurrentFOCSetpointImpl/UnitsPerS", unitsPerSecond);
     io.setVelocityTorqueCurrentFOCSetpoint(unitsPerSecond, slot);
   }
 
@@ -320,7 +341,8 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   }
 
   public void setTorqueCurrentFOCImpl(double current) {
-    Logger.recordOutput(getName() + "/API/setTorqueCurrentFoC/Current", current);
+    if (shouldLogAPI)
+      Logger.recordOutput(getName() + "/API/setTorqueCurrentFoC/Current", current);
     io.setTorqueCurrentFOC(current);
   }
 
