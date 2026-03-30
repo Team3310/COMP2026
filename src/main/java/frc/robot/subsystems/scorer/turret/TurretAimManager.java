@@ -25,7 +25,6 @@ import org.littletonrobotics.junction.Logger;
  * frc.robot.subsystems.scorer.hood.Hood} subsystems when you're ready.
  */
 public class TurretAimManager extends SubsystemBase {
-  private static final int LOG_INTERVAL = 5; // ~10 Hz at a 20 ms main loop
 
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> speedsSupplier;
@@ -46,7 +45,7 @@ public class TurretAimManager extends SubsystemBase {
   // visualisation — the logged ghost Pose2d rotates with realistic inertia.
   private double simTurretAngleDeg = 0.0; // current simulated turret angle
   private double prevTimestamp = -1.0; // for dt calculation
-  private int logCounter = 0;
+  private int logCounter = 5; // staggered offset 5
 
   /**
    * @param poseSupplier Supplies the robot's current field pose (usually {@code drive::getPose}).
@@ -61,7 +60,7 @@ public class TurretAimManager extends SubsystemBase {
   @Override
   public void periodic() {
     logCounter++;
-    boolean shouldLog = logCounter >= LOG_INTERVAL;
+    boolean shouldLog = logCounter >= Constants.kLogInterval;
     if (shouldLog) {
       logCounter = 0;
     }

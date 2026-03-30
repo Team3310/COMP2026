@@ -299,10 +299,16 @@ public class DriveCommands {
     double[] previousCommandedVxMetersPerSecond = new double[] {0.0};
     double[] previousCommandedVyMetersPerSecond = new double[] {0.0};
     double[] previousCommandedOmegaRadPerSec = new double[] {0.0};
+    int[] snapLogCounter = new int[] {7}; // staggered offset 7
 
     // Construct command
     return Commands.run(
             () -> {
+              // Rate-limited logging
+              snapLogCounter[0]++;
+              boolean shouldLog = snapLogCounter[0] >= Constants.kLogInterval;
+              if (shouldLog) snapLogCounter[0] = 0;
+
               // Get linear velocity
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
@@ -314,11 +320,13 @@ public class DriveCommands {
                       drive.getRotation().getRadians(), targetRotation.getRadians());
               double headingErrorRad =
                   MathUtil.angleModulus(targetRotation.minus(drive.getRotation()).getRadians());
-              Logger.recordOutput("Drive/Snap/TargetRotationRad", targetRotation.getRadians());
-              Logger.recordOutput(
-                  "Drive/Snap/CurrentRotationRad", drive.getRotation().getRadians());
-              Logger.recordOutput("Drive/Snap/ErrorRad", headingErrorRad);
-              Logger.recordOutput("Drive/Snap/OmegaCommandRadPerSec", omega);
+              if (shouldLog) {
+                Logger.recordOutput("Drive/Snap/TargetRotationRad", targetRotation.getRadians());
+                Logger.recordOutput(
+                    "Drive/Snap/CurrentRotationRad", drive.getRotation().getRadians());
+                Logger.recordOutput("Drive/Snap/ErrorRad", headingErrorRad);
+                Logger.recordOutput("Drive/Snap/OmegaCommandRadPerSec", omega);
+              }
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =

@@ -53,6 +53,11 @@ public final class Constants {
   public static final double kFieldLengthMeters = 16.54;
   public static final double kFieldWidthMeters = 8.21;
 
+  // Global log rate-limiting — every Nth 20 ms cycle.
+  // All subsystems share this interval but use different counter offsets
+  // so their Logger.recordOutput calls are staggered across cycles.
+  public static final int kLogInterval = 10; // ~5 Hz at 50 Hz loop
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,

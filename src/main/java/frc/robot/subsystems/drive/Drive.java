@@ -104,6 +104,11 @@ public class Drive extends SubsystemBase {
   // Only used when Constants.currentMode == Mode.SIM.
   private ChassisSpeeds simActualSpeeds = new ChassisSpeeds();
 
+  // Log rate-limiting — staggered offset 3 so Drive logs don't spike
+  // on the same cycle as Vision (offset 0) or other subsystems.
+  private int logCounter = 3;
+  private boolean shouldLog = false;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -157,6 +162,11 @@ public class Drive extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Rate-limited logging — offset from other subsystems to stagger NT writes.
+    logCounter++;
+    shouldLog = logCounter >= Constants.kLogInterval;
+    if (shouldLog) logCounter = 0;
+
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
@@ -173,7 +183,7 @@ public class Drive extends SubsystemBase {
     }
 
     // Log empty setpoint states when disabled
-    if (DriverStation.isDisabled()) {
+    if (DriverStation.isDisabled() && shouldLog) {
       Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
     }
@@ -182,11 +192,13 @@ public class Drive extends SubsystemBase {
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
     int gyroSampleCount = gyroInputs.odometryYawPositions.length;
-    Logger.recordOutput("Drive/Odometry/ModuleSampleCount", sampleTimestamps.length);
-    Logger.recordOutput("Drive/Odometry/GyroSampleCount", gyroSampleCount);
-    Logger.recordOutput(
-        "Drive/Odometry/GyroSampleMismatch",
-        gyroInputs.connected && gyroSampleCount != sampleTimestamps.length);
+    if (shouldLog) {
+      Logger.recordOutput("Drive/Odometry/ModuleSampleCount", sampleTimestamps.length);
+      Logger.recordOutput("Drive/Odometry/GyroSampleCount", gyroSampleCount);
+      Logger.recordOutput(
+          "Drive/Odometry/GyroSampleMismatch",
+          gyroInputs.connected && gyroSampleCount != sampleTimestamps.length);
+    }
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
@@ -293,15 +305,17 @@ public class Drive extends SubsystemBase {
       effectiveSpeeds = simActualSpeeds;
 
       // Log for tuning in AdvantageScope
-      Logger.recordOutput("SwerveChassisSpeeds/Commanded", speeds);
-      Logger.recordOutput("SwerveChassisSpeeds/SimActual", simActualSpeeds);
-      Logger.recordOutput(
-          "SimPhysics/TranslationalSpeed",
-          Math.hypot(simActualSpeeds.vxMetersPerSecond, simActualSpeeds.vyMetersPerSecond));
-      Logger.recordOutput(
-          "SimPhysics/RotationalSpeed", Math.abs(simActualSpeeds.omegaRadiansPerSecond));
-      Logger.recordOutput("SimPhysics/TransDragFactor", transAccelerating ? transDrag : 1.0);
-      Logger.recordOutput("SimPhysics/RotDragFactor", rotAccelerating ? rotDrag : 1.0);
+      if (shouldLog) {
+        Logger.recordOutput("SwerveChassisSpeeds/Commanded", speeds);
+        Logger.recordOutput("SwerveChassisSpeeds/SimActual", simActualSpeeds);
+        Logger.recordOutput(
+            "SimPhysics/TranslationalSpeed",
+            Math.hypot(simActualSpeeds.vxMetersPerSecond, simActualSpeeds.vyMetersPerSecond));
+        Logger.recordOutput(
+            "SimPhysics/RotationalSpeed", Math.abs(simActualSpeeds.omegaRadiansPerSecond));
+        Logger.recordOutput("SimPhysics/TransDragFactor", transAccelerating ? transDrag : 1.0);
+        Logger.recordOutput("SimPhysics/RotDragFactor", rotAccelerating ? rotDrag : 1.0);
+      }
 
       // Feed the simulated gyro with the inertia-filtered omega
       if (gyroIO instanceof GyroIOSim simGyro) {
@@ -323,8 +337,10 @@ public class Drive extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
 
     // Log unoptimized setpoints and setpoint speeds
-    Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
+    if (shouldLog) {
+      Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
+      Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
+    }
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
@@ -332,7 +348,9 @@ public class Drive extends SubsystemBase {
     }
 
     // Log optimized setpoints (runSetpoint mutates each state)
-    Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+    if (shouldLog) {
+      Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+    }
   }
 
   /** Runs the drive in a straight line with the specified drive output. */

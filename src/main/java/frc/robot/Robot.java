@@ -135,6 +135,9 @@ public class Robot extends LoggedRobot {
     robotContainer = RobotContainer.getInstance();
   }
 
+  // Log rate-limiting — staggered offset 6.
+  private int logCounter = 6;
+
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
@@ -144,9 +147,14 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
-    Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
-    Logger.recordOutput("Robot/DetectedBot", Constants.currentBot.name());
-    Logger.recordOutput("Robot/LocalMacAddresses", Constants.getLocalMacAddressesString());
+
+    logCounter++;
+    if (logCounter >= Constants.kLogInterval) {
+      logCounter = 0;
+      Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
+      Logger.recordOutput("Robot/DetectedBot", Constants.currentBot.name());
+      Logger.recordOutput("Robot/LocalMacAddresses", Constants.getLocalMacAddressesString());
+    }
 
     // Refresh alliance color every cycle — DriverStation data may not be
     // available at class-load time, so the initial value can be wrong.

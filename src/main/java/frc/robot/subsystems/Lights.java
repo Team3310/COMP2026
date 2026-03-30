@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import org.littletonrobotics.junction.Logger;
 
@@ -19,6 +20,9 @@ public class Lights extends SubsystemBase {
   private AddressableLED ledStrip;
   private AddressableLEDBuffer ledBuffer;
   private final SendableChooser<Robot.BotState> lightModeChooser = new SendableChooser<>();
+
+  // Log rate-limiting — staggered offset 8.
+  private int logCounter = 8;
 
   public static Lights getInstance() {
     if (instance == null) {
@@ -80,9 +84,15 @@ public class Lights extends SubsystemBase {
 
   @Override
   public void periodic() {
+    logCounter++;
+    boolean shouldLog = logCounter >= Constants.kLogInterval;
+    if (shouldLog) logCounter = 0;
+
     // Read the dropdown selection to override which state color is displayed
     Robot.BotState colorOverride = lightModeChooser.getSelected();
-    Logger.recordOutput("Lights/Mode", mode.name());
+    if (shouldLog) {
+      Logger.recordOutput("Lights/Mode", mode.name());
+    }
     switch (mode) {
       case BOT_STATE:
         if (Robot.inPit) {
@@ -118,10 +128,12 @@ public class Lights extends SubsystemBase {
               break;
           }
           LEDPattern.solid(stateColor).applyTo(ledBuffer);
-          Logger.recordOutput("Lights/StateColor", displayState.name());
-          Logger.recordOutput("Lights/R", stateColor.red * 255);
-          Logger.recordOutput("Lights/G", stateColor.green * 255);
-          Logger.recordOutput("Lights/B", stateColor.blue * 255);
+          if (shouldLog) {
+            Logger.recordOutput("Lights/StateColor", displayState.name());
+            Logger.recordOutput("Lights/R", stateColor.red * 255);
+            Logger.recordOutput("Lights/G", stateColor.green * 255);
+            Logger.recordOutput("Lights/B", stateColor.blue * 255);
+          }
         }
         ledStrip.setData(ledBuffer);
         break;

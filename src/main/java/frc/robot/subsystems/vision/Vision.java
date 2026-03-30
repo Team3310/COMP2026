@@ -62,7 +62,6 @@ public class Vision extends SubsystemBase {
   // functionality — all filtering, processing, and pose injection still run
   // every single cycle.
   private int logCounter = 0;
-  private static final int LOG_INTERVAL = 10; // Log every 10th cycle (~5 Hz)
 
   // Thermal throttle — skip frames while disabled to keep cameras cool.
   // Per Limelight docs (LDS §13): 100–200 while disabled, 0 while enabled.
@@ -143,7 +142,7 @@ public class Vision extends SubsystemBase {
     // Rate-limit logging — increment counter and decide if this is a log cycle.
     // All processing and injection still runs every cycle; only Logger output is gated.
     logCounter++;
-    boolean shouldLog = logCounter >= LOG_INTERVAL;
+    boolean shouldLog = logCounter >= Constants.kLogInterval;
     if (shouldLog) {
       logCounter = 0;
     }
@@ -203,23 +202,6 @@ public class Vision extends SubsystemBase {
 
     if (shouldLog) {
       Logger.recordOutput("Vision/pushedYawDeg", robotYawDeg);
-      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
-        String name = VisionConstants.kCameraNames[i];
-        String prefix = "Vision/" + name + "/";
-
-        // IMU array — element [0] = robot_yaw the LL is working with.
-        // 3G has no IMU so this will be empty (-9999).
-        double[] imuData = LimelightHelpers.getLimelightNTDoubleArray(name, "imu");
-        double llYaw = (imuData.length > 0) ? imuData[0] : -9999;
-        Logger.recordOutput(prefix + "llReportedYaw", llYaw);
-
-        // Log MT1 pose alongside MT2 for direct comparison on the 3G.
-        LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
-        if (mt1 != null && mt1.tagCount > 0 && mt1.pose != null) {
-          Logger.recordOutput(prefix + "mt1Pose", mt1.pose);
-          Logger.recordOutput(prefix + "mt1YawDeg", mt1.pose.getRotation().getDegrees());
-        }
-      }
     }
 
     // While disabled, downsample the expensive per-camera work
@@ -266,8 +248,8 @@ public class Vision extends SubsystemBase {
                   VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
             }
           }
-        } else {
-          // Not yet seeded — just log MT2 for diagnostics.
+        } else if (shouldLog) {
+          // Not yet seeded — just log MT2 for diagnostics (rate-limited).
           for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
             logRawMegaTag2Pose(VisionConstants.kCameraNames[i], i);
           }
