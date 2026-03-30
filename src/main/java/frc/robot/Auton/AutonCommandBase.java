@@ -82,12 +82,14 @@ public class AutonCommandBase extends SequentialCommandGroup {
         .andThen(
             Commands.runOnce(
                 () -> {
-                  java.util.function.DoubleSupplier feedRpm =
-                      robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+                  java.util.function.DoubleSupplier leftFeedRpm =
+                      robotContainer.getTurretAimManager()::getLeftVerticalFeedRPM;
+                  java.util.function.DoubleSupplier rightFeedRpm =
+                      robotContainer.getTurretAimManager()::getRightVerticalFeedRPM;
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(feedRpm));
+                      .schedule(robotContainer.getVerticalFeedLeft().setRPMCommand(leftFeedRpm));
                   edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance()
-                      .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(feedRpm));
+                      .schedule(robotContainer.getVerticalFeedRight().setRPMCommand(rightFeedRpm));
                 }))
         .withName("WaitForSnowblowAtSpeed");
   }
@@ -157,7 +159,10 @@ public class AutonCommandBase extends SequentialCommandGroup {
   }
 
   private Command shootAndWait() {
-    DoubleSupplier verticalFeedTargetRpm = robotContainer.getTurretAimManager()::getVerticalFeedRPM;
+    DoubleSupplier leftVerticalFeedTargetRpm =
+        robotContainer.getTurretAimManager()::getLeftVerticalFeedRPM;
+    DoubleSupplier rightVerticalFeedTargetRpm =
+        robotContainer.getTurretAimManager()::getRightVerticalFeedRPM;
     // Use asProxy() so agitator/vertical-feed subsystem requirements don't
     // propagate to the parent SequentialCommandGroup — same reason as above.
     // Use ParallelDeadlineGroup with a WaitCommand as the deadline so the
@@ -171,10 +176,13 @@ public class AutonCommandBase extends SequentialCommandGroup {
                 // Right floor roller now follows the left floor roller.
                 // Keep the old direct command commented out so follower mode is not overridden.
                 // robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
-                robotContainer.getVerticalFeedLeft().setRPMCommand(verticalFeedTargetRpm).asProxy(),
+                robotContainer
+                    .getVerticalFeedLeft()
+                    .setRPMCommand(leftVerticalFeedTargetRpm)
+                    .asProxy(),
                 robotContainer
                     .getVerticalFeedRight()
-                    .setRPMCommand(verticalFeedTargetRpm)
+                    .setRPMCommand(rightVerticalFeedTargetRpm)
                     .asProxy()),
             new InstantCommand(() -> setShoot = true)));
   }

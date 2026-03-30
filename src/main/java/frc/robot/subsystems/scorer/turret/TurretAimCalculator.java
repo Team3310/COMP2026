@@ -14,8 +14,9 @@ import java.util.Comparator;
  * Pure-math utility that computes the desired turret (lateral) and hood (vertical) angles for the
  * scorers based on the robot's current field pose and alliance color.
  *
- * <p>Both turrets are mechanically parallel, so a single aim solution is computed from the midpoint
- * between the two shooter exits and the same angles are returned for left and right.
+ * <p>Both turrets are mechanically parallel, but each shooter exit is modeled independently so the
+ * aim can account for their unique offsets when computing turret angle, hood, flywheel, and feed
+ * values.
  *
  * <h2>Zone logic</h2>
  *
@@ -53,8 +54,8 @@ public final class TurretAimCalculator {
     /** Left flywheel speed in RPM. */
     public final double leftFlywheelRPM;
 
-    /** Vertical feed speed in RPM. */
-    public final double verticalFeedRPM;
+    /** Left vertical feed speed in RPM. */
+    public final double leftVerticalFeedRPM;
 
     /** Right turret lateral angle in degrees (0 = forward, + = left). */
     public final double rightTurretDeg;
@@ -65,36 +66,46 @@ public final class TurretAimCalculator {
     /** Right flywheel speed in RPM. */
     public final double rightFlywheelRPM;
 
+    /** Right vertical feed speed in RPM. */
+    public final double rightVerticalFeedRPM;
+
+    /** Left shooter horizontal distance to target in meters. */
+    public final double leftDistanceToTargetMeters;
+
+    /** Right shooter horizontal distance to target in meters. */
+    public final double rightDistanceToTargetMeters;
+
     /** The field-space target both scorers are aiming at (for logging). */
     public final Translation2d target;
 
     /** True when in own-alliance zone (aim at hub); false for pass/lob/stow. */
     public final boolean home;
 
-    /** Horizontal distance in meters from the shooter midpoint to the target used for lookup. */
-    public final double shooterDistanceMeters;
-
     public AimResult(
         double leftTurretDeg,
         double leftHoodDeg,
         double leftFlywheelRPM,
-        double verticalFeedRPM,
+        double leftVerticalFeedRPM,
         double rightTurretDeg,
         double rightHoodDeg,
         double rightFlywheelRPM,
+        double rightVerticalFeedRPM,
+        double leftDistanceToTargetMeters,
+        double rightDistanceToTargetMeters,
         Translation2d target,
-        boolean home,
-        double shooterDistanceMeters) {
+        boolean home) {
       this.leftTurretDeg = leftTurretDeg;
       this.leftHoodDeg = leftHoodDeg;
       this.leftFlywheelRPM = leftFlywheelRPM;
-      this.verticalFeedRPM = verticalFeedRPM;
+      this.leftVerticalFeedRPM = leftVerticalFeedRPM;
       this.rightTurretDeg = rightTurretDeg;
       this.rightHoodDeg = rightHoodDeg;
       this.rightFlywheelRPM = rightFlywheelRPM;
+      this.rightVerticalFeedRPM = rightVerticalFeedRPM;
+      this.leftDistanceToTargetMeters = leftDistanceToTargetMeters;
+      this.rightDistanceToTargetMeters = rightDistanceToTargetMeters;
       this.target = target;
       this.home = home;
-      this.shooterDistanceMeters = shooterDistanceMeters;
     }
   }
 
@@ -105,7 +116,13 @@ public final class TurretAimCalculator {
   // Tracks the last output angle so we can pick the closest 360° wrap each
   // cycle.  This prevents the turret from snapping at ±180° and lets it use
   // the full ±220° software range before flipping.
-  private static double lastTurretDeg = 0.0;
+  private enum TurretSide {
+    LEFT,
+    RIGHT
+  }
+
+  private static double lastLeftTurretDeg = 0.0;
+  private static double lastRightTurretDeg = 0.0;
 
   // The turret flips to the other side when the commanded angle exceeds this
   // threshold.  270° is safely beyond the ±220° software limit, so the turret
@@ -116,13 +133,24 @@ public final class TurretAimCalculator {
   private TurretAimCalculator() {}
 
   /**
-   * Compute aim angles for both turrets and hoods.
+   * Compute aim angles for both turrets and hoods using the same robot pose for both.
    *
    * @param robotPose Current robot field pose from odometry / pose estimator.
-   * @return An {@link AimResult} with L/R turret, hood, flywheel, and vertical-feed RPM plus debug
-   *     info.
+   * @return Combined {@link AimResult} for left and right turrets.
    */
   public static AimResult calculate(Pose2d robotPose) {
+    return calculate(robotPose, robotPose);
+  }
+
+  /**
+   * Compute aim angles for both turrets and hoods, allowing each side to use its own effective
+   * robot pose (e.g., after TOF-based ballistic compensation).
+   *
+   * @param leftPose Pose to use when computing the left shooter location/heading.
+   * @param rightPose Pose to use when computing the right shooter location/heading.
+   * @return Combined {@link AimResult} for left and right turrets.
+   */
+  public static AimResult calculate(Pose2d leftPose, Pose2d rightPose) {
     boolean isBlue = (Robot.getEffectiveAlliance() == Alliance.Blue);
 
     FieldConstants.Zone zone = Robot.currentZone;
@@ -137,6 +165,7 @@ public final class TurretAimCalculator {
       home = true;
     }
 
+    double referenceY = (leftPose.getY() + rightPose.getY()) / 2.0;
     if (home) {
       // Aim at our hub
       if (isBlue) {
@@ -150,49 +179,53 @@ public final class TurretAimCalculator {
       // Pass mode — aim at the landing zone on OUR side.
       // Choose whichever landing zone (outpost vs depot) is closer to the
       // robot's current Y to minimize turret travel.
-      fieldTarget = pickLandingTarget(robotPose.getY(), isBlue);
+      fieldTarget = pickLandingTarget(referenceY, isBlue);
     }
 
-    // ---- Compute aim from midpoint of the two shooter exits ----
-    Rotation2d heading = robotPose.getRotation();
+    // ---- Compute aim from each shooter exit ----
+    Translation2d leftShooterField =
+        robotToField(
+            leftPose,
+            Constants.ScorerConstants.kLeftShooterXOffsetMeters,
+            Constants.ScorerConstants.kLeftShooterYOffsetMeters);
+    Translation2d rightShooterField =
+        robotToField(
+            rightPose,
+            Constants.ScorerConstants.kRightShooterXOffsetMeters,
+            Constants.ScorerConstants.kRightShooterYOffsetMeters);
 
-    double midShooterX =
-        (Constants.ScorerConstants.kLeftShooterXOffsetMeters
-                + Constants.ScorerConstants.kRightShooterXOffsetMeters)
-            / 2.0;
-    double midShooterY =
-        (Constants.ScorerConstants.kLeftShooterYOffsetMeters
-                + Constants.ScorerConstants.kRightShooterYOffsetMeters)
-            / 2.0;
+    double[] leftResult =
+        computeAngles(leftShooterField, fieldTarget, leftPose.getRotation(), home, TurretSide.LEFT);
+    double[] rightResult =
+        computeAngles(
+            rightShooterField, fieldTarget, rightPose.getRotation(), home, TurretSide.RIGHT);
 
-    Translation2d midShooterField = robotToField(robotPose, midShooterX, midShooterY);
-    double shooterDistanceMeters = midShooterField.getDistance(fieldTarget);
-    double[] result = computeAngles(midShooterField, fieldTarget, heading, home);
+    double turretDegLeft = leftResult[0] + Constants.ScorerConstants.kTurretOffsetDegrees;
+    double turretDegRight = rightResult[0] + Constants.ScorerConstants.kTurretOffsetDegrees;
 
-    double turretDegLeft =
-        result[0]
-            + Constants.ScorerConstants.kTurretOffsetDegrees
-            + Constants.ScorerConstants.kLeftTurretOffset; // add any static offset
-    double turretDegRight =
-        result[0]
-            + Constants.ScorerConstants.kTurretOffsetDegrees
-            + Constants.ScorerConstants.kRightTurretOffset; // add any static offset
-    double hoodDeg = result[1];
-    double flywheelRPM = result[2];
-    double verticalFeedRPM = result[3];
+    double leftHoodDeg = leftResult[1];
+    double rightHoodDeg = rightResult[1];
+    double leftFlywheelRPM = leftResult[2];
+    double rightFlywheelRPM = rightResult[2];
+    double leftVerticalFeedRPM = leftResult[3];
+    double rightVerticalFeedRPM = rightResult[3];
 
-    // Same values for both sides (parallel turrets)
+    double leftDistanceMeters = leftShooterField.getDistance(fieldTarget);
+    double rightDistanceMeters = rightShooterField.getDistance(fieldTarget);
+
     return new AimResult(
         turretDegLeft,
-        hoodDeg,
-        flywheelRPM,
-        verticalFeedRPM,
+        leftHoodDeg,
+        leftFlywheelRPM,
+        leftVerticalFeedRPM,
         turretDegRight,
-        hoodDeg,
-        flywheelRPM,
+        rightHoodDeg,
+        rightFlywheelRPM,
+        rightVerticalFeedRPM,
+        leftDistanceMeters,
+        rightDistanceMeters,
         fieldTarget,
-        home,
-        shooterDistanceMeters);
+        home);
   }
 
   // ====================================================================
@@ -239,7 +272,8 @@ public final class TurretAimCalculator {
       Translation2d shooterField,
       Translation2d targetField,
       Rotation2d robotHeading,
-      boolean home) {
+      boolean home,
+      TurretSide side) {
     // --- Lateral (turret) angle ---
     // Vector from shooter to target in field frame
     double dx = targetField.getX() - shooterField.getX();
@@ -269,8 +303,10 @@ public final class TurretAimCalculator {
 
     // Pick the 360° wrap closest to where the turret was last cycle.
     // This lets the angle smoothly pass through ±180° without snapping.
-    while (turretDeg - lastTurretDeg > 180.0) turretDeg -= 360.0;
-    while (turretDeg - lastTurretDeg < -180.0) turretDeg += 360.0;
+    double previousTurretDeg = (side == TurretSide.LEFT) ? lastLeftTurretDeg : lastRightTurretDeg;
+
+    while (turretDeg - previousTurretDeg > 180.0) turretDeg -= 360.0;
+    while (turretDeg - previousTurretDeg < -180.0) turretDeg += 360.0;
 
     // If we've exceeded the flip threshold, snap to the other side.
     if (turretDeg > FLIP_THRESHOLD) {
@@ -283,7 +319,11 @@ public final class TurretAimCalculator {
     turretDeg = Math.max(turretMin, Math.min(turretMax, turretDeg));
 
     // Remember for next cycle
-    lastTurretDeg = turretDeg;
+    if (side == TurretSide.LEFT) {
+      lastLeftTurretDeg = turretDeg;
+    } else {
+      lastRightTurretDeg = turretDeg;
+    }
 
     // --- Vertical (hood) angle and flywheel speed via lookup table ---
     double horizontalDist = Math.hypot(dx, dy);
