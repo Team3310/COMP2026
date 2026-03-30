@@ -612,57 +612,8 @@ public class RobotContainer {
   private Command buildShootWhileHeldCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
-    java.util.function.DoubleSupplier leftVerticalFeedTargetRpm =
-        turretAimManager::getLeftVerticalFeedRPM;
-    java.util.function.DoubleSupplier rightVerticalFeedTargetRpm =
-        turretAimManager::getRightVerticalFeedRPM;
-
-    return Commands.parallel(
-            Commands.startEnd(
-                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
-            Commands.parallel(
-                    flywheelLeft.setRPMCommand(leftTargetRpm),
-                    flywheelRight.setRPMCommand(rightTargetRpm))
-                .alongWith(
-                    Commands.run(
-                        () -> {
-                          double tolRPM = Constants.ScorerConstants.kFlywheelRPMTolerance;
-                          double leftErr =
-                              Math.abs(
-                                  flywheelLeft.getCurrentVelocity() - leftTargetRpm.getAsDouble());
-                          double rightErr =
-                              Math.abs(
-                                  flywheelRight.getCurrentVelocity()
-                                      - rightTargetRpm.getAsDouble());
-                          if (leftErr < tolRPM && rightErr < tolRPM && isTurretOnTarget()) {
-                            Commands.parallel(
-                                verticalFeedLeft.customVelocityCommand(verticalFeedTargetRpm),
-                                verticalFeedRight.customVelocityCommand(verticalFeedTargetRpm),
-                                agitatorLeft.snowblowCommand(),
-                                agitatorRight.snowblowCommand());
-                          } else {
-                            CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                            CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                            CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                            CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                          }
-                        })))
-        .finallyDo(
-            () -> {
-              CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-              CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-              CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-              CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-              CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-              CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-              Robot.stateRefreshRequested = true;
-            });
-  }*/
-
-  private Command buildShootWhileHeldCommand() {
-    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
-    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
-    java.util.function.DoubleSupplier verticalFeedTargetRpm = turretAimManager::getVerticalFeedRPM;
+    java.util.function.DoubleSupplier leftVerticalFeedTargetRpm = turretAimManager::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightVerticalFeedTargetRpm = turretAimManager::getRightVerticalFeedRPM;
 
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
@@ -675,8 +626,8 @@ public class RobotContainer {
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().
                         Commands.parallel(
-                            verticalFeedLeft.setRPMCommand(verticalFeedTargetRpm),
-                            verticalFeedRight.setRPMCommand(verticalFeedTargetRpm),
+                            verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
+                            verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
                             agitatorLeft.snowblowCommand()
                             // Right floor roller now follows the left floor roller.
                             // Keep the old direct command commented out so follower mode is not
