@@ -34,7 +34,7 @@ public class Lights extends SubsystemBase {
   private Lights() {
 
     ledStrip = new AddressableLED(2);
-    ledBuffer = new AddressableLEDBuffer(43); // Number of LEDs in the strip
+    ledBuffer = new AddressableLEDBuffer( ); // Number of LEDs in the strip
 
     ledStrip.setLength(ledBuffer.getLength());
     LEDPattern.solid(Color.kRed).applyTo(ledBuffer);
