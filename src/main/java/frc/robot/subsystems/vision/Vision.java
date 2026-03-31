@@ -222,7 +222,6 @@ public class Vision extends SubsystemBase {
           LimelightHelpers.SetRobotOrientation_NoFlush(
               name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
-        LimelightHelpers.Flush();
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
           // MT1 pre-match seeding: attempt to seed full pose (XY + heading) from
           // MegaTag 1 while disabled.  Only seeds once (hasSeed flag).
@@ -268,12 +267,12 @@ public class Vision extends SubsystemBase {
     }
 
     // Enabled path — full-rate processing every cycle.
-    // Use NoFlush variant so each camera's NT write is batched. A single manual
-    // flush after all 4 cameras avoids 4× full NT flushes per cycle (~4-8 ms each).
+    // NoFlush: WPILib already flushes NT at the end of every 20 ms loop iteration,
+    // so the orientation data reaches the LLs within one cycle regardless.
+    // Calling flush() manually just blocks the thread for no benefit.
     for (String name : VisionConstants.kCameraNames) {
       LimelightHelpers.SetRobotOrientation_NoFlush(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
-    LimelightHelpers.Flush();
 
     // Process each camera — collect accepted observations for timestamp-sorted injection.
     // Sorting ensures the pose estimator processes measurements in chronological order
@@ -529,12 +528,11 @@ public class Vision extends SubsystemBase {
     seedStable = true;
 
     // Immediately broadcast the new heading to ALL cameras so MT2 is re-anchored right away.
-    // Use NoFlush for the batch, then a single flush at the end.
+    // No manual flush needed — WPILib flushes NT at the end of every loop iteration.
     double newYawDeg = visionPose.getRotation().getDegrees();
     for (String cam : VisionConstants.kCameraNames) {
       LimelightHelpers.SetRobotOrientation_NoFlush(cam, newYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
-    LimelightHelpers.Flush();
 
     if (shouldLog) {
       Logger.recordOutput(prefix + "poseSeeded", true);
