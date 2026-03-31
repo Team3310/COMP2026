@@ -1,6 +1,7 @@
 package frc.lib.subsystems;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.controls.*;
@@ -33,8 +34,11 @@ public class TalonFXIO implements MotorIO {
   private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage =
       new DynamicMotionMagicVoltage(0.0, 0.0, 0.0);
   private final Follower followerControl = new Follower(0, MotorAlignmentValue.Aligned);
+
+  @SuppressWarnings("unused")
   private final MotionMagicTorqueCurrentFOC motionMagicTorqueFOCPositionControl =
       new MotionMagicTorqueCurrentFOC(0.0);
+
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
 
   private final StatusSignal<Angle> positionSignal;
@@ -48,7 +52,8 @@ public class TalonFXIO implements MotorIO {
 
   public TalonFXIO(ServoMotorSubsystemConfig config) {
     this.config = config;
-    talon = new TalonFX(config.talonCANID.getDeviceNumber(), config.talonCANID.getBus());
+    talon =
+        new TalonFX(config.talonCANID.getDeviceNumber(), new CANBus(config.talonCANID.getBus()));
 
     // Current limits and ramp rates do not perform well in sim.
     if (Robot.isSimulation()) {

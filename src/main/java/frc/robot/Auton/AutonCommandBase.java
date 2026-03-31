@@ -113,6 +113,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
 
   // #region Helpers
 
+  @SuppressWarnings("unused")
   private Command spinUp() {
     return new SequentialCommandGroup(
         new WaitUntilCommand(this::hasCrossedAllianceShootline),
