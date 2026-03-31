@@ -34,9 +34,11 @@ public class TalonFXIO implements MotorIO {
   private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage =
       new DynamicMotionMagicVoltage(0.0, 0.0, 0.0);
   private final Follower followerControl = new Follower(0, MotorAlignmentValue.Aligned);
+
   @SuppressWarnings("unused")
   private final MotionMagicTorqueCurrentFOC motionMagicTorqueFOCPositionControl =
       new MotionMagicTorqueCurrentFOC(0.0);
+
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
 
   private final StatusSignal<Angle> positionSignal;
