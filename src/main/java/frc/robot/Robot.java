@@ -142,6 +142,12 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @java.lang.Override
   public void robotPeriodic() {
+    // Batch-refresh all registered CAN status signals in one transaction
+    // before any subsystem periodic() reads them.  This replaces 13+ individual
+    // BaseStatusSignal.refreshAll() calls (one per motor) with a single call
+    // that batches frames internally, saving 5-15 ms per cycle.
+    frc.lib.subsystems.SignalRefreshManager.getInstance().refreshAll();
+
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
     // finished or interrupted commands, and running subsystem periodic() methods.

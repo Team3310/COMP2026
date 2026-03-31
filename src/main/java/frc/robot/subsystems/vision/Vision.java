@@ -90,6 +90,12 @@ public class Vision extends SubsystemBase {
   private final double[] lastMT2SeenTime;
   private double lastFinalFilteredTime = 0.0;
 
+  // Pre-allocated lists for per-cycle observation collection (max 4 cameras).
+  // Reused every cycle to avoid allocating a new ArrayList on the 100 MB heap
+  // with SerialGC (which has no concurrent collection).
+  private final List<AcceptedObservation> acceptedBuf = new ArrayList<>(4);
+  private final List<AcceptedObservation> disabledAcceptedBuf = new ArrayList<>(4);
+
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
   // Set to false from Elastic/SmartDashboard to remove vision from the pose
@@ -213,8 +219,10 @@ public class Vision extends SubsystemBase {
       if (disabledCycleCounter >= DISABLED_PROCESS_INTERVAL) {
         disabledCycleCounter = 0;
         for (String name : VisionConstants.kCameraNames) {
-          LimelightHelpers.SetRobotOrientation(name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
+          LimelightHelpers.SetRobotOrientation_NoFlush(
+              name, robotYawDeg, yawRateDps, 0.0, 0.0, 0.0, 0.0);
         }
+        LimelightHelpers.Flush();
         for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
           // MT1 pre-match seeding: attempt to seed full pose (XY + heading) from
           // MegaTag 1 while disabled.  Only seeds once (hasSeed flag).
@@ -230,17 +238,18 @@ public class Vision extends SubsystemBase {
         // so it doesn't drift on wheel slip / encoder error during pre-match
         // repositioning, and gives AdvantageScope a live fused pose ghost.
         if (hasSeed) {
-          List<AcceptedObservation> disabledAccepted = new ArrayList<>();
+          disabledAcceptedBuf.clear();
           for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
             AcceptedObservation obs =
                 processCamera(
                     VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
             if (obs != null) {
-              disabledAccepted.add(obs);
+              disabledAcceptedBuf.add(obs);
             }
           }
-          disabledAccepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
-          for (AcceptedObservation obs : disabledAccepted) {
+          disabledAcceptedBuf.sort(
+              Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+          for (AcceptedObservation obs : disabledAcceptedBuf) {
             if (visionEnabled) {
               drive.addVisionMeasurement(
                   obs.pose(),
@@ -259,27 +268,30 @@ public class Vision extends SubsystemBase {
     }
 
     // Enabled path — full-rate processing every cycle.
+    // Use NoFlush variant so each camera's NT write is batched. A single manual
+    // flush after all 4 cameras avoids 4× full NT flushes per cycle (~4-8 ms each).
     for (String name : VisionConstants.kCameraNames) {
-      LimelightHelpers.SetRobotOrientation(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+      LimelightHelpers.SetRobotOrientation_NoFlush(name, robotYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
+    LimelightHelpers.Flush();
 
     // Process each camera — collect accepted observations for timestamp-sorted injection.
     // Sorting ensures the pose estimator processes measurements in chronological order
     // even when cameras have different pipeline latencies.
-    List<AcceptedObservation> accepted = new ArrayList<>();
+    acceptedBuf.clear();
     for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
       AcceptedObservation obs =
           processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
       if (obs != null) {
-        accepted.add(obs);
+        acceptedBuf.add(obs);
       }
     }
 
     // Sort by timestamp (oldest first) and inject into pose estimator via WPILib's
     // built-in Kalman filter (SwerveDrivePoseEstimator). Each camera's stddev weight
     // controls how much it influences the fused pose — lower stddev = more trust.
-    accepted.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
-    for (AcceptedObservation obs : accepted) {
+    acceptedBuf.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
+    for (AcceptedObservation obs : acceptedBuf) {
       if (visionEnabled) {
         drive.addVisionMeasurement(
             obs.pose(),
@@ -294,14 +306,14 @@ public class Vision extends SubsystemBase {
       // estimator this cycle.  When multiple cameras pass filters we compute a
       // stddev-weighted average so AdvantageScope can show a single "what
       // odometry sees" ghost alongside the per-camera raw ghosts.
-      if (!accepted.isEmpty()) {
+      if (!acceptedBuf.isEmpty()) {
         lastFinalFilteredTime = Timer.getFPGATimestamp();
         double weightSum = 0.0;
         double sumX = 0.0;
         double sumY = 0.0;
         double sumCos = 0.0;
         double sumSin = 0.0;
-        for (AcceptedObservation obs : accepted) {
+        for (AcceptedObservation obs : acceptedBuf) {
           // Weight = 1/stddev² — lower stddev → higher weight.
           double w = 1.0 / (obs.scaledXYStdDev() * obs.scaledXYStdDev());
           weightSum += w;
@@ -517,10 +529,12 @@ public class Vision extends SubsystemBase {
     seedStable = true;
 
     // Immediately broadcast the new heading to ALL cameras so MT2 is re-anchored right away.
+    // Use NoFlush for the batch, then a single flush at the end.
     double newYawDeg = visionPose.getRotation().getDegrees();
     for (String cam : VisionConstants.kCameraNames) {
-      LimelightHelpers.SetRobotOrientation(cam, newYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+      LimelightHelpers.SetRobotOrientation_NoFlush(cam, newYawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
+    LimelightHelpers.Flush();
 
     if (shouldLog) {
       Logger.recordOutput(prefix + "poseSeeded", true);

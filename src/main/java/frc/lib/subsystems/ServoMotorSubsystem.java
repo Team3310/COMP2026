@@ -26,8 +26,10 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   protected ServoMotorSubsystemConfig conf;
   private int latencyLogCounter = 0;
   private String lastLoggedCommandName = "";
+
   /** True on the one cycle per kLogInterval where API-level Logger calls fire. */
   private boolean shouldLogAPI = false;
+
   private int apiLogCounter = 0;
 
   public ServoMotorSubsystem(ServoMotorSubsystemConfig config, T inputs, U io) {
@@ -109,8 +111,7 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     if (shouldLogAPI) {
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
-      Logger.recordOutput(
-          getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
     }
@@ -127,8 +128,7 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
     if (shouldLogAPI) {
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Units", units);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Velocity", velocity);
-      Logger.recordOutput(
-          getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
+      Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Accel", acceleration);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Jerk", jerk);
       Logger.recordOutput(getName() + "/API/setMotionMagicSetpointImpDynamic/Slot", slot);
       Logger.recordOutput(
@@ -341,8 +341,7 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
   }
 
   public void setTorqueCurrentFOCImpl(double current) {
-    if (shouldLogAPI)
-      Logger.recordOutput(getName() + "/API/setTorqueCurrentFoC/Current", current);
+    if (shouldLogAPI) Logger.recordOutput(getName() + "/API/setTorqueCurrentFoC/Current", current);
     io.setTorqueCurrentFOC(current);
   }
 
