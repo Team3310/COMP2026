@@ -256,6 +256,54 @@ public class RobotContainer {
     return autonomousChooser.getCommand();
   }
 
+  public Command buildAutoDefenseOutCommand() {
+    return Commands.parallel(
+            intakePivot.deployCommand().asProxy(),
+            intakeRollers.offCommand().asProxy(),
+            agitatorLeft.offCommand().asProxy(),
+            verticalFeedLeft.offCommand().asProxy(),
+            verticalFeedRight.offCommand().asProxy())
+        .withName("Auto DefenceOut");
+  }
+
+  public Command buildAutoCollectCommand() {
+    return Commands.parallel(
+            intakePivot.deployCommand().asProxy(),
+            intakeRollers.intakeCommand().asProxy(),
+            agitatorLeft.collectCommand().asProxy(),
+            // Right floor roller follows the left floor roller, so do not
+            // directly command the follower in autonomous collect.
+            verticalFeedLeft.verticalFeedCollectCommand().asProxy(),
+            verticalFeedRight.verticalFeedCollectCommand().asProxy())
+        .withName("Auto Collect");
+  }
+
+  public Command buildAutoSnowblowCommand() {
+    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
+    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
+    java.util.function.DoubleSupplier leftFeedRpm = turretAimManager::getLeftVerticalFeedRPM;
+    java.util.function.DoubleSupplier rightFeedRpm = turretAimManager::getRightVerticalFeedRPM;
+
+    return Commands.parallel(
+            Commands.startEnd(
+                () -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
+            flywheelLeft.setRPMCommand(leftTargetRpm).asProxy(),
+            flywheelRight.setRPMCommand(rightTargetRpm).asProxy(),
+            intakePivot.deployCommand().asProxy(),
+            intakeRollers.intakeCommand().asProxy(),
+            new WaitCommand(Constants.ScorerConstants.kWaitTime)
+                .andThen(
+                    Commands.parallel(
+                        agitatorLeft.snowblowCommand().asProxy(),
+                        // Right floor roller now follows the left floor roller.
+                        // Keep the old direct command commented out so follower
+                        // mode is not overridden.
+                        // agitatorRight.snowblowCommand().asProxy(),
+                        verticalFeedLeft.setRPMCommand(leftFeedRpm).asProxy(),
+                        verticalFeedRight.setRPMCommand(rightFeedRpm).asProxy())))
+        .withName("Auto Snowblow");
+  }
+
   // #endregion
 
   // Controllers
@@ -289,10 +337,9 @@ public class RobotContainer {
             .withName("RightFloorRoller Follow LeftFloorRoller"));
 
     // Register PathPlanner named commands (must be before any path loading)
-    NamedCommands.registerCommand(
-        "switchToCollect", buildOverrideStateCommand(Robot.OverrideState.COLLECT));
-    NamedCommands.registerCommand(
-        "switchToSnowblow", buildOverrideStateCommand(Robot.OverrideState.SNOWBLOW));
+    NamedCommands.registerCommand("switchToCollect", buildAutoCollectCommand());
+    NamedCommands.registerCommand("switchToSnowblow", buildAutoSnowblowCommand());
+    NamedCommands.registerCommand("snowblow", buildSnowblowCommand());
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
     NamedCommands.registerCommand(
         "deployIntake",

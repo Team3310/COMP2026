@@ -40,6 +40,7 @@ public class Robot extends LoggedRobot {
 
   // enums
   public static enum BotState {
+    AUTO,
     SNOWBLOW,
     COLLECT,
     DEFENCEIN,
@@ -171,7 +172,9 @@ public class Robot extends LoggedRobot {
     // states.
     // If we are deploying or retracting, we want to stay in deploy or retract until
     // we are done.
-    if (inPit && !robotContainer.pitOperatorMirrorsNormalMode) {
+    if (DriverStation.isAutonomousEnabled()) {
+      currentState = BotState.AUTO;
+    } else if (inPit && !robotContainer.pitOperatorMirrorsNormalMode) {
       currentState = BotState.PIT;
     } else if (!deploying && !retracting) {
       switch (overrideState) {
@@ -420,6 +423,7 @@ public class Robot extends LoggedRobot {
 
     robotContainer.getDrive().lockGyroHeadingToEstimatedPose();
 
+    currentState = BotState.AUTO;
     autonomousCommand = autoCommand;
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
@@ -566,6 +570,10 @@ public class Robot extends LoggedRobot {
       case SNOWBLOW:
         snowblow();
         break;
+      case AUTO:
+        // Autonomous commands drive the superstructure directly instead of
+        // entering the normal teleop state machine.
+        break;
       case COLLECT:
         collect();
         break;
@@ -632,8 +640,13 @@ public class Robot extends LoggedRobot {
 
     // Raise the roof before retracting the intake to avoid mechanism interference.
     CommandScheduler.getInstance().schedule(retract());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    // Only kill flywheels during teleop. In autonomous, autos like DepCollect
+    // run flywheelsOn() in parallel for the full routine, and scheduling off
+    // here cancels that command immediately on entry to DEFENCEIN.
+    if (DriverStation.isTeleop()) {
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    }
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     // Right floor roller now follows the left floor roller.
     // Keep the old direct off command commented out so follower mode is not overridden.
@@ -656,8 +669,10 @@ public class Robot extends LoggedRobot {
 
   private void defenseOut() {
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    if (DriverStation.isTeleop()) {
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+    }
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     // Right floor roller now follows the left floor roller.
     // Keep the old direct off command commented out so follower mode is not overridden.

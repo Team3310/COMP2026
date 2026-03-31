@@ -16,7 +16,6 @@ import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.Robot.OverrideState;
 import frc.robot.RobotContainer;
 import java.util.function.DoubleSupplier;
 
@@ -96,21 +95,17 @@ public class AutonCommandBase extends SequentialCommandGroup {
   }
 
   protected Command followPathAndSnowblow(PathPlannerPath path) {
-    return new ParallelCommandGroup(
-        followPath(path), new InstantCommand(() -> Robot.overrideState = OverrideState.SNOWBLOW));
+    return new ParallelDeadlineGroup(followPath(path), robotContainer.buildAutoSnowblowCommand());
   }
 
   protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
-    return new SequentialCommandGroup(
-        new ParallelCommandGroup(
-            followPath(path),
-            new SequentialCommandGroup(
-                new WaitUntilCommand(this::hasCrossedDeployLine),
-                new InstantCommand(() -> deployCheckActive = false),
-                new InstantCommand(() -> Robot.overrideState = OverrideState.DEFENCEOUT),
-                new WaitCommand(0.5),
-                new InstantCommand(() -> Robot.overrideState = OverrideState.COLLECT)),
-            new SequentialCommandGroup(new WaitCommand(4.0), shoot())));
+    return new ParallelCommandGroup(
+        followPath(path),
+        new SequentialCommandGroup(
+            new WaitUntilCommand(this::hasCrossedDeployLine),
+            new InstantCommand(() -> deployCheckActive = false),
+            deployAndIntake()),
+        new SequentialCommandGroup(new WaitCommand(4.0), shoot()));
   }
 
   // #endregion
@@ -124,6 +119,17 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new InstantCommand(() -> spinUp = true),
         flywheelsOn(),
         waitForFlywheelsAtSpeed());
+  }
+
+  private Command deployAndIntake() {
+    return new ParallelDeadlineGroup(
+            robotContainer
+                .getIntakePivot()
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 2.0)
+                .asProxy(),
+            robotContainer.getIntakeRollers().deployCommand().asProxy())
+        .andThen(robotContainer.getIntakeRollers().intakeCommand().asProxy());
   }
 
   private Command shoot() {
@@ -220,12 +226,13 @@ public class AutonCommandBase extends SequentialCommandGroup {
         : robotX > trenchCenterLine;
   }
 
-  private boolean hasCrossedDeployLine(){
+  private boolean hasCrossedDeployLine() {
     deployCheckActive = true;
     double robotX = robotContainer.getDrive().getPose().getX();
-    double deployLine = Robot.getEffectiveAlliance() == Alliance.Blue
-        ? FieldConstants.kBlueShootLine
-        : FieldConstants.kRedShootLine;
+    double deployLine =
+        Robot.getEffectiveAlliance() == Alliance.Blue
+            ? FieldConstants.kBlueShootLine
+            : FieldConstants.kRedShootLine;
 
     return Robot.getEffectiveAlliance() == Alliance.Blue
         ? robotX > deployLine
