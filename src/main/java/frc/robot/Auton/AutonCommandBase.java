@@ -165,7 +165,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new ParallelCommandGroup(
             followPath(path),
             new SequentialCommandGroup(
-                new WaitCommand(1.0),
+                new WaitUntilCommand(1.0),
+                new InstantCommand(() -> Robot.overrideState = OverrideState.DEFENCEOUT),
                 new InstantCommand(() -> Robot.overrideState = OverrideState.COLLECT)),
             new SequentialCommandGroup(new WaitCommand(4.0), shoot())));
   }

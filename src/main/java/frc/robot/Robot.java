@@ -654,7 +654,7 @@ public class Robot extends LoggedRobot {
   private void collect() {
 
     // Deploy intake to collect, and run motors to intake and agitator motors.
-    CommandScheduler.getInstance().schedule(deploy(false));
+    CommandScheduler.getInstance().schedule(deploy(true));
     // Only kill flywheels during teleop — in autonomous, flywheelsOn() is
     // running in parallel and must not be cancelled.  The auton shoot
     // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.

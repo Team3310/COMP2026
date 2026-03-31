@@ -106,8 +106,7 @@ public class TunerConstantsComp {
   private static final double kSteerGearRatio = 12.1;
   // TODO: Calibrate kRadiusFactor for the comp bot by driving a known distance
   // and comparing measured vs actual.  Using practice-bot value as placeholder.
-  private static final double kRadiusFactor = (90.99 - 78.74) / (78.74); // error/actual
-  private static final Distance kWheelRadius = Inches.of(2 * kRadiusFactor);
+  private static final Distance kWheelRadius = Inches.of(2);
 
   private static final boolean kInvertLeftSide = false;
   private static final boolean kInvertRightSide = true;
