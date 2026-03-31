@@ -456,7 +456,7 @@ public final class Constants {
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 4.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 2.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 4.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
@@ -591,10 +591,10 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds, verticalFeedRPM }
-      {1.219, 6.5, 3275, 1.0, 2500.0},
-      {1.524, 8.1, 3325, 1.0, 2500.0},
-      {1.829, 9.7, 3375.0, 1.0, 2500.0},
-      {2.134, 11.3, 3400.0, 1.0, 2500.0},
+      {1.219, 6.5, 3275, 1.0, 1000.0},
+      {1.524, 8.1, 3325, 1.0, 1000.0},
+      {1.829, 9.7, 3375.0, 1.0, 1000.0},
+      {2.134, 11.3, 3400.0, 1.0, 2000.0},
       {2.438, 12.9, 3450.0, 1.0, 2500.0},
       {2.743, 14.4, 3525.0, 1.0, 2500.0},
       {3.048, 15.9, 3600.0, 1.0, 2500.0},
@@ -791,7 +791,7 @@ public final class Constants {
     kLeftFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+    kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 100.0;
     kLeftFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -812,7 +812,7 @@ public final class Constants {
     kRightFlywheelConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFlywheelConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 80.0;
+    kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 100.0;
     kRightFlywheelConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -831,7 +831,7 @@ public final class Constants {
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kIntakeVelocityRPM = 3000.0;
-    public static double kOuttakeVelocityRPM = -2500.0;
+    public static double kOuttakeVelocityRPM = -4000.0;
 
     public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
