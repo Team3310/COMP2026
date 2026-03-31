@@ -84,10 +84,6 @@ public class TalonFXIO implements MotorIO {
     CTREUtil.tryUntilOK(
         () -> BaseStatusSignal.setUpdateFrequencyForAll(50.0, signals), talon.getDeviceID());
     CTREUtil.tryUntilOK(() -> talon.optimizeBusUtilization(), talon.getDeviceID());
-
-    // Register signals with the central batch-refresh manager so they are
-    // refreshed in one CAN transaction per cycle instead of per-motor.
-    SignalRefreshManager.getInstance().register(signals);
   }
 
   private double rotorToUnits(double rotor) {
@@ -104,8 +100,7 @@ public class TalonFXIO implements MotorIO {
 
   @Override
   public void readInputs(MotorInputs inputs) {
-    // Signals are already refreshed by SignalRefreshManager.refreshAll()
-    // at the top of the robot loop — no per-motor CAN read needed here.
+    BaseStatusSignal.refreshAll(signals);
 
     inputs.unitPosition = rotorToUnits(positionSignal.getValueAsDouble());
     inputs.velocityUnitsPerSecond = rotorToUnits(velocitySignal.getValueAsDouble());
