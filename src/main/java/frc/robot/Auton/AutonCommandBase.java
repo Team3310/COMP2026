@@ -104,8 +104,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new SequentialCommandGroup(
             new WaitUntilCommand(this::hasCrossedDeployLine),
             new InstantCommand(() -> deployCheckActive = false),
-            deployAndIntake()),
-        new SequentialCommandGroup(new WaitCommand(4.0), shoot()));
+            deployAndIntake(),
+        new SequentialCommandGroup(new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline), shoot())));
   }
 
   // #endregion
@@ -174,8 +174,8 @@ public class AutonCommandBase extends SequentialCommandGroup {
         robotContainer.getTurretAimManager()::getLeftVerticalFeedRPM;
     DoubleSupplier rightVerticalFeedTargetRpm =
         robotContainer.getTurretAimManager()::getRightVerticalFeedRPM;
-    // Use asProxy() so agitator/vertical-feed subsystem requirements don't
-    // propagate to the parent SequentialCommandGroup — same reason as above.
+    // Hold floor/vertical-feed requirements directly during the shoot window so
+    // another command can't preempt these rollers off mid-shot.
     // Use ParallelDeadlineGroup with a WaitCommand as the deadline so the
     // never-ending velocity commands are interrupted after 3 seconds and the
     // sequence can continue to the next step.
@@ -183,18 +183,12 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new WaitCommand(3.0),
         new SequentialCommandGroup(
             new ParallelCommandGroup(
-                robotContainer.getAgitatorLeft().snowblowCommand().asProxy(),
+                robotContainer.getAgitatorLeft().snowblowCommand(),
                 // Right floor roller now follows the left floor roller.
                 // Keep the old direct command commented out so follower mode is not overridden.
                 // robotContainer.getAgitatorRight().snowblowCommand().asProxy(),
-                robotContainer
-                    .getVerticalFeedLeft()
-                    .setRPMCommand(leftVerticalFeedTargetRpm)
-                    .asProxy(),
-                robotContainer
-                    .getVerticalFeedRight()
-                    .setRPMCommand(rightVerticalFeedTargetRpm)
-                    .asProxy()),
+                robotContainer.getVerticalFeedLeft().setRPMCommand(leftVerticalFeedTargetRpm),
+                robotContainer.getVerticalFeedRight().setRPMCommand(rightVerticalFeedTargetRpm)),
             new InstantCommand(() -> setShoot = true)));
   }
 
