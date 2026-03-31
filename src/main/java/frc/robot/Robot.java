@@ -304,6 +304,7 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putBoolean("trenchCheckActive", AutonCommandBase.trenchCheckActive);
       SmartDashboard.putBoolean("spinUp", AutonCommandBase.spinUp);
       SmartDashboard.putBoolean("setShoot", AutonCommandBase.setShoot);
+      SmartDashboard.putBoolean("deployCheck", AutonCommandBase.deployCheckActive);
 
       // Per-subsystem supply current (amps)
       double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();

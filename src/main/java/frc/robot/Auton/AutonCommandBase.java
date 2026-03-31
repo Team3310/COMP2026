@@ -31,6 +31,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
   public static boolean trenchCheckActive;
   public static boolean spinUp;
   public static boolean setShoot;
+  public static boolean deployCheckActive;
 
   /**
    * Creates a new AutonCommandBase.
@@ -104,8 +105,10 @@ public class AutonCommandBase extends SequentialCommandGroup {
         new ParallelCommandGroup(
             followPath(path),
             new SequentialCommandGroup(
-                new WaitUntilCommand(1.0),
+                new WaitUntilCommand(this::hasCrossedDeployLine),
+                new InstantCommand(() -> deployCheckActive = false),
                 new InstantCommand(() -> Robot.overrideState = OverrideState.DEFENCEOUT),
+                new WaitCommand(0.5),
                 new InstantCommand(() -> Robot.overrideState = OverrideState.COLLECT)),
             new SequentialCommandGroup(new WaitCommand(4.0), shoot())));
   }
@@ -215,6 +218,18 @@ public class AutonCommandBase extends SequentialCommandGroup {
     return Robot.getEffectiveAlliance() == Alliance.Blue
         ? robotX < trenchCenterLine
         : robotX > trenchCenterLine;
+  }
+
+  private boolean hasCrossedDeployLine(){
+    deployCheckActive = true;
+    double robotX = robotContainer.getDrive().getPose().getX();
+    double deployLine = Robot.getEffectiveAlliance() == Alliance.Blue
+        ? FieldConstants.kBlueShootLine
+        : FieldConstants.kRedShootLine;
+
+    return Robot.getEffectiveAlliance() == Alliance.Blue
+        ? robotX > deployLine
+        : robotX < deployLine;
   }
 
   /**
