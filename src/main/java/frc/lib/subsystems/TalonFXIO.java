@@ -28,6 +28,8 @@ public class TalonFXIO implements MotorIO {
   private final VelocityVoltage velocityVoltageControl = new VelocityVoltage(0.0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOCControl =
       new VelocityTorqueCurrentFOC(0.0);
+  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOCControl =
+      new VelocityTorqueCurrentFOC(0.0);
   private final VoltageOut voltageControl = new VoltageOut(0.0);
   private final PositionVoltage positionVoltageControl = new PositionVoltage(0.0);
   private final MotionMagicVoltage motionMagicPositionControl = new MotionMagicVoltage(0.0);
@@ -201,6 +203,12 @@ public class TalonFXIO implements MotorIO {
   }
 
   @Override
+  public void setVelocityTorqueCurrentFOCSetpoint(double unitsPerSecond, int slot) {
+    talon.setControl(
+        velocityTorqueCurrentFOCControl.withVelocity(unitsToRotor(unitsPerSecond)).withSlot(slot));
+  }
+
+  @Override
   public void setCurrentPositionAsZero() {
     setCurrentPosition(0.0);
   }
@@ -217,6 +225,11 @@ public class TalonFXIO implements MotorIO {
 
   @Override
   public void follow(CANDeviceId masterId, boolean opposeMasterDirection) {
+    talon.setControl(
+        followerControl
+            .withLeaderID(masterId.getDeviceNumber())
+            .withMotorAlignment(
+                opposeMasterDirection ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned));
     talon.setControl(
         followerControl
             .withLeaderID(masterId.getDeviceNumber())
