@@ -237,20 +237,6 @@ public class ServoMotorSubsystem<T extends MotorInputsAutoLogged, U extends Moto
         .withName(getName() + " VelocityTorqueCurrentFOCControl");
   }
 
-  public Command velocityTorqueCurrentFOCSetpointCommand(DoubleSupplier velocitySupplier) {
-    return velocityTorqueCurrentFOCSetpointCommand(velocitySupplier, 0);
-  }
-
-  public Command velocityTorqueCurrentFOCSetpointCommand(
-      DoubleSupplier velocitySupplier, int slot) {
-    return runEnd(
-            () -> {
-              setVelocityTorqueCurrentFOCSetpointImpl(velocitySupplier.getAsDouble(), slot);
-            },
-            () -> {})
-        .withName(getName() + " VelocityTorqueCurrentFOCControl");
-  }
-
   public Command setCoast() {
     return startEnd(
             () -> setNeutralModeImpl(NeutralModeValue.Coast),
