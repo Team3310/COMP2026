@@ -9,6 +9,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -86,6 +87,9 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
+  // All CAN status signals from gyro + 4 modules, refreshed in one batched call.
+  private final BaseStatusSignal[] allDriveSignals;
+
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
@@ -122,6 +126,20 @@ public class Drive extends SubsystemBase {
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
+
+    // Build a single array of every CAN signal from all modules + gyro so
+    // Drive.periodic() can refresh them all with ONE BaseStatusSignal.refreshAll()
+    // call instead of 13 separate round-trips.
+    {
+      BaseStatusSignal[] gyroSigs = gyroIO.getStatusSignals();
+      int totalLen = gyroSigs.length;
+      for (var m : modules) totalLen += m.getStatusSignals().length;
+      allDriveSignals = new BaseStatusSignal[totalLen];
+      int idx = 0;
+      for (BaseStatusSignal s : gyroSigs) allDriveSignals[idx++] = s;
+      for (var m : modules)
+        for (BaseStatusSignal s : m.getStatusSignals()) allDriveSignals[idx++] = s;
+    }
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
@@ -166,6 +184,13 @@ public class Drive extends SubsystemBase {
     logCounter++;
     shouldLog = logCounter >= Constants.kLogInterval;
     if (shouldLog) logCounter = 0;
+
+    // Batch-refresh ALL drive CAN signals (gyro + 4 modules = ~38 signals) in
+    // ONE call instead of 13 separate refreshAll() calls. This eliminates 12
+    // CAN round-trips per cycle and is the single biggest Drive.periodic() win.
+    if (allDriveSignals.length > 0) {
+      BaseStatusSignal.refreshAll(allDriveSignals);
+    }
 
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);

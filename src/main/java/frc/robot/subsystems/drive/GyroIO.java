@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -21,6 +22,14 @@ public interface GyroIO {
   }
 
   public default void updateInputs(GyroIOInputs inputs) {}
+
+  /**
+   * Returns all CAN status signals that should be refreshed each cycle. Drive batches these with
+   * module signals into a single {@link BaseStatusSignal#refreshAll} call.
+   */
+  public default BaseStatusSignal[] getStatusSignals() {
+    return new BaseStatusSignal[0];
+  }
 
   public default void setYaw(Rotation2d yaw) {}
 }

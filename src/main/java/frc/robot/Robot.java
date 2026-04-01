@@ -22,6 +22,7 @@ import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.subsystems.Lights;
+import frc.robot.util.ThrottledDataReceiver;
 import frc.robot.util.choosers.AutonomousChooser;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -91,6 +92,10 @@ public class Robot extends LoggedRobot {
   // Dashboard write rate-limiting — staggered offset 5 so reads (cycle 0) and
   // writes (cycle 5) never fire on the same tick.
   private int dashboardWriteCounter = 5;
+  // Current-monitoring writes at a slower cadence (~1 Hz) to reduce NT traffic
+  // from 26 SmartDashboard.putNumber calls on the same tick.
+  private int currentWriteCounter = 0;
+  private static final int CURRENT_WRITE_INTERVAL = 50; // ~1 Hz at 50 Hz loop
 
   public Robot() {
     // Record metadata
@@ -112,7 +117,9 @@ public class Robot extends LoggedRobot {
       case REAL:
         // Running on a real robot, log to the roboRIO internal storage.
         Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs"));
-        Logger.addDataReceiver(new NT4Publisher());
+        // Throttle live NT4 publishing to every 3rd cycle (~16 Hz) to reduce
+        // SmartDashboard.updateValues() overhead.  The .wpilog stays full-rate.
+        Logger.addDataReceiver(new ThrottledDataReceiver(new NT4Publisher(), 3));
         break;
 
       case SIM:
@@ -308,7 +315,11 @@ public class Robot extends LoggedRobot {
       SmartDashboard.putBoolean("spinUp", AutonCommandBase.spinUp);
       SmartDashboard.putBoolean("setShoot", AutonCommandBase.setShoot);
       SmartDashboard.putBoolean("deployCheck", AutonCommandBase.deployCheckActive);
+    }
 
+    // Per-subsystem supply current at ~1 Hz — these 26 putNumber calls are
+    // expensive and do not need high refresh for the dashboard.
+    if (currentWriteCounter++ % CURRENT_WRITE_INTERVAL == 0) {
       // Per-subsystem supply current (amps)
       double iFloorLeft = robotContainer.getAgitatorLeft().getSupplyCurrentAmps();
       double iFloorRight = robotContainer.getAgitatorRight().getSupplyCurrentAmps();

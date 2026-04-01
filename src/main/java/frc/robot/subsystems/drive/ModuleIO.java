@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -34,6 +35,15 @@ public interface ModuleIO {
 
   /** Updates the set of loggable inputs. */
   public default void updateInputs(ModuleIOInputs inputs) {}
+
+  /**
+   * Returns all CAN status signals that should be refreshed each cycle. Drive calls a single
+   * batched {@link BaseStatusSignal#refreshAll} with every module's + gyro's signals so we pay one
+   * CAN round-trip instead of 13.
+   */
+  public default BaseStatusSignal[] getStatusSignals() {
+    return new BaseStatusSignal[0];
+  }
 
   /** Run the drive motor at the specified open loop value. */
   public default void setDriveOpenLoop(double output) {}
