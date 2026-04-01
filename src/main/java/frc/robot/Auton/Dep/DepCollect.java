@@ -20,6 +20,8 @@ public class DepCollect extends AutonCommandBase {
     this.addCommands(
         robotContainer.holdDefenceOutCommand().withTimeout(0.02),
         followPath(Paths.depCollect),
-        followPath(Paths.depCollect2));
+        robotContainer.buildAutoShootCommand().withTimeout(3.0),
+        followPath(Paths.depCollect2),
+        robotContainer.buildAutoShootCommand().withTimeout(3.0));
   }
 }

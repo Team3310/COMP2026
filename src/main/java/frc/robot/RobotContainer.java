@@ -287,7 +287,21 @@ public class RobotContainer {
   }
 
   public Command holdShootCommand() {
-    return buildShootWhileHeldCommand().withName("Hold Shoot");
+    return buildShootWhileHeldCommand(false).withName("Hold Shoot");
+  }
+
+  public Command buildAutoShootCommand() {
+    return buildShootWhileHeldCommand(true).withName("Auto Shoot");
+  }
+
+  public Command buildAutoFlywheelsOnCommand() {
+    java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
+    java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
+
+    return Commands.parallel(
+            flywheelLeft.setRPMCommand(leftTargetRpm).asProxy(),
+            flywheelRight.setRPMCommand(rightTargetRpm).asProxy())
+        .withName("Auto Flywheels On");
   }
 
   public Command buildAutoSnowblowCommand() {
@@ -355,7 +369,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
     NamedCommands.registerCommand("stateDefenceOut", holdDefenceOutCommand());
     NamedCommands.registerCommand("stateCollect", holdCollectCommand());
-    NamedCommands.registerCommand("shootOn", holdShootCommand());
+    NamedCommands.registerCommand("shootOn", buildAutoFlywheelsOnCommand());
     NamedCommands.registerCommand(
         "deployIntake",
         Commands.parallel(intakePivot.deployCommand(), intakeRollers.deployCommand()));
@@ -674,7 +688,11 @@ public class RobotContainer {
     return leftErr < tol && rightErr < tol;
   }
 
-  private Command buildShootWhileHeldCommand() {
+  private Command maybeProxy(Command command, boolean proxyCommands) {
+    return proxyCommands ? command.asProxy() : command;
+  }
+
+  private Command buildShootWhileHeldCommand(boolean proxyCommands) {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     java.util.function.DoubleSupplier leftVerticalFeedTargetRpm =
@@ -685,17 +703,21 @@ public class RobotContainer {
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
-                flywheelLeft.setRPMCommand(leftTargetRpm),
-                flywheelRight.setRPMCommand(rightTargetRpm))
+                maybeProxy(flywheelLeft.setRPMCommand(leftTargetRpm), proxyCommands),
+                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands))
             .alongWith(
                 new WaitCommand(Constants.ScorerConstants.kWaitTime)
                     .andThen(
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().
                         Commands.parallel(
-                            verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
-                            verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
-                            agitatorLeft.snowblowCommand()
+                            maybeProxy(
+                                verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
+                                proxyCommands),
+                            maybeProxy(
+                                verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
+                                proxyCommands),
+                            maybeProxy(agitatorLeft.snowblowCommand(), proxyCommands)
                             // Right floor roller now follows the left floor roller.
                             // Keep the old direct command commented out so follower mode is not
                             // overridden.

@@ -65,15 +65,15 @@
     {
       "anchor": {
         "x": 3.5646332737030413,
-        "y": 7.385545617173523
+        "y": 7.4991234347048294
       },
       "prevControl": {
-        "x": 3.712304027113631,
-        "y": 7.183819692743497
+        "x": 3.84046511627907,
+        "y": 7.531574239713774
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "DepCollect1End"
     }
   ],
   "rotationTargets": [
@@ -136,17 +136,6 @@
       }
     },
     {
-      "name": "stateDefenceOut",
-      "waypointRelativePos": 3.2,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "stateDefenceOut"
-        }
-      }
-    },
-    {
       "name": "shootOn",
       "waypointRelativePos": 3.72,
       "endWaypointRelativePos": null,
@@ -154,17 +143,6 @@
         "type": "named",
         "data": {
           "name": "shootOn"
-        }
-      }
-    },
-    {
-      "name": "stateDefenceOut",
-      "waypointRelativePos": 3.95,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "stateDefenceOut"
         }
       }
     }
