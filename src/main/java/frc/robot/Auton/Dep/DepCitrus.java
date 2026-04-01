@@ -3,8 +3,8 @@ package frc.robot.Auton.Dep;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.RobotContainer;
@@ -18,7 +18,10 @@ public class DepCitrus extends AutonCommandBase {
     super(robotContainer, BLUE_START);
 
     this.addCommands(
-        new SequentialCommandGroup(
-            followPath(Paths.depCitrus1), new WaitCommand(4.0), followPath(Paths.depCitrus2)));
+        new ParallelDeadlineGroup(
+            new SequentialCommandGroup(
+                followPathAndCollectThenShoot(Paths.depCitrus1),
+                followPathAndCollectThenShoot(Paths.depCitrus2)),
+            flywheelsOn()));
   }
 }

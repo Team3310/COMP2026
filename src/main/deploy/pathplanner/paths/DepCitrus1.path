@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 8.757222222222223,
-        "y": 7.185583333333334
+        "x": 8.448160714285713,
+        "y": 6.7236071428571424
       },
       "prevControl": {
-        "x": 8.068414728111229,
-        "y": 8.144240897088073
+        "x": 7.759353220174718,
+        "y": 7.682264706611881
       },
       "nextControl": {
-        "x": 9.190995891160721,
-        "y": 6.5818726997516865
+        "x": 8.88193438322421,
+        "y": 6.119896509275495
       },
       "isLocked": false,
       "linkedName": null
@@ -36,12 +36,12 @@
         "y": 4.692128801431127
       },
       "prevControl": {
-        "x": 8.772053143731828,
-        "y": 5.018428599012938
+        "x": 8.496749999999999,
+        "y": 4.731446428571428
       },
       "nextControl": {
-        "x": 7.198949256158403,
-        "y": 4.264161276988753
+        "x": 7.106278671046757,
+        "y": 4.596535117732766
       },
       "isLocked": false,
       "linkedName": null
@@ -84,37 +84,7 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "switchToCollect",
-      "waypointRelativePos": 0.41706161137440767,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "sequential",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "switchToCollect"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "snowblow",
-      "waypointRelativePos": 4.0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "snowblow"
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
