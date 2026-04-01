@@ -14,6 +14,6 @@ public class Citrus1 extends AutonCommandBase {
         robotContainer,
         new Pose2d(new Translation2d(4.433125, 0.7584305555555546), Rotation2d.fromDegrees(180.0)));
 
-    this.addCommands(followPath(Paths.citrus1));
+    this.addCommands(followPath(Paths.outCitrus1));
   }
 }

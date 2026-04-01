@@ -4,12 +4,8 @@ import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
 import frc.robot.Auton.Dep.DepSnowblowMidShort2;
-import frc.robot.Auton.Forward2m;
-import frc.robot.Auton.Forward2mPath;
-import frc.robot.Auton.OneAuton;
-import frc.robot.Auton.Outpost.CitrusAuton;
+import frc.robot.Auton.Outpost.OutCitrus;
 import frc.robot.Auton.Outpost.OutCollect;
-import frc.robot.Auton.Outpost.OutCollectMidShort2;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort;
 import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
 import frc.robot.RobotContainer;
@@ -18,9 +14,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
   public AutonomousChooser() {
     super("Autonomous Mode");
 
-    setDefaultOption(AutonomousMode.ONE_AUTON)
-        .addOption(AutonomousMode.TEST_FORWARD)
-        .addOption(AutonomousMode.TEST_FORWARDPATH)
+    setDefaultOption(AutonomousMode.DEP_COLLECT)
         // .addOption(AutonomousMode.DEP_CYCLE1)
         // .addOption(AutonomousMode.DEPSSTRENCH1)
         // .addOption(AutonomousMode.OUT_CYCLE1)
@@ -33,12 +27,10 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         // .addOption(AutonomousMode.HUB_TO_OUT)
         // .addOption(AutonomousMode.HUB_TO_DEP)
         // .addOption(AutonomousMode.DEP_SNOWBLOW_MID_SHORT)
-        .addOption(AutonomousMode.DEP_COLLECT)
         .addOption(AutonomousMode.OUT_COLLECT)
         // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT)
         // .addOption(AutonomousMode.OUT_SNOWBLOW_MID_SHORT2)
-        .addOption(AutonomousMode.OUT_COLLECT_MID_SHORT2)
-        .addOption(AutonomousMode.CITRUS_AUTON)
+        .addOption(AutonomousMode.OUT_CITRUS)
         .addOption(AutonomousMode.DEP_CITRUS);
   }
 
@@ -48,13 +40,10 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
   public AutonomousMode getSelectedMode() {
     AutonomousMode selected = getSendable().getSelected();
-    return selected != null ? selected : AutonomousMode.TEST_FORWARD;
+    return selected != null ? selected : AutonomousMode.DEP_COLLECT;
   }
 
   public enum AutonomousMode {
-    ONE_AUTON("one cycle anywhere"),
-    TEST_FORWARD("test forward"),
-    TEST_FORWARDPATH("path test forward"),
     // DEP_CYCLE1("depo cycle"),
     // DEPSSTRENCH1("depo to ss trench1"),
     // OUT_CYCLE1("out cycle"),
@@ -72,9 +61,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     OUT_COLLECT("OutCollect"),
     OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
     OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
-    OUT_COLLECT_MID_SHORT2("2out collect mid short"),
-    CITRUS_AUTON("citrus auton"),
-    DEP_CITRUS("dep citrus");
+    OUT_CITRUS("OutCitrus"),
+    DEP_CITRUS("DepCitrus");
 
     private String name = "";
 
@@ -89,10 +77,6 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
     public AutonCommandBase getCommand() {
       switch (this) {
-        case TEST_FORWARD:
-          return new Forward2m(RobotContainer.getInstance());
-        case TEST_FORWARDPATH:
-          return new Forward2mPath(RobotContainer.getInstance());
           // case DEP_CYCLE1:
           //   return new DepCycle1(RobotContainer.getInstance());
           // case DEPSSTRENCH1:
@@ -125,23 +109,21 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new OutSnowblowMidShort(RobotContainer.getInstance());
         case OUT_SNOWBLOW_MID_SHORT2:
           return new OutSnowblowMidShort2(RobotContainer.getInstance());
-        case OUT_COLLECT_MID_SHORT2:
-          return new OutCollectMidShort2(RobotContainer.getInstance());
-        case CITRUS_AUTON:
-          return new CitrusAuton(RobotContainer.getInstance());
+        case OUT_CITRUS:
+          return new OutCitrus(RobotContainer.getInstance());
         case DEP_CITRUS:
           return new DepCitrus(RobotContainer.getInstance());
         default:
-          return new OneAuton(RobotContainer.getInstance());
+          return new DepCollect(RobotContainer.getInstance());
       }
     }
 
     public boolean requiresPathLoading() {
-      return this != TEST_FORWARD;
+      return true;
     }
 
     public boolean disablesVisionSeeding() {
-      return this == TEST_FORWARD;
+      return false;
     }
   }
 }

@@ -48,10 +48,9 @@ public class Paths {
 
   public static PathPlannerPath outCollect;
   public static PathPlannerPath outCollect2;
-  public static PathPlannerPath outCollectFull;
 
-  public static PathPlannerPath citrus1;
-  public static PathPlannerPath citrus2;
+  public static PathPlannerPath outCitrus1;
+  public static PathPlannerPath outCitrus2;
 
   public static PathPlannerPath depCitrus1;
   public static PathPlannerPath depCitrus2;
@@ -88,7 +87,6 @@ public class Paths {
 
     outCollect = loadPath("OutCollect");
     outCollect2 = loadPath("OutCollect2");
-    outCollectFull = loadPath("OutCollectFull");
 
     // snowblowOutpostBumpToTrench = loadPath("snowblowOutpostBumpToTrench");
     // snowblowOutpostTrenchToBump = loadPath("snowblowOutpostTrenchToBump");
@@ -97,8 +95,8 @@ public class Paths {
     // outCollectMidShort = loadPath("OutCollectMidShort");
     outCollectMidShort2 = loadPath("OutCollectMidShort2");
 
-    citrus1 = loadPath("OutCitrus1");
-    citrus2 = loadPath("Citrus2");
+    outCitrus1 = loadPath("OutCitrus1");
+    outCitrus2 = loadPath("OutCitrus2");
 
     depCitrus1 = loadPath("DepCitrus1");
     depCitrus2 = loadPath("DepCitrus2");

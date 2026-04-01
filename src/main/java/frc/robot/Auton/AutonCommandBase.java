@@ -99,14 +99,16 @@ public class AutonCommandBase extends SequentialCommandGroup {
   }
 
   protected Command followPathAndCollectThenShoot(PathPlannerPath path) {
-    return new ParallelCommandGroup(
-        followPath(path),
-        new SequentialCommandGroup(
-            new WaitUntilCommand(this::hasCrossedDeployLine),
-            new InstantCommand(() -> deployCheckActive = false),
-            deployAndIntake(),
+    return new SequentialCommandGroup(
+        new ParallelDeadlineGroup(
+            followPath(path),
             new SequentialCommandGroup(
-                new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline), shoot())));
+                new WaitUntilCommand(this::hasCrossedDeployLine),
+                new InstantCommand(() -> deployCheckActive = false),
+                new ParallelDeadlineGroup(
+                    new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline),
+                    deployAndIntake()))),
+        shoot());
   }
 
   // #endregion

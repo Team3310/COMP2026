@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Version:** | 2.2 |
-| **Date:** | 2/25/2026 |
+| **Version:** | 1.0 |
+| **Date:** | 2/21/2026 |
 | **Author(s):** | Paul D. Copioli |
 | **Google Doc Link:** | Practice Robot SDS |
 
@@ -15,10 +15,7 @@
 
 | Date | Author | Version | Summary of Change |
 |------|--------|---------|-------------------|
-| 2/21/2026 | PDC | 1.0 | Initial Release |
-| 2/24/2026 | PDC | 2.0 | Added Pit Mode Specifications |
-| 2/25/2026 | PDC | 2.1 | Updated Pit Mode Specifications |
-| 2/25/2026 | PDC | 2.2 | Added Trench Information; updated device info |
+| 3/27/2026 | PDC | 1.0 | Initial Release with changes for Amarillo |
 
 ---
 
@@ -38,8 +35,8 @@
 ### Swerve Drive Mechanism Details
 
 - **Module:** WCP Swerve X2c
-- **Drive Ratio Selection:** X3 - 11T Motor Pinion
-- **Drive Ratio:** 5.89:1 (54 / 11 * 16 / 40 * 45 / 15)
+- **Drive Ratio Selection:** X1 - 11T Motor Pinion
+- **Drive Ratio:** 6.976:1 (54 / 11 * 18 / 38 * 45 / 15)
 - **Steering Ratio:** Standard
 
 ---
@@ -82,12 +79,12 @@ The practice robot uses one physical CANivore. The second CANivore table keeps u
 | 21 | Left Vertical Feed Roller | X44 | 1.5:1 (18/12) | 125 RPS | 83.33 RPS | Intake | NA | 80A |
 | 22 | Left Turret | X44 | 45.714:1 (32/11 * 220/14) | 125 RPS | 2.734 RPS | Positive (Left) | -220 deg -> +220 deg | 10A (initial) |
 | 23 | Left Hood | X44 | 71.8667:1 (294/18 * 44/10) | 125 RPS | 1.739 RPS | Positive (Up) | 10 deg -> 35 deg | 80A |
-| 24 | Left Shooter | X60 | 1:1 | 95 RPS | 95 RPS | Suck In | NA | 150A |
+| 24 | Left Shooter | X60 | 1:1.5 | 95 RPS | 140 RPS | Suck In | NA | 150A |
 | 25 | Right Floor Roller | X44 | 1.66667:1 (20/12) | 125 RPS | 75 RPS | Outtake | NA | 80A |
 | 26 | Right Vertical Feed Roller | X44 | 1.5:1 (18/12) | 125 RPS | 83.33 RPS | Outtake | NA | 80A |
 | 27 | Right Turret | X44 | 45.714:1 (32/11 * 220/14) | 125 RPS | 2.734 RPS | Positive (Left) | -220 deg -> +220 deg | 80A |
 | 28 | Right Hood | X44 | 71.8667:1 (294/18 * 44/10) | 125 RPS | 1.739 RPS | Positive (Up) | 10 deg -> 35 deg | NA |
-| 29 | Right Shooter | X60 | 1:1 | 95 RPS | 95 RPS | Suck In | NA | 150A |
+| 29 | Right Shooter | X60 | 1:1.5 | 95 RPS | 140 RPS | Suck In | NA | 150A |
 
 ---
 
@@ -106,49 +103,104 @@ No additional information.
 
 ### 3.3 Intake Rollers
 
-- **Number of Motors:** 2, independently controlled. Do not use follower mode.
-- **Control Mode:** Velocity TorqueCurrentFOC
-- **Axis Gear Ratio:** 3.55556:1 (32/10 * 20/18)
+- **Number of Motors:** 1
+- **Control Mode:** VelocityVoltage
+- **Axis Gear Ratio:** 3.55556:1 (28/16 * 20/18)
 - **Axis Rev per Motor Rev:** -0.28125 (10/32 * 18/20)
-- **Axis Top Speed:** 35 RPS (2,100 RPM)
+- **Axis Top Speed:** 25 RPS (1,500 RPM)
 - **Axis Drum Diameter:** 1.325 in
 - **Axis Linear Travel to Motor Ratio:** 1.1707 in per motor rev (0.28125 * pi * 1.325)
-- **Axis Linear Top Speed:** 146 in/sec (12.2 ft/sec)
+- **Axis Linear Top Speed:** 104 in/sec (8.7 ft/sec)
+
+**PID Constants**
+
+Intake Velocity: 1,500 RPM (89 RPS @ Motor)
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | 2 | 0.12 | 0.0195 |
 
 ### 3.4 Intake Deploy
 
-- **Control Mode:** Motion Magic Position Control with Torque Current FOC
+- **Control Mode:** Motion Magic Position Control Voltage
 - **Axis Gear Ratio:** 20.35714:1 (32/12 * 38/16 * 40/16 * 18/14)
+
+**Motion Magic:**
+- **Cruise Velocity:** 150 RPS at motor
+- **Acceleration:** 300 RPS/S at motor
+
+**PID Constants**
+
+| Slot | Mode | kP | kV | kS |
+|------|------|----|----|-----|
+| Slot 0 | Deploy | 2 | 0.12 | 0 |
+| Slot 1 | Retract | 6 | 0.12 | 0 |
 
 ### 3.5 Floor Rollers (Left & Right)
 
 - **Control Mode:** Velocity Voltage Control
 
+**PID Constants**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | 0.5 | 0.12 | 0.0195 |
+
 ### 3.6 Vertical Feeder Rollers (Left & Right)
 
 - **Control Mode:** Velocity Voltage Control
 
+**PID Constants**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | 0.5 | 0.12 | 0.0915 |
+
 ### 3.7 Turret (Left & Right)
 
-- **Control Mode:** Motion Magic Position Control with Torque Current FOC
+- **Control Mode:** Motion Magic Position Control
+
+**Motion Magic:**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | | 0.12 | |
 
 ### 3.8 Hood (Left & Right)
 
 - **Control Mode:** Motion Magic Position Control with Torque Current FOC
 
+**Motion Magic:**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | | 0.12 | |
+
 ### 3.9 Shooter (Left)
 
-- **Control Mode:** Velocity Control with TorqueCurrent FOC
+- **Control Mode:** Velocity Voltage
 - **Axis Center X Distance from Robot Center:** -6.4 in
 - **Axis Center Y Distance from Robot Center:** +6.831 in
 - **Shooter Top Wheel Z Distance from Floor:** 20.5 in
 
+**Motion Magic:**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | 0.5 | 0.12 | 0.0915 |
+
 ### 3.10 Shooter (Right)
 
-- **Control Mode:** Velocity Control with TorqueCurrent FOC
+- **Control Mode:** Velocity Voltage
 - **Axis Center X Distance from Robot Center:** -6.4 in
 - **Axis Center Y Distance from Robot Center:** -6.831 in
 - **Shooter Top Wheel Z Distance from Floor:** 20.5 in
+
+**Motion Magic:**
+
+| Slot | kP | kV | kS |
+|------|----|----|-----|
+| Slot 0 | 0.5 | 0.12 | 0.0195 |
 
 ---
 
@@ -178,7 +230,7 @@ No additional information.
 |-----------|-------|
 | X Position from Robot Center | -3.132 in |
 | Y Position from Robot Center | -13.179 in |
-| Z Position from Robot Floor | 13.558 in |
+| Z Position from Robot Floor | 12.859 in |
 | Z Rotation Angle from Robot Front | -90 deg |
 | Y Rotation Angle from Ground | 180 deg (rotated upside down) |
 | X Rotation Angle from Ground | 0 deg |
@@ -233,6 +285,63 @@ Pit & Tuning mode has no state machine logic. Once enabled, all motors should be
 - One of the `A`, `B`, `X`, `Y` buttons toggles both floor rollers on and off.
 - One of the `A`, `B`, `X`, `Y` buttons toggles the shooter roller on and off.
 - D-pad moves both hoods to 10 deg (zero), 20 deg, 25 deg, and 35 deg.
+
+---
+
+## 8. Turret and Shooter Setup Specifications
+
+In addition to the requirements in section 7, there are dashboard requirements to properly tune the shooter and turret.
+
+### 8.1 Dashboard Requirements
+
+- **Dashboard Tool:** Elastic or Smart Dashboard (Elastic preferred as Smart Dashboard will be deprecated in 2027)
+- **XY Plots:** Two large XY plots to help with tuning. Must be able to add stator current, command velocity, command position, actual velocity, and actual position.
+- **Hood Control:** Ability to change hood angle in 1 degree increments from 10 to 35 degrees with indication of command angle and actual angle for both hoods.
+- **Turret Control:** Ability to change turret angle by 1 degree increments from the specified range with indication of commanded angle and actual angle for both turrets.
+- **Shooter Speed Control:** Ability to change shooter speed by 100 RPM increments at the shooter wheel from 0 RPM through 9,000 RPM with indication of both command and actual speeds for both shooters.
+- **Robot Field Position:** Dashboard needs to understand where the robot is on the field and report the robot's X, Y location and robot orientation.
+- **Target Selection:** Selector for target (Right pass, left pass, and hub) with indication of what is selected.
+- **Distance Vector:** Display the calculated distance vector from the robot shooter center to the target.
+
+### 8.2 Purpose
+
+The purpose of this dashboard is to generate a table that can be used in code to determine turret angle, hood angle, and shooter speed for each location on the field.
+
+---
+
+## 9. Shooting Profile Data
+
+### 9.1 Landing Zone Shooting Profile
+
+| Hood Angle (deg) | Speed (RPM) | Distance (m) | Time of Flight (s) |
+|------------------|-------------|--------------|-------------------|
+| 9.8 | 4000 | 4.69 | |
+| 15 | 4600 | 6.79 | |
+| 15 | 5200 | 8.62 | |
+| 20 | 5200 | 8.12 | |
+| 10.2 | 3500 | 4.06 | |
+| 9.5 | 3600 | 3.56 | |
+| 12.3 | 3600 | 4.46 | |
+| 12 | 4000 | 6.29 | |
+| 12 | 4200 | 6.1 | |
+| 12 | 4200 | 6.3 | |
+| 12 | 4900 | 6.3 | |
+| 12 | 4900 | 6.8 | |
+| 19 | 4900 | 8.6 | |
+| 21 | 5000 | 8.9 | |
+| 35 | 6300 | 15.59 | |
+| 12 | 3700 | 3.517 | |
+
+### 9.2 Hub Zone Shooting Profile
+
+| Hood Angle (deg) | Speed (RPM) | Distance (m) | Time of Flight (s) | Vertical Speed (RPM) |
+|------------------|-------------|--------------|-------------------|----------------------|
+| 12.82 | 4100 | 5.31 | | |
+| 10.85 | 4000 | 4.37 | | 3000 |
+| 10.66 | 3500 | 3.15 | | |
+| 5 | 3000 | 1.6 | | |
+| 12.86 | 4300 | 4.82 | | |
+| 9.87 | 3700 | 3.2 | | |
 
 ---
 

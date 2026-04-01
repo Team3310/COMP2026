@@ -870,7 +870,7 @@ public final class Constants {
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kIntakeVelocityRPM = 3000.0;
-    public static double kOuttakeVelocityRPM = -4000.0;
+    public static double kOuttakeVelocityRPM = -3000.0;
 
     public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
@@ -888,7 +888,8 @@ public final class Constants {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
         new CANDeviceId(13, CanBusNames.superstructureFor(13)); // Motor 1 (master)
-    kIntakeRollerConfig.momentOfInertia = 0.00132536;
+    kIntakeRollerConfig.momentOfInertia =
+        0.000075; // Reduced from 0.00132536 for proper sim behavior
     kIntakeRollerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
 

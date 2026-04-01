@@ -12,6 +12,7 @@ public class ServoMotorSubsystemConfig {
   // be the units.
   // <1 is reduction
   public double unitToRotorRatio = 1.0;
+
   public double kMinPositionUnits = Double.NEGATIVE_INFINITY;
   public double kMaxPositionUnits = Double.POSITIVE_INFINITY;
 

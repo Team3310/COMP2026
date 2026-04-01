@@ -56,6 +56,9 @@ public class Turret extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO> 
     if (++dashboardCounter >= Constants.kLogInterval) {
       dashboardCounter = 0;
       SmartDashboard.putNumber(getName() + "/Position", getCurrentPosition());
+      SmartDashboard.putBoolean(getName() + "/Running", Math.abs(inputs.appliedVolts) > 0.1);
+      String cmd = getCurrentCommand() == null ? "None" : getCurrentCommand().getName();
+      SmartDashboard.putString(getName() + "/CurrentCommand", cmd);
     }
     super.periodic();
   }
