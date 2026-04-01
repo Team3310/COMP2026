@@ -22,6 +22,6 @@ public class DepCollect extends AutonCommandBase {
         followPath(Paths.depCollect),
         robotContainer.buildAutoShootCommand().withTimeout(3.0),
         followPath(Paths.depCollect2),
-        robotContainer.buildAutoShootCommand().withTimeout(3.0));
+        robotContainer.buildAutoShootCommand());
   }
 }
