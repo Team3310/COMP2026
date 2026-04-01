@@ -456,7 +456,7 @@ public final class Constants {
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 4.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 4.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 20.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
@@ -783,7 +783,7 @@ public final class Constants {
     kLeftFlywheelConfig.momentOfInertia = 0.00132536;
     kLeftFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kLeftFlywheelConfig.fxConfig.Slot0.kP = 14.0;
+    kLeftFlywheelConfig.fxConfig.Slot0.kP = 11.0;
     kLeftFlywheelConfig.fxConfig.Slot0.kS = 6.5;
     kLeftFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
@@ -804,7 +804,7 @@ public final class Constants {
     kRightFlywheelConfig.momentOfInertia = 0.00132536;
     kRightFlywheelConfig.unitToRotorRatio = (26.0 / 26.0) * 60; // gear ratio * 60 for RPM to RPS
 
-    kRightFlywheelConfig.fxConfig.Slot0.kP = 14.0;
+    kRightFlywheelConfig.fxConfig.Slot0.kP = 11.0;
     kRightFlywheelConfig.fxConfig.Slot0.kS = 6.5;
     kRightFlywheelConfig.fxConfig.Slot0.kV = 0.05;
 
