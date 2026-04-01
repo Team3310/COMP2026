@@ -3,8 +3,6 @@ package frc.robot.Auton.Outpost;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
 import frc.robot.RobotContainer;
@@ -18,10 +16,8 @@ public class OutCollect extends AutonCommandBase {
     super(robotContainer, BLUE_START);
 
     this.addCommands(
-        new ParallelDeadlineGroup(
-            new SequentialCommandGroup(
-                followPathDeployImmediatelyAndCollectThenShoot(Paths.outCollect),
-                followPathAndCollectThenShoot(Paths.outCollect2)),
-            flywheelsOn()));
+        robotContainer.holdDefenceOutCommand().withTimeout(0.02),
+        followPath(Paths.outCollect),
+        followPath(Paths.outCollect2));
   }
 }

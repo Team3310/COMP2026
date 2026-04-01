@@ -278,6 +278,18 @@ public class RobotContainer {
         .withName("Auto Collect");
   }
 
+  public Command holdDefenceOutCommand() {
+    return buildAutoDefenseOutCommand().withName("Hold DefenceOut");
+  }
+
+  public Command holdCollectCommand() {
+    return buildAutoCollectCommand().withName("Hold Collect");
+  }
+
+  public Command holdShootCommand() {
+    return buildShootWhileHeldCommand().withName("Hold Shoot");
+  }
+
   public Command buildAutoSnowblowCommand() {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
@@ -341,6 +353,9 @@ public class RobotContainer {
     NamedCommands.registerCommand("switchToSnowblow", buildAutoSnowblowCommand());
     NamedCommands.registerCommand("snowblow", buildSnowblowCommand());
     NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
+    NamedCommands.registerCommand("stateDefenceOut", holdDefenceOutCommand());
+    NamedCommands.registerCommand("stateCollect", holdCollectCommand());
+    NamedCommands.registerCommand("shootOn", holdShootCommand());
     NamedCommands.registerCommand(
         "deployIntake",
         Commands.parallel(intakePivot.deployCommand(), intakeRollers.deployCommand()));
@@ -922,7 +937,7 @@ public class RobotContainer {
             () ->
                 Robot.currentState == Robot.BotState.DEFENCEOUT
                     || Robot.currentState == Robot.BotState.COLLECT)
-        .whileTrue(buildShootWhileHeldCommand());
+        .whileTrue(holdShootCommand());
 
     // Left Trigger:
     // Pit legacy -> toggleOnTrue: vertical rollers off
