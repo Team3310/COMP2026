@@ -193,8 +193,9 @@ public final class Constants {
     // Tags the Limelights are allowed to track. Pushed via SetFiducialIDFiltersOverride
     // on boot.  Tags NOT in this list are completely ignored at the hardware level —
     // they never enter the MT1/MT2 solve.
-    // Excluded: 1, 6, 7, 12 (red coral stations / unreliable)
-    //           17, 22, 23, 28 (blue coral stations / unreliable)
+    // Currently using hub tags only — wall/outpost tags excluded because the
+    // shop field walls are frequently mis-aligned and those tags give bad data.
+    // Excluded tags are commented out and can be re-enabled per-event.
     public static final int[] kValidTagIds = {
       2, 3, 4, 5, 8, 9, 10, 11, // 13, 14, //15, 16,
       18, 19, 20, 21, 24, 25, 26, 27 // , //29, 30, 31, 32
@@ -204,6 +205,28 @@ public final class Constants {
     // Maximum angular velocity (deg/s) before we reject vision updates.
     // Fast rotation causes motion-blur → bad detections.
     public static final double kMaxAngularVelocityDegPerSec = 360.0;
+
+    // Maximum average tag distance (meters) before rejecting the observation.
+    // Tags beyond this distance have poor corner resolution and produce noisy
+    // / unreliable pose solves.  With hub-only tags this also prevents the
+    // far hub from polluting the estimate when you can barely see it.
+    //   5.0 m = covers the home zone + outpost comfortably without seeing the
+    //           other hub across the field (~8 m away).
+    // Set to Double.MAX_VALUE to disable the cutoff entirely.
+    public static final double kMaxAvgTagDistMeters = 5.0;
+
+    // ---- Distance-based std-dev scaling ----
+    // Scale the XY stddev by (avgTagDist / kDistScalingRefMeters)² so that
+    // far-away tags are trusted less.  At the reference distance the stddev
+    // is unchanged; at 2× the reference it's 4× larger, etc.
+    //   true  = enable distance scaling (recommended)
+    //   false = flat stddev regardless of distance (legacy behavior)
+    public static final boolean kDistanceScalingEnabled = true;
+
+    // Reference distance for scaling — at this distance the base multiplier
+    // is applied with no additional scaling.  Typical scoring distance is
+    // ~1–2 m from the hub.
+    public static final double kDistScalingRefMeters = 2.0;
 
     // Minimum average tag area (% of image) required to trust a single-tag result
     public static final double kMinTagAreaForSingleTag = 0.1;

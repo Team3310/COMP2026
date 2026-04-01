@@ -307,6 +307,33 @@ public class Vision extends SubsystemBase {
       }
     }
 
+    // ---- MT1 diagnostic logging (gated, no injection) ----
+    // Log the raw MT1 pose + tag count + avg distance for every camera on log
+    // cycles so we can compare MT1 vs MT2 in AdvantageScope.  This is purely
+    // diagnostic — the data is NOT fed into the pose estimator.
+    if (shouldLog) {
+      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+        String cameraName = VisionConstants.kCameraNames[i];
+        String prefix = "Vision/" + cameraName + "/";
+        PoseEstimate mt1Est = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+        if (mt1Est != null && mt1Est.tagCount > 0 && mt1Est.pose != null) {
+          Logger.recordOutput(prefix + "mt1Pose", mt1Est.pose);
+          Logger.recordOutput(prefix + "mt1TagCount", mt1Est.tagCount);
+          Logger.recordOutput(prefix + "mt1AvgTagDist", mt1Est.avgTagDist);
+          double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+          if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
+            Logger.recordOutput(prefix + "mt1YawStdDev", stddevs[VisionConstants.kMT1YawStdDevIndex]);
+            Logger.recordOutput(
+                prefix + "mt1XYStdDev",
+                Math.max(stddevs[VisionConstants.kMT1XStdDevIndex], stddevs[VisionConstants.kMT1YStdDevIndex]));
+          }
+        } else {
+          Logger.recordOutput(prefix + "mt1Pose", OFF_SCREEN_POSE);
+          Logger.recordOutput(prefix + "mt1TagCount", 0);
+        }
+      }
+    }
+
     // ---- MT1 heading drift correction (low-rate) ----
     // Every Nth cycle, query MT1 from each camera.  When ≥2 tags are visible
     // with low yaw stddev, inject the full 6-DOF pose with a moderate theta
@@ -531,9 +558,32 @@ public class Vision extends SubsystemBase {
       return null;
     }
 
-    // 7. Apply per-camera trust factor.
+    // 7. Reject if average tag distance exceeds the cutoff.
+    //    Far-away tags have poor corner resolution and produce noisy solves.
+    //    With hub-only tags this also prevents the far hub from polluting.
+    if (estimate.avgTagDist > VisionConstants.kMaxAvgTagDistMeters) {
+      if (shouldLog) {
+        Logger.recordOutput(prefix + "accepted", false);
+        Logger.recordOutput(prefix + "rejectReason", "too-far:" + estimate.avgTagDist);
+      }
+      return null;
+    }
+
+    // 8. Apply per-camera trust factor + distance scaling.
+    //    Scale stddev by (avgTagDist / refDist)² so far tags are trusted less.
+    //    At the reference distance (2 m) the base multiplier is unchanged;
+    //    at 4 m it's 4× larger, etc.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
     double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor;
+    if (VisionConstants.kDistanceScalingEnabled && estimate.avgTagDist > 0.0) {
+      double distRatio = estimate.avgTagDist / VisionConstants.kDistScalingRefMeters;
+      scaledXYStdDev *= distRatio * distRatio;
+    }
+
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
+      Logger.recordOutput(prefix + "scaledXYStdDev", scaledXYStdDev);
+    }
 
     // Record this timestamp so future duplicate frames from the same camera
     // are rejected by filter 4.
@@ -599,7 +649,12 @@ public class Vision extends SubsystemBase {
       return null;
     }
 
-    // 6. Read yaw stddev — only correct heading when MT1 is confident.
+    // 6. Reject if average tag distance exceeds the cutoff.
+    if (estimate.avgTagDist > VisionConstants.kMaxAvgTagDistMeters) {
+      return null;
+    }
+
+    // 7. Read yaw stddev — only correct heading when MT1 is confident.
     double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
     if (stddevs.length < VisionConstants.kExpectedStdDevArrayLength) {
       return null;
