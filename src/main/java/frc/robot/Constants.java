@@ -456,7 +456,7 @@ public final class Constants {
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 4.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 4.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 20.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
