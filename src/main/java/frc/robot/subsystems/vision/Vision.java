@@ -96,6 +96,12 @@ public class Vision extends SubsystemBase {
   private final List<AcceptedObservation> acceptedBuf = new ArrayList<>(4);
   private final List<AcceptedObservation> disabledAcceptedBuf = new ArrayList<>(4);
 
+  // Per-camera last-accepted timestamp — used to detect and reject duplicate
+  // or replayed NT frames.  When the NT4 connection to a Limelight drops and
+  // reconnects, the server may re-send the last value with the same embedded
+  // timestamp.  Without this guard, the same stale pose gets re-injected.
+  private final double[] lastAcceptedTimestamp;
+
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
   // Set to false from Elastic/SmartDashboard to remove vision from the pose
@@ -114,6 +120,7 @@ public class Vision extends SubsystemBase {
   public Vision(Drive drive) {
     this.drive = drive;
     this.lastMT2SeenTime = new double[VisionConstants.kCameraNames.length];
+    this.lastAcceptedTimestamp = new double[VisionConstants.kCameraNames.length];
     // Publish the default value so the toggle appears on the dashboard immediately.
     // TODO: Re-enable vision seeding once camera coordinates are verified on the real robot.
     SmartDashboard.putBoolean(kVisionEnabledKey, false);
@@ -400,11 +407,11 @@ public class Vision extends SubsystemBase {
    * @param yawRateDegPerSec Current angular velocity in deg/s
    * @param cameraIndex Index into kCameraNames (for logging and per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited) /** Queries one
-   *     Limelight for a MegaTag 2 pose estimate, applies minimal filtering, and — if accepted —
+   *     Limelight for a MegaTag 2 pose estimate, applies filtering, and — if accepted —
    *     returns an {@link AcceptedObservation} ready for injection.
-   *     <p>Filters kept: null/no-tag guard, off-field bounds check. Everything else (stddev array,
-   *     yaw rate, timestamp age, single-tag area) removed — with 4 cameras and stable hardware the
-   *     LL stddevs are reliable and extra filters just drop good data.
+   *     <p>Filters: null/no-tag guard, stale timestamp rejection (kMaxMeasurementAgeSec),
+   *     duplicate timestamp rejection, yaw rate gate (kMaxAngularVelocityDegPerSec),
+   *     off-field bounds check.
    * @param cameraName Limelight hostname
    * @param cameraIndex Index into kCameraNames (for per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
@@ -446,23 +453,65 @@ public class Vision extends SubsystemBase {
       }
     }
 
-    // 3. Reject poses clearly off the field.
+    // 3. Reject stale measurements — if the NT4 connection dropped during a
+    //    loop overrun, the Limelight queues frames that were computed against
+    //    the heading you pushed *before* the disconnect.  Those poses reflect
+    //    where the robot WAS, not where it IS, and they cause visible jitter
+    //    for several seconds after the robot stops moving.
+    double measurementAge = Timer.getFPGATimestamp() - estimate.timestampSeconds;
+    if (measurementAge > VisionConstants.kMaxMeasurementAgeSec) {
+      if (shouldLog) {
+        Logger.recordOutput(prefix + "accepted", false);
+        Logger.recordOutput(prefix + "rejectReason", "stale:" + measurementAge);
+      }
+      return null;
+    }
+
+    // 4. Reject duplicate / replayed timestamps — when the NT4 connection
+    //    reconnects, getAtomic() may return the same embedded timestamp as the
+    //    last accepted observation.  Re-injecting the same pose is useless at
+    //    best and harmful if the robot has moved since.
+    if (estimate.timestampSeconds <= lastAcceptedTimestamp[cameraIndex]) {
+      if (shouldLog) {
+        Logger.recordOutput(prefix + "accepted", false);
+        Logger.recordOutput(prefix + "rejectReason", "duplicate");
+      }
+      return null;
+    }
+
+    // 5. Reject while spinning fast — motion blur degrades tag detection and
+    //    MT2 solves become unreliable at high angular velocities.
+    if (Math.abs(yawRateDegPerSec) > VisionConstants.kMaxAngularVelocityDegPerSec) {
+      if (shouldLog) {
+        Logger.recordOutput(prefix + "accepted", false);
+        Logger.recordOutput(prefix + "rejectReason", "spinning");
+      }
+      return null;
+    }
+
+    // 6. Reject poses clearly off the field.
     if (visionPose.getX() < 0.01
         || visionPose.getX() > Constants.kFieldLengthMeters
         || visionPose.getY() < 0.01
         || visionPose.getY() > Constants.kFieldWidthMeters) {
       if (shouldLog) {
         Logger.recordOutput(prefix + "accepted", false);
+        Logger.recordOutput(prefix + "rejectReason", "off-field");
       }
       return null;
     }
 
-    // 4. Apply per-camera trust factor.
+    // 7. Apply per-camera trust factor.
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
     double scaledXYStdDev = VisionConstants.kMT2StdDevMultiplier * cameraFactor;
 
+    // Record this timestamp so future duplicate frames from the same camera
+    // are rejected by filter 4.
+    lastAcceptedTimestamp[cameraIndex] = estimate.timestampSeconds;
+
     if (shouldLog) {
       Logger.recordOutput(prefix + "accepted", true);
+      Logger.recordOutput(prefix + "rejectReason", "");
     }
 
     return new AcceptedObservation(
