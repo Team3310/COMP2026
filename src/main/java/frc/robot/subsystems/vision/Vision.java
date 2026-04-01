@@ -49,14 +49,14 @@ import org.littletonrobotics.junction.Logger;
  * <h3>Heading Drift Correction — Periodic MT1 while enabled</h3>
  *
  * <p>MT2 does <b>not</b> estimate rotation — it echoes back the gyro heading you supply. Over a
- * long match the Pigeon2 can drift ~0.5–1°/min. To correct this, every Nth cycle we also query
- * MT1 (full 6-DOF) and, when ≥2 tags are visible with low yaw stddev, inject the result with a
- * moderate theta stddev so the WPILib pose estimator slowly pulls the fused heading toward the
- * true field heading. The XY component of MT1 is heavily down-weighted since MT2 is more
- * accurate for translation.
+ * long match the Pigeon2 can drift ~0.5–1°/min. To correct this, every Nth cycle we also query MT1
+ * (full 6-DOF) and, when ≥2 tags are visible with low yaw stddev, inject the result with a moderate
+ * theta stddev so the WPILib pose estimator slowly pulls the fused heading toward the true field
+ * heading. The XY component of MT1 is heavily down-weighted since MT2 is more accurate for
+ * translation.
  *
- * <p>Theta std dev is set to 999999 for MT2 observations (no heading info) but to
- * {@code kMT1HeadingThetaStdDev} (~10°) for MT1 heading corrections.
+ * <p>Theta std dev is set to 999999 for MT2 observations (no heading info) but to {@code
+ * kMT1HeadingThetaStdDev} (~10°) for MT1 heading corrections.
  */
 public class Vision extends SubsystemBase {
   private static final String kVisionEnabledKey = "Vision/Enabled";
@@ -557,8 +557,8 @@ public class Vision extends SubsystemBase {
    * unlike MT2 which echoes back the gyro heading you supply.
    *
    * <p>Filters: null/no-tag guard, minimum 2 tags (single-tag MT1 has yaw ambiguity), yaw stddev
-   * gate, stale timestamp, off-field bounds. XY is heavily down-weighted since MT2 is more
-   * accurate for translation — we only want the heading information from MT1.
+   * gate, stale timestamp, off-field bounds. XY is heavily down-weighted since MT2 is more accurate
+   * for translation — we only want the heading information from MT1.
    *
    * @param cameraName Limelight hostname
    * @param cameraIndex Index into kCameraNames
