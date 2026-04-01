@@ -111,6 +111,17 @@ public class AutonCommandBase extends SequentialCommandGroup {
         shoot());
   }
 
+  /**
+   * Like {@link #followPathAndCollectThenShoot} but deploys the intake immediately at path start
+   * instead of waiting for the deploy line. Use this for the first path in an auto that starts
+   * inside the trench zone, where the normal deploy-line and trench-deadline conditions would fire
+   * too early due to the robot's starting position.
+   */
+  protected Command followPathDeployImmediatelyAndCollectThenShoot(PathPlannerPath path) {
+    return new SequentialCommandGroup(
+        new ParallelDeadlineGroup(followPath(path), deployAndIntake()), shoot());
+  }
+
   // #endregion
 
   // #region Helpers

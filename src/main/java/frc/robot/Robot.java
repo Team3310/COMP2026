@@ -409,7 +409,7 @@ public class Robot extends LoggedRobot {
     currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
     var selectedAuto = robotContainer.getAutonomousChooser().getSelectedMode();
-    robotContainer.getVision().setVisionEnabled(false);
+    robotContainer.getVision().setVisionEnabled(true);
 
     // Use the pre-built command from disabledPeriodic, or build now as fallback.
     AutonCommandBase autoCommand =
