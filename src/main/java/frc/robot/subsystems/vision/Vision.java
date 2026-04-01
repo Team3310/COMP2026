@@ -46,8 +46,17 @@ import org.littletonrobotics.junction.Logger;
  *   <li>Scale stddevs and feed accepted measurements into {@code Drive.addVisionMeasurement()}.
  * </ol>
  *
- * <p>Theta std dev is set to 999999 during enabled mode because MegaTag 2 does <b>not</b> estimate
- * rotation — it uses the gyro heading you supply.
+ * <h3>Heading Drift Correction — Periodic MT1 while enabled</h3>
+ *
+ * <p>MT2 does <b>not</b> estimate rotation — it echoes back the gyro heading you supply. Over a
+ * long match the Pigeon2 can drift ~0.5–1°/min. To correct this, every Nth cycle we also query
+ * MT1 (full 6-DOF) and, when ≥2 tags are visible with low yaw stddev, inject the result with a
+ * moderate theta stddev so the WPILib pose estimator slowly pulls the fused heading toward the
+ * true field heading. The XY component of MT1 is heavily down-weighted since MT2 is more
+ * accurate for translation.
+ *
+ * <p>Theta std dev is set to 999999 for MT2 observations (no heading info) but to
+ * {@code kMT1HeadingThetaStdDev} (~10°) for MT1 heading corrections.
  */
 public class Vision extends SubsystemBase {
   private static final String kVisionEnabledKey = "Vision/Enabled";
@@ -101,6 +110,11 @@ public class Vision extends SubsystemBase {
   // reconnects, the server may re-send the last value with the same embedded
   // timestamp.  Without this guard, the same stale pose gets re-injected.
   private final double[] lastAcceptedTimestamp;
+
+  // MT1 heading drift correction — runs every Nth enabled cycle to slowly
+  // pull the gyro heading toward the true field heading using MegaTag 1's
+  // full 6-DOF solve (which independently estimates rotation).
+  private int mt1HeadingCycleCounter = 0;
 
   // Dashboard key for the vision enable/disable toggle.
   // Default: true (vision actively seeds pose estimator).
@@ -290,6 +304,23 @@ public class Vision extends SubsystemBase {
           processCamera(VisionConstants.kCameraNames[i], robotYawDeg, yawRateDps, i, shouldLog);
       if (obs != null) {
         acceptedBuf.add(obs);
+      }
+    }
+
+    // ---- MT1 heading drift correction (low-rate) ----
+    // Every Nth cycle, query MT1 from each camera.  When ≥2 tags are visible
+    // with low yaw stddev, inject the full 6-DOF pose with a moderate theta
+    // stddev so the pose estimator slowly corrects gyro heading drift.
+    // The XY component is heavily down-weighted (MT2 is better for XY).
+    mt1HeadingCycleCounter++;
+    if (mt1HeadingCycleCounter >= VisionConstants.kMT1HeadingCorrectionInterval) {
+      mt1HeadingCycleCounter = 0;
+      for (int i = 0; i < VisionConstants.kCameraNames.length; i++) {
+        AcceptedObservation mt1Obs =
+            processCameraMT1Heading(VisionConstants.kCameraNames[i], i, shouldLog);
+        if (mt1Obs != null) {
+          acceptedBuf.add(mt1Obs);
+        }
       }
     }
 
@@ -516,6 +547,85 @@ public class Vision extends SubsystemBase {
 
     return new AcceptedObservation(
         visionPose, estimate.timestampSeconds, scaledXYStdDev, VisionConstants.kThetaStdDev);
+  }
+
+  // -----------------------------------------------------------------------
+  //  MT1 heading drift correction (while enabled)
+  // -----------------------------------------------------------------------
+  /**
+   * Queries one Limelight for a MegaTag 1 pose estimate to extract heading information for gyro
+   * drift correction. MT1 performs a full 6-DOF solve (including independent rotation estimation),
+   * unlike MT2 which echoes back the gyro heading you supply.
+   *
+   * <p>Filters: null/no-tag guard, minimum 2 tags (single-tag MT1 has yaw ambiguity), yaw stddev
+   * gate, stale timestamp, off-field bounds. XY is heavily down-weighted since MT2 is more
+   * accurate for translation — we only want the heading information from MT1.
+   *
+   * @param cameraName Limelight hostname
+   * @param cameraIndex Index into kCameraNames
+   * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
+   * @return An accepted observation with finite theta stddev, or {@code null} if rejected.
+   */
+  private AcceptedObservation processCameraMT1Heading(
+      String cameraName, int cameraIndex, boolean shouldLog) {
+
+    String prefix = "Vision/" + cameraName + "/";
+
+    // 1. Read the MegaTag 1 pose estimate (full 6-DOF including rotation).
+    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+
+    // 2. Null / no-tag guard.
+    if (estimate == null || estimate.tagCount == 0 || estimate.pose == null) {
+      return null;
+    }
+
+    // 3. Require ≥2 tags — single-tag MT1 has yaw flip ambiguity.
+    if (estimate.tagCount < VisionConstants.kMT1HeadingMinTagCount) {
+      return null;
+    }
+
+    Pose2d visionPose = estimate.pose;
+
+    // 4. Reject stale measurements (same logic as MT2 filter).
+    double measurementAge = Timer.getFPGATimestamp() - estimate.timestampSeconds;
+    if (measurementAge > VisionConstants.kMaxMeasurementAgeSec) {
+      return null;
+    }
+
+    // 5. Reject poses off the field.
+    if (visionPose.getX() < 0.01
+        || visionPose.getX() > Constants.kFieldLengthMeters
+        || visionPose.getY() < 0.01
+        || visionPose.getY() > Constants.kFieldWidthMeters) {
+      return null;
+    }
+
+    // 6. Read yaw stddev — only correct heading when MT1 is confident.
+    double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
+    if (stddevs.length < VisionConstants.kExpectedStdDevArrayLength) {
+      return null;
+    }
+    double yawStdDev = stddevs[VisionConstants.kMT1YawStdDevIndex];
+    if (yawStdDev > VisionConstants.kMT1HeadingMaxYawStdDevDeg) {
+      return null;
+    }
+
+    // 7. Accepted — inject with high XY stddev (down-weight translation) and
+    //    moderate theta stddev (the heading info we actually want).
+    double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
+    double scaledXYStdDev = VisionConstants.kMT1HeadingXYStdDevMultiplier * cameraFactor;
+
+    if (shouldLog) {
+      Logger.recordOutput(prefix + "mt1HeadingPose", visionPose);
+      Logger.recordOutput(prefix + "mt1HeadingYawStdDev", yawStdDev);
+      Logger.recordOutput(prefix + "mt1HeadingAccepted", true);
+    }
+
+    return new AcceptedObservation(
+        visionPose,
+        estimate.timestampSeconds,
+        scaledXYStdDev,
+        VisionConstants.kMT1HeadingThetaStdDev);
   }
 
   // -----------------------------------------------------------------------

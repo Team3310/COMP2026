@@ -243,6 +243,45 @@ public final class Constants {
     // We ignore the LL-reported yaw std dev and always override with this value.
     public static final double kThetaStdDev = 999999.0;
 
+    // ---- MT1 heading drift correction (while enabled) ----
+    // MegaTag 2 does NOT estimate rotation — it echoes back the gyro heading
+    // you feed it.  Over a long match the Pigeon2 can drift ~0.5–1°/min.
+    // To correct this, we periodically query MT1 (full 6-DOF) and inject
+    // its heading with a moderate theta std dev so the pose estimator slowly
+    // pulls the fused heading toward the true field heading.
+    //
+    // This runs at low rate (every Nth 50 Hz cycle) so the extra NT read is
+    // negligible.  We require ≥2 tags because single-tag MT1 heading is
+    // ambiguous (flip-ambiguity on the yaw axis).
+
+    // How often to query MT1 for heading correction (in 50 Hz cycles).
+    // 10 = every 10th cycle = 5 Hz.  MT1 is expensive so keep this low.
+    public static final int kMT1HeadingCorrectionInterval = 10;
+
+    // Minimum tags visible for MT1 heading correction to fire.
+    // Single-tag MT1 has yaw ambiguity — require ≥2 for reliable heading.
+    public static final int kMT1HeadingMinTagCount = 2;
+
+    // Maximum MT1 yaw std dev (degrees) to accept a heading correction.
+    // Only correct when MT1 is confident.  Typical 2-tag MT1 yaw stddev
+    // is 0.5–3° at reasonable range.
+    public static final double kMT1HeadingMaxYawStdDevDeg = 5.0;
+
+    // Theta std dev (degrees) fed to addVisionMeasurement() for MT1 heading
+    // corrections.  This controls how aggressively the pose estimator pulls
+    // the fused heading toward the MT1 observation.
+    //   ~10–15° = very gentle drift correction (takes many seconds to converge)
+    //   ~3–5°   = moderate (converges in a few seconds, slight heading jitter)
+    //   ~1–2°   = aggressive (fast convergence but may fight the gyro)
+    // Start conservative and reduce if gyro drift is noticeable.
+    public static final double kMT1HeadingThetaStdDev = 10.0;
+
+    // XY std dev multiplier for MT1 heading correction observations.
+    // MT1 XY is less accurate than MT2 (it doesn't use the constrained gyro
+    // heading), so we use a high multiplier to down-weight XY and only
+    // benefit from the heading information.
+    public static final double kMT1HeadingXYStdDevMultiplier = 5.0;
+
     // ---- Std-dev multipliers (filter strength) ----
     // These scale the Limelight-reported standard deviations *before* they are
     // passed to the WPILib pose estimator.  The pose estimator uses stddevs as
