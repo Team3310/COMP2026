@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.445305555555558,
-        "y": 7.555180555555555
+        "x": 5.589303088767766,
+        "y": 7.2651670257494745
       },
       "isLocked": false,
       "linkedName": null
@@ -20,28 +20,28 @@
         "y": 7.185583333333334
       },
       "prevControl": {
-        "x": 8.792298590974362,
-        "y": 7.501270652102567
+        "x": 8.068414728111229,
+        "y": 8.144240897088073
       },
       "nextControl": {
-        "x": 8.729614340703511,
-        "y": 6.937112399664929
+        "x": 9.190995891160721,
+        "y": 6.5818726997516865
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.977666666666666,
-        "y": 4.444958333333334
+        "x": 8.091520572450806,
+        "y": 4.692128801431127
       },
       "prevControl": {
-        "x": 8.905272740131915,
-        "y": 4.015092104166511
+        "x": 8.772053143731828,
+        "y": 5.018428599012938
       },
       "nextControl": {
-        "x": 6.978861111111112,
-        "y": 4.907819444444445
+        "x": 7.198949256158403,
+        "y": 4.264161276988753
       },
       "isLocked": false,
       "linkedName": null
@@ -52,12 +52,12 @@
         "y": 5.845722222222222
       },
       "prevControl": {
-        "x": 4.445305555555556,
-        "y": 5.687375
+        "x": 4.773761678033191,
+        "y": 5.6235296837279405
       },
       "nextControl": {
-        "x": 3.3003333333333336,
-        "y": 6.004069444444445
+        "x": 3.629671255739451,
+        "y": 5.905688012774017
       },
       "isLocked": false,
       "linkedName": null
@@ -68,8 +68,8 @@
         "y": 5.845722222222222
       },
       "prevControl": {
-        "x": 3.110322003577817,
-        "y": 5.746779964221824
+        "x": 2.76826003692923,
+        "y": 5.82176523784319
       },
       "nextControl": null,
       "isLocked": false,
@@ -116,11 +116,11 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
-    "nominalVoltage": 10.0,
+    "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
@@ -133,5 +133,5 @@
     "velocity": 0,
     "rotation": -90.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
