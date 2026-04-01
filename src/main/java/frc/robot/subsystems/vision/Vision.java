@@ -438,11 +438,10 @@ public class Vision extends SubsystemBase {
    * @param yawRateDegPerSec Current angular velocity in deg/s
    * @param cameraIndex Index into kCameraNames (for logging and per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited) /** Queries one
-   *     Limelight for a MegaTag 2 pose estimate, applies filtering, and — if accepted —
-   *     returns an {@link AcceptedObservation} ready for injection.
-   *     <p>Filters: null/no-tag guard, stale timestamp rejection (kMaxMeasurementAgeSec),
-   *     duplicate timestamp rejection, yaw rate gate (kMaxAngularVelocityDegPerSec),
-   *     off-field bounds check.
+   *     Limelight for a MegaTag 2 pose estimate, applies filtering, and — if accepted — returns an
+   *     {@link AcceptedObservation} ready for injection.
+   *     <p>Filters: null/no-tag guard, stale timestamp rejection (kMaxMeasurementAgeSec), duplicate
+   *     timestamp rejection, yaw rate gate (kMaxAngularVelocityDegPerSec), off-field bounds check.
    * @param cameraName Limelight hostname
    * @param cameraIndex Index into kCameraNames (for per-camera stddev factor)
    * @param shouldLog Whether to emit Logger output this cycle (rate-limited)
