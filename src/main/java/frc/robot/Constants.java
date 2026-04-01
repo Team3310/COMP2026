@@ -495,7 +495,7 @@ public final class Constants {
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 4.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 20.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 12.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;
@@ -503,8 +503,8 @@ public final class Constants {
 
     // Home-scoring drive profile. Applies only while the robot is in its home
     // zone and the shoot command is being held.
-    public static double kHomeScoringMaxLinearSpeedMps = 2.5;
-    public static double kHomeScoringMaxAngularSpeedRadPerSec = 1.0;
+    public static double kHomeScoringMaxLinearSpeedMps = 2.0;
+    public static double kHomeScoringMaxAngularSpeedRadPerSec = 4.0;
     public static double kHomeScoringMaxLinearAccelMetersPerSec2 = 6.0;
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 30.0;
     public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
