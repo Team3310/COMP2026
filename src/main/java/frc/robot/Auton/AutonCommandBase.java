@@ -105,8 +105,7 @@ public class AutonCommandBase extends SequentialCommandGroup {
             new WaitUntilCommand(this::hasCrossedDeployLine),
             new InstantCommand(() -> deployCheckActive = false),
             deployAndIntake(),
-            new SequentialCommandGroup(
-                new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline), shoot())));
+        new SequentialCommandGroup(new WaitUntilCommand(this::hasCrossedAllianceTrenchCenterline), shoot())));
   }
 
   // #endregion
