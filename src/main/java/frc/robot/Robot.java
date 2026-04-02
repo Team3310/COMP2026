@@ -84,6 +84,8 @@ public class Robot extends LoggedRobot {
   // public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
   private BotState lastAppliedState = null;
   private Command snowblowGateCommand = null;
+  private Command intakeJamClearCommand = null;
+  private static final double INTAKE_JAM_CURRENT_THRESHOLD_AMPS = 60.0;
 
   // Dashboard read rate-limiting — tuning values don't need 50 Hz updates.
   // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
@@ -174,6 +176,7 @@ public class Robot extends LoggedRobot {
     double robotOrient = robotContainer.getDrive().getPose().getRotation().getDegrees();
 
     updateZone();
+    clearIntakeJam();
 
     // This basically says if we are not deploying or retracting, then we can change
     // states.
@@ -492,6 +495,27 @@ public class Robot extends LoggedRobot {
   public void simulationPeriodic() {}
 
   // #region util methods
+  private void clearIntakeJam() {
+    boolean shouldClearJam =
+        DriverStation.isEnabled()
+            && robotContainer.getIntakeRollers().getSupplyCurrentAmps()
+                > INTAKE_JAM_CURRENT_THRESHOLD_AMPS;
+
+    if (shouldClearJam) {
+      if (intakeJamClearCommand == null) {
+        intakeJamClearCommand = robotContainer.getIntakeRollers().outtakeCommand();
+        CommandScheduler.getInstance().schedule(intakeJamClearCommand);
+      }
+      return;
+    }
+
+    if (intakeJamClearCommand != null) {
+      intakeJamClearCommand.cancel();
+      intakeJamClearCommand = null;
+      stateRefreshRequested = true;
+    }
+  }
+
   public void updateZone() {
     double robotX = robotContainer.getDrive().getPose().getX();
 
