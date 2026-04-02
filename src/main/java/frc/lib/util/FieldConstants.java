@@ -66,10 +66,10 @@ public class FieldConstants {
     BLUEDEP(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(218.0))),
     BLUEMID(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(159))),
     REDOUT(
-        new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(238.5))),
+        new Translation2d(kFieldLength - Units.inchesToMeters(48.0), Units.inchesToMeters(238.5))),
     REDDEP(
-        new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(79.5))),
-    REDMID(new Translation2d(kFieldLength - Units.inchesToMeters(80.0), Units.inchesToMeters(159)));
+        new Translation2d(kFieldLength - Units.inchesToMeters(48.0), Units.inchesToMeters(79.5))),
+    REDMID(new Translation2d(kFieldLength - Units.inchesToMeters(48.0), Units.inchesToMeters(159)));
     private final double x;
     private final double y;
 

@@ -892,7 +892,7 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kIntakeVelocityRPM = 3000.0;
+    public static double kIntakeVelocityRPM = 2500.0;
     public static double kOuttakeVelocityRPM = -3000.0;
 
     public static final double kDeployVelocityRPM = 1500.0;
@@ -914,7 +914,7 @@ public final class Constants {
     kIntakeRollerConfig.momentOfInertia =
         0.000075; // Reduced from 0.00132536 for proper sim behavior
     kIntakeRollerConfig.unitToRotorRatio =
-        (18.0 / 20.0) * (10.0 / 32.0) * 60.0; // gear ratio in RPM to RPS
+        (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
 
     kIntakeRollerConfig.fxConfig.Slot0.kP = 2.0; // Increased from 0.5
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
