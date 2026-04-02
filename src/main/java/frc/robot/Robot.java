@@ -21,7 +21,7 @@ import frc.lib.util.FieldConstants;
 import frc.lib.util.FieldConstants.Zone;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
-import frc.robot.subsystems.Lights;
+// import frc.robot.subsystems.Lights;
 import frc.robot.util.ThrottledDataReceiver;
 import frc.robot.util.choosers.AutonomousChooser;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -81,7 +81,7 @@ public class Robot extends LoggedRobot {
   public static boolean hubOverride = false; // true = manually forced OFF by SmartDashboard button
   public static Alliance currentAlliance = DriverStation.getAlliance().orElse(Alliance.Blue);
   public static FieldConstants.Zone currentZone = FieldConstants.Zone.BLUE;
-  public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
+  // public static Lights.LightMode currentLightMode = Lights.LightMode.OFF;
   private BotState lastAppliedState = null;
   private Command snowblowGateCommand = null;
 

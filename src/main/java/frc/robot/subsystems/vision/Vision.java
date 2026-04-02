@@ -322,10 +322,13 @@ public class Vision extends SubsystemBase {
           Logger.recordOutput(prefix + "mt1AvgTagDist", mt1Est.avgTagDist);
           double[] stddevs = LimelightHelpers.getLimelightNTDoubleArray(cameraName, "stddevs");
           if (stddevs.length >= VisionConstants.kExpectedStdDevArrayLength) {
-            Logger.recordOutput(prefix + "mt1YawStdDev", stddevs[VisionConstants.kMT1YawStdDevIndex]);
+            Logger.recordOutput(
+                prefix + "mt1YawStdDev", stddevs[VisionConstants.kMT1YawStdDevIndex]);
             Logger.recordOutput(
                 prefix + "mt1XYStdDev",
-                Math.max(stddevs[VisionConstants.kMT1XStdDevIndex], stddevs[VisionConstants.kMT1YStdDevIndex]));
+                Math.max(
+                    stddevs[VisionConstants.kMT1XStdDevIndex],
+                    stddevs[VisionConstants.kMT1YStdDevIndex]));
           }
         } else {
           Logger.recordOutput(prefix + "mt1Pose", OFF_SCREEN_POSE);
