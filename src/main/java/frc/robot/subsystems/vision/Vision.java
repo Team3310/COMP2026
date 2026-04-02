@@ -274,10 +274,10 @@ public class Vision extends SubsystemBase {
           disabledAcceptedBuf.sort(
               Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
           for (AcceptedObservation obs : disabledAcceptedBuf) {
-              drive.addVisionMeasurement(
-                  obs.pose(),
-                  obs.timestampSeconds(),
-                  VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
+            drive.addVisionMeasurement(
+                obs.pose(),
+                obs.timestampSeconds(),
+                VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
           }
         } else if (shouldLog) {
           // Not yet seeded — just log MT2 for diagnostics (rate-limited).
@@ -694,8 +694,7 @@ public class Vision extends SubsystemBase {
    *
    * <p>Filters: null/no-tag guard, off-field bounds, yaw stddev gate (kGyroSeedMaxYawStdDevDeg).
    */
-  private void processCameraPreMatch(
-      String cameraName, int cameraIndex, boolean shouldLog) {
+  private void processCameraPreMatch(String cameraName, int cameraIndex, boolean shouldLog) {
 
     // Only seed once per power cycle.
     if (hasSeed) {

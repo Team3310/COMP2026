@@ -32,7 +32,7 @@ public class TunerConstantsComp {
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
-      new Slot0Configs().withKP(1.0).withKI(0).withKD(0).withKS(0).withKV(0.144);
+      new Slot0Configs().withKP(2.0).withKI(0).withKD(0).withKS(0).withKV(0.144);
 
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
@@ -68,8 +68,8 @@ public class TunerConstantsComp {
                   .withSupplyCurrentLimit(Amps.of(30))
                   .withStatorCurrentLimitEnable(true)
                   .withSupplyCurrentLimitEnable(true))
-          .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.05))
-          .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(0.05))
+          .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(0.2))
+          .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(0.2))
           .withVoltage(new VoltageConfigs().withPeakForwardVoltage(12).withPeakReverseVoltage(-12));
 
   private static final TalonFXConfiguration steerInitialConfigs =
@@ -96,7 +96,7 @@ public class TunerConstantsComp {
 
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
-  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4.3);
+  public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(7.37);
 
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
