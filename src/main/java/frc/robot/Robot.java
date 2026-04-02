@@ -70,8 +70,8 @@ public class Robot extends LoggedRobot {
 
   public static boolean inPit = false;
 
-  public static BotState currentState = BotState.DEFENCEIN;
-  public static OverrideState overrideState = OverrideState.OFF;
+  public static BotState currentState = BotState.DEFENCEOUT;
+  public static OverrideState overrideState = OverrideState.DEFENCEOUT;
   public static boolean stateRefreshRequested = false;
   public static boolean crossOverrideActive = false;
 
@@ -473,6 +473,10 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    currentState = BotState.DEFENCEOUT;
+    overrideState = OverrideState.DEFENCEOUT;
+
     stateRefreshRequested = true;
   }
 
