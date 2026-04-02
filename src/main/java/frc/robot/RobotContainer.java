@@ -21,7 +21,7 @@ import frc.lib.subsystems.TalonFXIO;
 import frc.lib.util.Util;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Lights;
+// import frc.robot.subsystems.Lights;
 import frc.robot.subsystems.agitator.Agitator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -30,7 +30,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.IntakePivot;
 import frc.robot.subsystems.intake.IntakeRollers;
-import frc.robot.subsystems.roof.Roof;
+// import frc.robot.subsystems.roof.Roof;
 import frc.robot.subsystems.scorer.flywheel.Flywheel;
 import frc.robot.subsystems.scorer.hood.Hood;
 import frc.robot.subsystems.scorer.turret.Turret;
@@ -126,13 +126,13 @@ public class RobotContainer {
     }
   }
 
-  private Roof buildRoofSystem(ServoMotorSubsystemConfig config) {
-    if (Constants.currentMode == Constants.Mode.REAL) {
-      return new Roof(config, new TalonFXIO(config));
-    } else {
-      return new Roof(config, new SimTalonFXIO(config));
-    }
-  }
+  // private Roof buildRoofSystem(ServoMotorSubsystemConfig config) {
+  //   if (Constants.currentMode == Constants.Mode.REAL) {
+  //     return new Roof(config, new TalonFXIO(config));
+  //   } else {
+  //     return new Roof(config, new SimTalonFXIO(config));
+  //   }
+  // }
 
   // Subsystem Intances
   private final Drive drive = buildDriveSystem();
@@ -155,7 +155,7 @@ public class RobotContainer {
   private final Flywheel flywheelRight = buildFlywheelSystem(Constants.kRightFlywheelConfig);
   private final Turret turretRight = buildTurretSystem(Constants.kRightTurretConfig);
 
-  private final Roof roof = buildRoofSystem(Constants.kRoofConfig);
+  // private final Roof roof = buildRoofSystem(Constants.kRoofConfig);
 
   public final AutonomousChooser autonomousChooser;
 
@@ -236,9 +236,9 @@ public class RobotContainer {
     return turretRight;
   }
 
-  public Roof getRoof() {
-    return roof;
-  }
+  // public Roof getRoof() {
+  //   return roof;
+  // }
 
   public TurretAimManager getTurretAimManager() {
     return turretAimManager;
@@ -469,18 +469,18 @@ public class RobotContainer {
     SmartDashboard.putData(
         "Change Hub Active", new InstantCommand(() -> Robot.hubOverride = !Robot.hubOverride));
 
-    SmartDashboard.putData("Roof Deploy", roof.setMaxHeightCommand());
-    SmartDashboard.putData("Roof Stow", roof.setMinHeightCommand());
+    // SmartDashboard.putData("Roof Deploy", roof.setMaxHeightCommand());
+    // SmartDashboard.putData("Roof Stow", roof.setMinHeightCommand());
 
     // LED on/off buttons
-    SmartDashboard.putData(
-        "Lights ON",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.BOT_STATE))
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Lights OFF",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.OFF))
-            .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights ON",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.BOT_STATE))
+    //         .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights OFF",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.OFF))
+    //         .ignoringDisable(true));
 
     // Speed tuning — publish defaults so Elastic/SmartDashboard shows editable
     // number widgets.
@@ -523,26 +523,26 @@ public class RobotContainer {
     // Removed individual turret offset controls; only the global turret offset remains adjustable.
 
     // Light color buttons — work even while disabled
-    SmartDashboard.putData(
-        "Lights Red",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_RED))
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Lights Blue",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_BLUE))
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Lights Green",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_GREEN))
-            .ignoringDisable(true));
-    SmartDashboard.putData(
-        "Lights Orange",
-        new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_ORANGE))
-            .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights Red",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_RED))
+    //         .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights Blue",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_BLUE))
+    //         .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights Green",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_GREEN))
+    //         .ignoringDisable(true));
+    // SmartDashboard.putData(
+    //     "Lights Orange",
+    //     new InstantCommand(() -> Lights.getInstance().setMode(Lights.LightMode.COLOR_ORANGE))
+    //         .ignoringDisable(true));
     // #endregion
 
     // Initialize LED display mode to show bot state colors
-    Lights.getInstance().setMode(Lights.LightMode.BOT_STATE);
+    // Lights.getInstance().setMode(Lights.LightMode.BOT_STATE);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -715,7 +715,7 @@ public class RobotContainer {
     // setDegreesCommand finishes, and the hood drifts back to zero / goes limp.
     hoodLeft.setTeleopDefaultCommand();
     hoodRight.setTeleopDefaultCommand();
-    roof.setTeleopDefaultCommand();
+    // roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
         flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(
