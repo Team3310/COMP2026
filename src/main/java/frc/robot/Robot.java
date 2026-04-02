@@ -86,7 +86,7 @@ public class Robot extends LoggedRobot {
   private BotState lastAppliedState = null;
   private Command snowblowGateCommand = null;
   private Command intakeJamClearCommand = null;
-  private static final double INTAKE_JAM_CURRENT_THRESHOLD_AMPS = 60.0;
+  private static final double INTAKE_JAM_CURRENT_THRESHOLD_AMPS = 115.0;
   private static final double INTAKE_JAM_CLEAR_DURATION_SECONDS = 0.35;
   private double intakeJamClearEndTimestamp = Double.NEGATIVE_INFINITY;
 
