@@ -136,8 +136,8 @@ public class Vision extends SubsystemBase {
     this.lastMT2SeenTime = new double[VisionConstants.kCameraNames.length];
     this.lastAcceptedTimestamp = new double[VisionConstants.kCameraNames.length];
     // Publish the default value so the toggle appears on the dashboard immediately.
-    // TODO: Re-enable vision seeding once camera coordinates are verified on the real robot.
-    SmartDashboard.putBoolean(kVisionEnabledKey, false);
+    // Vision is always on — this key is published for AdvantageScope logging only.
+    SmartDashboard.putBoolean(kVisionEnabledKey, true);
     SmartDashboard.putBoolean(kVisionSeededKey, false);
     SmartDashboard.putBoolean(kVisionSeedStableKey, false);
     // Whether to reset the pre-match seed when transitioning back to disabled.
@@ -147,8 +147,10 @@ public class Vision extends SubsystemBase {
     SmartDashboard.putBoolean("Vision/ResetOnDisable", false);
   }
 
+  // Vision is always on — no toggle. This method is kept as a no-op so
+  // callers in Robot.java don't need to be changed.
   public void setVisionEnabled(boolean enabled) {
-    SmartDashboard.putBoolean(kVisionEnabledKey, enabled);
+    // no-op: vision is unconditionally enabled
   }
 
   /** Returns true if the odometry has already been seeded by limelight pre-match. */
@@ -161,11 +163,6 @@ public class Vision extends SubsystemBase {
   // -----------------------------------------------------------------------
   @Override
   public void periodic() {
-    // Skip all vision processing while in pit mode.
-    if (Robot.inPit) {
-      return;
-    }
-
     // Rate-limit logging — increment counter and decide if this is a log cycle.
     // All processing and injection still runs every cycle; only Logger output is gated.
     logCounter++;
@@ -176,12 +173,19 @@ public class Vision extends SubsystemBase {
 
     // Read the dashboard toggle — when false, cameras still run and log but
     // do NOT inject measurements into the pose estimator.  Useful for debugging.
-    boolean visionEnabled = SmartDashboard.getBoolean(kVisionEnabledKey, false);
+    // HARDCODED: Vision is always on. No dashboard toggle — eliminates the risk
+    // of accidental disable or NT disconnect killing vision mid-match.
     SmartDashboard.putBoolean(kVisionSeededKey, hasSeed);
     SmartDashboard.putBoolean(kVisionSeedStableKey, seedStable);
 
+    // Always log state flags so a latched-off condition is visible in AdvantageScope.
     if (shouldLog) {
-      Logger.recordOutput("VisionEnabled", visionEnabled);
+      Logger.recordOutput("Vision/inPit", Robot.inPit);
+    }
+
+    // Skip all vision processing while in pit mode.
+    if (Robot.inPit) {
+      return;
     }
 
     // Always push IMU mode every cycle so the transition from mode 1 → 4
@@ -250,7 +254,7 @@ public class Vision extends SubsystemBase {
           // produces garbage until the Pigeon is seeded to the real field heading.
           // LL4s mask this problem because their internal IMU provides a heading
           // reference even before seeding.
-          processCameraPreMatch(VisionConstants.kCameraNames[i], i, visionEnabled, shouldLog);
+          processCameraPreMatch(VisionConstants.kCameraNames[i], i, shouldLog);
         }
 
         // Once seeded, run the full MT2 processing pipeline and inject into
@@ -270,12 +274,10 @@ public class Vision extends SubsystemBase {
           disabledAcceptedBuf.sort(
               Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
           for (AcceptedObservation obs : disabledAcceptedBuf) {
-            if (visionEnabled) {
               drive.addVisionMeasurement(
                   obs.pose(),
                   obs.timestampSeconds(),
                   VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
-            }
           }
         } else if (shouldLog) {
           // Not yet seeded — just log MT2 for diagnostics (rate-limited).
@@ -359,12 +361,10 @@ public class Vision extends SubsystemBase {
     // controls how much it influences the fused pose — lower stddev = more trust.
     acceptedBuf.sort(Comparator.comparingDouble(AcceptedObservation::timestampSeconds));
     for (AcceptedObservation obs : acceptedBuf) {
-      if (visionEnabled) {
-        drive.addVisionMeasurement(
-            obs.pose(),
-            obs.timestampSeconds(),
-            VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
-      }
+      drive.addVisionMeasurement(
+          obs.pose(),
+          obs.timestampSeconds(),
+          VecBuilder.fill(obs.scaledXYStdDev(), obs.scaledXYStdDev(), obs.thetaStdDev()));
     }
 
     // Log the final filtered pose feeding odometry (rate-limited).
@@ -695,7 +695,7 @@ public class Vision extends SubsystemBase {
    * <p>Filters: null/no-tag guard, off-field bounds, yaw stddev gate (kGyroSeedMaxYawStdDevDeg).
    */
   private void processCameraPreMatch(
-      String cameraName, int cameraIndex, boolean visionEnabled, boolean shouldLog) {
+      String cameraName, int cameraIndex, boolean shouldLog) {
 
     // Only seed once per power cycle.
     if (hasSeed) {
