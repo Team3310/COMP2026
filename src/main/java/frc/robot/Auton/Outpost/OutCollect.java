@@ -18,6 +18,8 @@ public class OutCollect extends AutonCommandBase {
     this.addCommands(
         robotContainer.holdDefenceOutCommand().withTimeout(0.02),
         followPath(Paths.outCollect),
-        followPath(Paths.outCollect2));
+        robotContainer.buildAutoShootCommand().withTimeout(3.0),
+        followPath(Paths.outCollect2),
+        robotContainer.buildAutoShootCommand());
   }
 }
