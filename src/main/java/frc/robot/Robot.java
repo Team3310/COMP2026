@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -86,6 +87,8 @@ public class Robot extends LoggedRobot {
   private Command snowblowGateCommand = null;
   private Command intakeJamClearCommand = null;
   private static final double INTAKE_JAM_CURRENT_THRESHOLD_AMPS = 60.0;
+  private static final double INTAKE_JAM_CLEAR_DURATION_SECONDS = 0.35;
+  private double intakeJamClearEndTimestamp = Double.NEGATIVE_INFINITY;
 
   // Dashboard read rate-limiting — tuning values don't need 50 Hz updates.
   // Read every Nth cycle to reduce NT traffic without affecting robot functionality.
@@ -387,7 +390,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    stopIntakeJamClear();
+  }
 
   /** This function is called periodically when disabled. */
   @Override
@@ -496,24 +501,38 @@ public class Robot extends LoggedRobot {
 
   // #region util methods
   private void clearIntakeJam() {
-    boolean shouldClearJam =
+    boolean jamDetected =
         DriverStation.isEnabled()
             && robotContainer.getIntakeRollers().getSupplyCurrentAmps()
                 > INTAKE_JAM_CURRENT_THRESHOLD_AMPS;
+    if (jamDetected) {
+      intakeJamClearEndTimestamp = Timer.getFPGATimestamp() + INTAKE_JAM_CLEAR_DURATION_SECONDS;
+    }
 
-    if (shouldClearJam) {
-      if (intakeJamClearCommand == null) {
+    boolean shouldHoldJamClear =
+        DriverStation.isEnabled() && Timer.getFPGATimestamp() < intakeJamClearEndTimestamp;
+
+    if (shouldHoldJamClear) {
+      if (intakeJamClearCommand == null
+          || !CommandScheduler.getInstance().isScheduled(intakeJamClearCommand)) {
         intakeJamClearCommand = robotContainer.getIntakeRollers().outtakeCommand();
         CommandScheduler.getInstance().schedule(intakeJamClearCommand);
       }
       return;
     }
 
-    if (intakeJamClearCommand != null) {
-      intakeJamClearCommand.cancel();
-      intakeJamClearCommand = null;
-      stateRefreshRequested = true;
+    stopIntakeJamClear();
+  }
+
+  private void stopIntakeJamClear() {
+    intakeJamClearEndTimestamp = Double.NEGATIVE_INFINITY;
+    if (intakeJamClearCommand == null) {
+      return;
     }
+
+    intakeJamClearCommand.cancel();
+    intakeJamClearCommand = null;
+    stateRefreshRequested = true;
   }
 
   public void updateZone() {
