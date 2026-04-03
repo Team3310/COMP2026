@@ -653,25 +653,25 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds, verticalFeedRPM }
-      {1.219, 6.5, 3475, 1.0, 1000.0},
-      {1.524, 8.1, 3525, 1.0, 1000.0},
-      {1.829, 9.7, 3575.0, 1.0, 1000.0},
-      {2.134, 11.3, 3600.0, 1.0, 2000.0},
-      {2.438, 12.9, 3650.0, 1.0, 2500.0},
-      {2.743, 14.4, 3725.0, 1.0, 2500.0},
-      {3.048, 15.9, 3700.0, 1.0, 2500.0},
-      {3.353, 17.4, 3900.0, 1.0, 2500.0},
-      {3.658, 18.9, 4000.0, 1.0, 2500.0},
-      {3.962, 20.3, 4100.0, 1.0, 2500.0},
-      {4.267, 21.8, 4300.0, 1.0, 2500.0},
-      {4.572, 23.2, 4600.0, 1.0, 2500.0},
-      {4.877, 24.5, 4675.0, 1.0, 2500.0},
-      {5.182, 25.9, 4800.0, 1.0, 2500.0},
-      {5.486, 27.2, 4900.0, 1.0, 2500.0},
-      {5.791, 28.5, 5000.0, 1.0, 2500.0},
-      {6.096, 29.7, 5100.0, 1.0, 2500.0},
-      {6.401, 30.9, 5200.0, 1.0, 2500.0},
-      {6.706, 32.1, 5300.0, 1.0, 2500.0},
+      {1.219, 6.5, 3675, 1.0, 1000.0},
+      {1.524, 8.1, 3725, 1.0, 1000.0},
+      {1.829, 9.7, 3775.0, 1.0, 1000.0},
+      {2.134, 11.3, 3800.0, 1.0, 2000.0},
+      {2.438, 12.9, 3850.0, 1.0, 2500.0},
+      {2.743, 14.4, 3925.0, 1.0, 2500.0},
+      {3.048, 15.9, 3900.0, 1.0, 2500.0},
+      {3.353, 17.4, 4100.0, 1.0, 2500.0},
+      {3.658, 18.9, 4200.0, 1.0, 2500.0},
+      {3.962, 20.3, 4300.0, 1.0, 2500.0},
+      {4.267, 21.8, 4500.0, 1.0, 2500.0},
+      {4.572, 23.2, 4800.0, 1.0, 2500.0},
+      {4.877, 24.5, 4875.0, 1.0, 2500.0},
+      {5.182, 25.9, 5000.0, 1.0, 2500.0},
+      {5.486, 27.2, 5100.0, 1.0, 2500.0},
+      {5.791, 28.5, 5200.0, 1.0, 2500.0},
+      {6.096, 29.7, 5300.0, 1.0, 2500.0},
+      {6.401, 30.9, 5400.0, 1.0, 2500.0},
+      {6.706, 32.1, 5400.0, 1.0, 2500.0},
       {7.010, 33.3, 5400.0, 1.0, 2500.0},
       {7.315, 34.4, 5400.0, 1.0, 2500.0},
       {7.620, 35.0, 5400.0, 1.0, 2500.0},
@@ -926,7 +926,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -1038,7 +1038,7 @@ public final class Constants {
     kRightFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
-    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kRightFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
@@ -1062,7 +1062,7 @@ public final class Constants {
     kLeftFloorRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 80.0;
-    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kLeftFloorRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
   }
 
