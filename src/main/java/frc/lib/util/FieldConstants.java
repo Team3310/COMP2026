@@ -22,9 +22,12 @@ public class FieldConstants {
   public static final double kBlueTrenchCenterLine = Units.inchesToMeters(181.5);
   public static final double kBlueTrenchHomeSideLine = Units.inchesToMeters(111.75);
 
-  public static final double kRedTrenchMidSideLine = Units.inchesToMeters(kFieldLength - kBlueTrenchMidSideLine);
-  public static final double kRedTrenchCenterLine = Units.inchesToMeters(kFieldLength - kBlueTrenchCenterLine);
-  public static final double kRedTrenchHomeSideLine = Units.inchesToMeters(kFieldLength - kBlueTrenchHomeSideLine);
+  public static final double kRedTrenchMidSideLine =
+      Units.inchesToMeters(kFieldLength - kBlueTrenchMidSideLine);
+  public static final double kRedTrenchCenterLine =
+      Units.inchesToMeters(kFieldLength - kBlueTrenchCenterLine);
+  public static final double kRedTrenchHomeSideLine =
+      Units.inchesToMeters(kFieldLength - kBlueTrenchHomeSideLine);
 
   public static final double kBlueShootLine = Units.inchesToMeters(245.0);
   public static final double kRedShootLine = Units.inchesToMeters(kFieldLength - 245.0);

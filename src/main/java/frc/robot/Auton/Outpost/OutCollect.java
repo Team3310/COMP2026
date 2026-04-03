@@ -2,14 +2,16 @@ package frc.robot.Auton.Outpost;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
+import frc.lib.util.FieldConstants;
 import frc.robot.RobotContainer;
 
 public class OutCollect extends AutonCommandBase {
   private static final Pose2d BLUE_START =
-      new Pose2d(FieldConstants.BLUEOUTMID.getTranslation(), Rotation2d.fromDegrees(90.0));
+      new Pose2d(
+          FieldConstants.StartingPosition.BLUEOUTMID.getTranslation(),
+          Rotation2d.fromDegrees(90.0));
 
   public OutCollect(RobotContainer robotContainer) {
 
