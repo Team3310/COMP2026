@@ -15,16 +15,16 @@ import edu.wpi.first.math.util.Units;
  * have a blue alliance origin.
  */
 public class FieldConstants {
-  public static final double kFieldLength = Units.inchesToMeters(651.0);
+  public static final double kFieldLength = Units.inchesToMeters(649.5);
   public static final double kFieldWidth = Units.inchesToMeters(318.0);
 
-  public static final double kBlueTrenchMidSideLine = Units.inchesToMeters(160.0);
-  public static final double kBlueTrenchCenterLine = Units.inchesToMeters(183.0);
-  public static final double kBlueTrenchHomeSideLine = Units.inchesToMeters(206.5);
+  public static final double kBlueTrenchMidSideLine = Units.inchesToMeters(158.25);
+  public static final double kBlueTrenchCenterLine = Units.inchesToMeters(181.5);
+  public static final double kBlueTrenchHomeSideLine = Units.inchesToMeters(111.75);
 
-  public static final double kRedTrenchMidSideLine = Units.inchesToMeters(kFieldLength - 160.0);
-  public static final double kRedTrenchCenterLine = Units.inchesToMeters(kFieldLength - 183.0);
-  public static final double kRedTrenchHomeSideLine = Units.inchesToMeters(kFieldLength - 206.5);
+  public static final double kRedTrenchMidSideLine = Units.inchesToMeters(kFieldLength - kBlueTrenchMidSideLine);
+  public static final double kRedTrenchCenterLine = Units.inchesToMeters(kFieldLength - kBlueTrenchCenterLine);
+  public static final double kRedTrenchHomeSideLine = Units.inchesToMeters(kFieldLength - kBlueTrenchHomeSideLine);
 
   public static final double kBlueShootLine = Units.inchesToMeters(245.0);
   public static final double kRedShootLine = Units.inchesToMeters(kFieldLength - 245.0);
@@ -35,11 +35,11 @@ public class FieldConstants {
   public static final double kMidBiasMeters = Units.inchesToMeters(24.0); // ~0.6 m
 
   public static enum StartingPosition { // measured with sim
-    BLUEDEPHOME(new Translation2d(3.570, 7.247)),
-    BLUEDEPMID(new Translation2d(4.407, 7.247)),
+    BLUEDEPHOME(new Translation2d(3.570, 7.499)),
+    BLUEDEPMID(new Translation2d(4.457, 7.499)),
     BLUEHUB(new Translation2d(3.570, 3.977)),
-    BLUEOUTHOME(new Translation2d(3.750, 0.841)),
-    BLUEOUTMID(new Translation2d(4.407, 0.841)),
+    BLUEOUTHOME(new Translation2d(3.750, 0.527)),
+    BLUEOUTMID(new Translation2d(4.433, 0.527)),
 
     REDDEPHOME(new Translation2d(13.0, 0.841)),
     REDDEPMID(new Translation2d(12.201, 0.841)),

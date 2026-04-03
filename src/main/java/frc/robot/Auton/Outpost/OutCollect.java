@@ -9,7 +9,7 @@ import frc.robot.RobotContainer;
 
 public class OutCollect extends AutonCommandBase {
   private static final Pose2d BLUE_START =
-      new Pose2d(new Translation2d(4.445, 0.692), Rotation2d.fromDegrees(90.0));
+      new Pose2d(FieldConstants.BLUEOUTMID.getTranslation(), Rotation2d.fromDegrees(90.0));
 
   public OutCollect(RobotContainer robotContainer) {
 
