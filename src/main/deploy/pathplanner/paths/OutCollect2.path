@@ -57,7 +57,7 @@
       },
       "nextControl": {
         "x": 7.009896853403972,
-        "y": 1.7224401163090366
+        "y": 1.7224401163090364
       },
       "isLocked": false,
       "linkedName": null
@@ -146,7 +146,7 @@
   "eventMarkers": [
     {
       "name": "stateCollect",
-      "waypointRelativePos": 0.2,
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -168,7 +168,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.5,
+    "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

@@ -41,8 +41,8 @@ public class FieldConstants {
     BLUEDEPHOME(new Translation2d(3.570, 7.499)),
     BLUEDEPMID(new Translation2d(4.457, 7.499)),
     BLUEHUB(new Translation2d(3.570, 3.977)),
-    BLUEOUTHOME(new Translation2d(3.750, 0.527)),
-    BLUEOUTMID(new Translation2d(4.433, 0.527)),
+    BLUEOUTHOME(new Translation2d(3.750, 0.607)),
+    BLUEOUTMID(new Translation2d(4.457, 0.607)),
 
     REDDEPHOME(new Translation2d(13.0, 0.841)),
     REDDEPMID(new Translation2d(12.201, 0.841)),

@@ -146,7 +146,7 @@
   "eventMarkers": [
     {
       "name": "stateCollect",
-      "waypointRelativePos": 0.2,
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
