@@ -734,7 +734,7 @@ public class RobotContainer {
                   // Keep the old direct off command commented out so follower mode is not
                   // overridden.
                   // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  Robot.stateRefreshRequested = true;
+                    Robot.stateRefreshRequested = true;
                 }));
   }
 
@@ -834,7 +834,7 @@ public class RobotContainer {
     // right bumper = unbound
 
     // left bumper = intake roller outtake only while held in both modes
-    driver.leftBumper().whileTrue(intakeRollers.outtakeCommand());
+    driver.leftBumper().whileTrue(intakeRollers.outtakeCommand().finallyDo(()-> Robot.stateRefreshRequested = true));
 
     // right trigger = unbound
 
