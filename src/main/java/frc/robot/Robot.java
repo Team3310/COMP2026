@@ -590,8 +590,8 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance()
             .schedule(robotContainer.getFlywheelRight().setRPMCommand(pitRpm));
       } else {
-        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
+        CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
       }
     } else if (currentState == BotState.SNOWBLOW && !shootButtonHeld) {
       double leftTargetRpm = robotContainer.getTurretAimManager().getLeftFlywheelRPM();
@@ -689,8 +689,8 @@ public class Robot extends LoggedRobot {
     // running in parallel and must not be cancelled.  The auton shoot
     // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
     if (DriverStation.isTeleop()) {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
     }
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
@@ -733,8 +733,8 @@ public class Robot extends LoggedRobot {
   private void defenseOut() {
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
     if (DriverStation.isTeleop()) {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().offCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().offCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
+      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
     }
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     // Right floor roller now follows the left floor roller.

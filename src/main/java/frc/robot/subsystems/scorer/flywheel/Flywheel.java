@@ -53,6 +53,11 @@ public class Flywheel extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return velocityTorqueCurrentFOCSetpointCommand(rpmSupplier).withName("Flywheel Track RPM");
   }
 
+  public Command idleCommand() {
+    return velocityTorqueCurrentFOCSetpointCommand(() -> Constants.ScorerConstants.kFlywheelIdleRPM)
+        .withName("Flywheel Idle");
+  }
+
   /**
    * Command to run flywheel at target velocity for collecting game pieces.
    *

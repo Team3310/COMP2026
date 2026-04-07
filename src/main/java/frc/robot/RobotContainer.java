@@ -725,8 +725,8 @@ public class RobotContainer {
                             )))
             .finallyDo(
                 () -> {
-                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                  CommandScheduler.getInstance().schedule(flywheelLeft.idleCommand());
+                  CommandScheduler.getInstance().schedule(flywheelRight.idleCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
@@ -754,9 +754,9 @@ public class RobotContainer {
     hoodRight.setTeleopDefaultCommand();
     // roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
-        flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
+        flywheelLeft.idleCommand().withName("Flywheel Left Idle (default)"));
     flywheelRight.setDefaultCommand(
-        flywheelRight.offCommand().withName("Flywheel Right Neutral (default)"));
+        flywheelRight.idleCommand().withName("Flywheel Right Idle (default)"));
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
