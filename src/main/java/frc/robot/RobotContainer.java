@@ -734,7 +734,9 @@ public class RobotContainer {
                   // Keep the old direct off command commented out so follower mode is not
                   // overridden.
                   // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  Robot.stateRefreshRequested = true;
+                  if (Robot.currentState == Robot.BotState.COLLECT || Robot.overrideState == Robot.OverrideState.COLLECT) {
+                    Robot.stateRefreshRequested = true;
+                  }
                 }));
   }
 
