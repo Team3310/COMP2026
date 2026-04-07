@@ -37,6 +37,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -111,6 +113,7 @@ public class Drive extends SubsystemBase {
   // on the same cycle as Vision (offset 0) or other subsystems.
   private int logCounter = 3;
   private boolean shouldLog = false;
+  private final Field2d field = new Field2d();
 
   public Drive(
       GyroIO gyroIO,
@@ -165,6 +168,9 @@ public class Drive extends SubsystemBase {
         (targetPose) -> {
           if (shouldLog) Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
+
+    // Publish live field map widget for Driver Station dashboards.
+    SmartDashboard.putData("Field", field);
 
     // Configure SysId
     sysId =
@@ -254,6 +260,9 @@ public class Drive extends SubsystemBase {
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
     }
+
+    // Always update Field2d so robot pose is live on the dashboard map.
+    field.setRobotPose(getPose());
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
