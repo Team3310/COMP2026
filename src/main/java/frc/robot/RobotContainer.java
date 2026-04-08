@@ -263,7 +263,9 @@ public class RobotContainer {
             intakeRollers.offCommand().asProxy(),
             agitatorLeft.offCommand().asProxy(),
             verticalFeedLeft.offCommand().asProxy(),
-            verticalFeedRight.offCommand().asProxy())
+            verticalFeedRight.offCommand().asProxy(),
+            flywheelLeft.idleCommand().asProxy(),
+            flywheelRight.idleCommand().asProxy())
         .withName("Auto DefenceOut");
   }
 
@@ -275,7 +277,9 @@ public class RobotContainer {
             // Right floor roller follows the left floor roller, so do not
             // directly command the follower in autonomous collect.
             verticalFeedLeft.verticalFeedCollectCommand().asProxy(),
-            verticalFeedRight.verticalFeedCollectCommand().asProxy())
+            verticalFeedRight.verticalFeedCollectCommand().asProxy(),
+            flywheelLeft.idleCommand().asProxy(),
+            flywheelRight.idleCommand().asProxy())
         .withName("Auto Collect");
   }
 
@@ -375,13 +379,10 @@ public class RobotContainer {
             .withName("RightFloorRoller Follow LeftFloorRoller"));
 
     // Register PathPlanner named commands (must be before any path loading)
-    NamedCommands.registerCommand("switchToCollect", buildAutoCollectCommand());
-    NamedCommands.registerCommand("switchToSnowblow", buildAutoSnowblowCommand());
-    NamedCommands.registerCommand("snowblow", buildSnowblowCommand());
-    NamedCommands.registerCommand("crossOverrde", buildCrossOverrideCommand());
     NamedCommands.registerCommand("stateDefenceOut", holdDefenceOutCommand());
     NamedCommands.registerCommand("stateCollect", holdCollectCommand());
-    NamedCommands.registerCommand("shootOn", buildAutoFlywheelsOnCommand());
+    NamedCommands.registerCommand("flywheelsOn", buildAutoFlywheelsOnCommand());
+    NamedCommands.registerCommand("shootOn", buildAutoShootCommand());
     NamedCommands.registerCommand(
         "deployIntake",
         Commands.parallel(intakePivot.deployCommand(), intakeRollers.deployCommand()));
