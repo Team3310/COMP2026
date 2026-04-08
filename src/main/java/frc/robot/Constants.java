@@ -99,7 +99,7 @@ public final class Constants {
       }
 
       return switch (deviceId) {
-        case 12, 13, 20, 21, 22, 25, 26, 27, 28, 29 -> TunerConstants.kCANBus2.getName();
+        case 12, 13, 15, 20, 21, 22, 25, 26, 27, 28, 29 -> TunerConstants.kCANBus2.getName();
         case 30 -> kRio;
         default -> KCANBUS1_STRING;
       };
@@ -908,6 +908,9 @@ public final class Constants {
   public static final ServoMotorSubsystemConfig kIntakeRollerConfig =
       new ServoMotorSubsystemConfig();
 
+  public static final ServoMotorSubsystemConfig kIntakeRollerFollowerConfig =
+      new ServoMotorSubsystemConfig();
+
   static {
     kIntakeRollerConfig.name = "Intake_Roller";
     kIntakeRollerConfig.talonCANID =
@@ -931,6 +934,31 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+  }
+
+  static {
+    kIntakeRollerFollowerConfig.name = "Intake_Roller_Follower";
+    kIntakeRollerFollowerConfig.talonCANID =
+        new CANDeviceId(15, CanBusNames.superstructureFor(15)); // Motor 2 (follower)
+    kIntakeRollerFollowerConfig.momentOfInertia =
+        0.000075; // Reduced from 0.00132536 for proper sim behavior
+    kIntakeRollerFollowerConfig.unitToRotorRatio =
+        (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
+
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kP = 2.0;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kI = 0.0;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kD = 0.0;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kS = 0.0195;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kV = 0.144;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kA = 0.0;
+
+    kIntakeRollerFollowerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+    kIntakeRollerFollowerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
   }
 
   public static final ServoMotorSubsystemWithCanCoderConfig kIntakePivotConfig =

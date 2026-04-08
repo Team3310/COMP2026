@@ -82,13 +82,11 @@ public class RobotContainer {
     }
   }
 
-  private IntakeRollers buildIntakeRollersSystem() {
+  private IntakeRollers buildIntakeRollersSystem(ServoMotorSubsystemConfig config) {
     if (Constants.currentMode == Constants.Mode.REAL) {
-      return new IntakeRollers(
-          Constants.kIntakeRollerConfig, new TalonFXIO(Constants.kIntakeRollerConfig));
+      return new IntakeRollers(config, new TalonFXIO(config));
     } else {
-      return new IntakeRollers(
-          Constants.kIntakeRollerConfig, new SimTalonFXIO(Constants.kIntakeRollerConfig));
+      return new IntakeRollers(config, new SimTalonFXIO(config));
     }
   }
 
@@ -144,7 +142,10 @@ public class RobotContainer {
   private final Agitator verticalFeedLeft =
       buildAgitatorSystem(Constants.kLeftVerticalFeedConfig, 7);
 
-  private final IntakeRollers intakeRollers = buildIntakeRollersSystem();
+  private final IntakeRollers intakeRollers =
+      buildIntakeRollersSystem(Constants.kIntakeRollerConfig);
+  private final IntakeRollers intakeRollerFollower =
+      buildIntakeRollersSystem(Constants.kIntakeRollerFollowerConfig);
   private final IntakePivot intakePivot = buildIntakePivotSystem();
 
   private final Hood hoodLeft = buildHoodSystem(Constants.kLeftHoodConfig);
@@ -351,6 +352,17 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Intake follower roller follows the intake master roller.
+    intakeRollerFollower.motorIO.follow(Constants.kIntakeRollerConfig.talonCANID, false);
+    intakeRollerFollower.setDefaultCommand(
+        Commands.run(
+                () ->
+                    intakeRollerFollower.motorIO.follow(
+                        Constants.kIntakeRollerConfig.talonCANID, false),
+                intakeRollerFollower)
+            .ignoringDisable(true)
+            .withName("IntakeRollerFollower Follow IntakeRoller"));
+
     // Right floor roller follows the left floor roller so the left remains
     // the only floor roller running VelocityTorqueCurrentFOC closed-loop control.
     agitatorRight.motorIO.follow(Constants.kLeftFloorRollerConfig.talonCANID, true);
@@ -704,9 +716,13 @@ public class RobotContainer {
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
                 maybeProxy(flywheelLeft.setRPMCommand(leftTargetRpm), proxyCommands),
-                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands),
+                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands))
+            .alongWith(
+                new WaitCommand(Constants.ScorerConstants.kWaitTime)
+                    .andThen(
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().
+                        Commands.parallel(
                             maybeProxy(
                                 verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
                                 proxyCommands),
@@ -718,11 +734,11 @@ public class RobotContainer {
                             // Keep the old direct command commented out so follower mode is not
                             // overridden.
                             // , agitatorRight.snowblowCommand()
-                            )
+                            )))
             .finallyDo(
                 () -> {
-                  CommandScheduler.getInstance().schedule(flywheelLeft.idleCommand());
-                  CommandScheduler.getInstance().schedule(flywheelRight.idleCommand());
+                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
                   CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
                   CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
@@ -730,9 +746,7 @@ public class RobotContainer {
                   // Keep the old direct off command commented out so follower mode is not
                   // overridden.
                   // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  if (Robot.currentState == Robot.BotState.COLLECT || Robot.overrideState == Robot.OverrideState.COLLECT) {
-                    Robot.stateRefreshRequested = true;
-                  }
+                  Robot.stateRefreshRequested = true;
                 }));
   }
 
@@ -752,9 +766,9 @@ public class RobotContainer {
     hoodRight.setTeleopDefaultCommand();
     // roof.setTeleopDefaultCommand();
     flywheelLeft.setDefaultCommand(
-        flywheelLeft.idleCommand().withName("Flywheel Left Idle (default)"));
+        flywheelLeft.offCommand().withName("Flywheel Left Neutral (default)"));
     flywheelRight.setDefaultCommand(
-        flywheelRight.idleCommand().withName("Flywheel Right Idle (default)"));
+        flywheelRight.offCommand().withName("Flywheel Right Neutral (default)"));
 
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
