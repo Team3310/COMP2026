@@ -541,7 +541,7 @@ public final class Constants {
     public static final double kWaitTime = 0.5; // seconds before teleop feed engages
     // NOTE: non-final so SmartDashboard can override at runtime
     public static double kShootRPM = 5400.0;
-    public static final double kFlywheelIdleRPM = 3000.0;
+    public static final double kFlywheelIdleRPM = 3310.0;
     public static double kReverseShootRPM = -5400.0;
 
     /** Flywheel RPM tolerance — feeders engage once both flywheels are within this of target. */

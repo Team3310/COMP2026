@@ -704,13 +704,9 @@ public class RobotContainer {
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
         Commands.parallel(
                 maybeProxy(flywheelLeft.setRPMCommand(leftTargetRpm), proxyCommands),
-                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands))
-            .alongWith(
-                new WaitCommand(Constants.ScorerConstants.kWaitTime)
-                    .andThen(
+                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands),
                         // Use Commands.parallel so subsystem requirements are properly held
                         // and commands stay running — never schedule() inside run().
-                        Commands.parallel(
                             maybeProxy(
                                 verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
                                 proxyCommands),
@@ -722,7 +718,7 @@ public class RobotContainer {
                             // Keep the old direct command commented out so follower mode is not
                             // overridden.
                             // , agitatorRight.snowblowCommand()
-                            )))
+                            )
             .finallyDo(
                 () -> {
                   CommandScheduler.getInstance().schedule(flywheelLeft.idleCommand());
