@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.528863636363636,
-        "y": 5.1378295454545455
+        "x": 3.0444431818181816,
+        "y": 5.426420454545455
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1791214934969423,
-        "y": 5.49931556533416
+        "x": 2.694701038951488,
+        "y": 5.7879064744250694
       },
       "isLocked": false,
       "linkedName": "depCitrus1End"
@@ -64,28 +64,28 @@
     },
     {
       "anchor": {
-        "x": 6.765204545454545,
-        "y": 4.632795454545455
+        "x": 6.4972272727272715,
+        "y": 5.158443181818182
       },
       "prevControl": {
-        "x": 7.5522867649197,
-        "y": 3.8949058737968745
+        "x": 7.430608474723401,
+        "y": 4.617352629936367
       },
       "nextControl": {
-        "x": 5.94065909090909,
-        "y": 5.405806818181818
+        "x": 5.786056818181818,
+        "y": 5.570715909090909
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.528863636363636,
-        "y": 5.1378295454545455
+        "x": 3.0444431818181816,
+        "y": 5.426420454545455
       },
       "prevControl": {
-        "x": 5.172782936701542,
-        "y": 5.071338092463092
+        "x": 4.688362482156085,
+        "y": 5.3599290015540015
       },
       "nextControl": null,
       "isLocked": false,
@@ -121,7 +121,7 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 4.3985637342908355,
+      "minWaypointRelativePos": 4.048473967684022,
       "maxWaypointRelativePos": 4.8653500897666015,
       "constraints": {
         "maxVelocity": 1.5,
@@ -134,7 +134,30 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "stateCollect",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "stateCollect"
+        }
+      }
+    },
+    {
+      "name": "flywheelsOn",
+      "waypointRelativePos": 4.308797127468572,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "flywheelsOn"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,

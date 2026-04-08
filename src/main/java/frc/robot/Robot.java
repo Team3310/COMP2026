@@ -688,10 +688,8 @@ public class Robot extends LoggedRobot {
     // Only kill flywheels during teleop — in autonomous, flywheelsOn() is
     // running in parallel and must not be cancelled.  The auton shoot
     // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
-    if (DriverStation.isTeleop()) {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
-    }
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
@@ -732,10 +730,9 @@ public class Robot extends LoggedRobot {
 
   private void defenseOut() {
     // Enter DEFENCEOUT with intake deployed and all intake/feed rollers off.
-    if (DriverStation.isTeleop()) {
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
-      CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
-    }
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
+    CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
+
     CommandScheduler.getInstance().schedule(robotContainer.getAgitatorLeft().offCommand());
     // Right floor roller now follows the left floor roller.
     // Keep the old direct off command commented out so follower mode is not overridden.

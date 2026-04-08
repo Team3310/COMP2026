@@ -1,27 +1,25 @@
 package frc.robot.Auton.Dep;
 
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Paths;
+import frc.lib.util.FieldConstants;
 import frc.robot.RobotContainer;
 
 public class DepCitrus extends AutonCommandBase {
 
   private static final Pose2d BLUE_START =
-      new Pose2d(new Translation2d(4.433125, 7.3195694444444454), Rotation2d.fromDegrees(-90.0));
+      new Pose2d(FieldConstants.StartingPosition.BLUEDEPMID.getTranslation(), Rotation2d.fromDegrees(-90.0));
 
   public DepCitrus(RobotContainer robotContainer) {
     super(robotContainer, BLUE_START);
 
     this.addCommands(
-        new ParallelDeadlineGroup(
-            new SequentialCommandGroup(
-                followPathAndCollectThenShoot(Paths.depCitrus1),
-                followPathAndCollectThenShoot(Paths.depCitrus2)),
-            flywheelsOn()));
+        followPath(Paths.depCitrus1),
+        robotContainer.buildAutoShootCommand().withTimeout(3.0),
+        followPath(Paths.depCitrus2),
+        robotContainer.buildAutoShootCommand());
   }
 }
