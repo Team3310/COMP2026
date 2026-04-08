@@ -36,53 +36,88 @@
         "y": 4.692128801431127
       },
       "prevControl": {
-        "x": 8.496749999999999,
-        "y": 4.731446428571428
+        "x": 8.744113636363636,
+        "y": 4.704943181818183
       },
       "nextControl": {
-        "x": 7.106278671046757,
-        "y": 4.596535117732766
+        "x": 7.058322810523434,
+        "y": 4.671840830460353
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.8728194444444446,
-        "y": 5.845722222222222
+        "x": 5.7757499999999995,
+        "y": 5.1378295454545455
       },
       "prevControl": {
-        "x": 4.773761678033191,
-        "y": 5.6235296837279405
+        "x": 6.425079545454545,
+        "y": 5.11721590909091
       },
       "nextControl": {
-        "x": 3.629671255739451,
-        "y": 5.905688012774017
+        "x": 5.157966331219949,
+        "y": 5.157441725415816
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.4842361111111115,
-        "y": 5.845722222222222
+        "x": 3.528863636363636,
+        "y": 5.1378295454545455
       },
       "prevControl": {
-        "x": 2.76826003692923,
-        "y": 5.82176523784319
+        "x": 3.8128875621817544,
+        "y": 5.113872561075513
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "depCitrus1End"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 2.4431137724550904,
+      "waypointRelativePos": 0.8993710691823898,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 1.9999999999999936,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 3.05,
       "rotationDegrees": 180.0
     }
   ],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.9694793536804303,
+      "maxWaypointRelativePos": 2.1543985637342895,
+      "constraints": {
+        "maxVelocity": 1.8,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 3.1,
+      "maxWaypointRelativePos": 3.7,
+      "constraints": {
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {

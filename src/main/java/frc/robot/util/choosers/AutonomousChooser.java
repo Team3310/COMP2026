@@ -3,18 +3,16 @@ package frc.robot.util.choosers;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
-import frc.robot.Auton.Dep.DepSnowblowMidShort2;
 import frc.robot.Auton.Outpost.OutCitrus;
 import frc.robot.Auton.Outpost.OutCollect;
-import frc.robot.Auton.Outpost.OutSnowblowMidShort;
-import frc.robot.Auton.Outpost.OutSnowblowMidShort2;
 import frc.robot.RobotContainer;
 
 public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousMode> {
   public AutonomousChooser() {
     super("Autonomous Mode");
 
-    setDefaultOption(AutonomousMode.DEP_COLLECT)
+    setDefaultOption(AutonomousMode.ONE)
+        .addOption(AutonomousMode.)
         // .addOption(AutonomousMode.DEP_CYCLE1)
         // .addOption(AutonomousMode.DEPSSTRENCH1)
         // .addOption(AutonomousMode.OUT_CYCLE1)
@@ -44,6 +42,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
   }
 
   public enum AutonomousMode {
+    ONE("One"),
+    FORWARD2MPATH ("Path Forward 2M"),
     // DEP_CYCLE1("depo cycle"),
     // DEPSSTRENCH1("depo to ss trench1"),
     // OUT_CYCLE1("out cycle"),
@@ -55,14 +55,12 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     // OUT_TO_OUT("out to out"),
     // HUB_TO_OUT("hub to out"),
     // HUB_TO_DEP("hub to depo"),
-    DEP_SNOWBLOW_MID_SHORT("depo snowblow mid short"),
     DEP_COLLECT("DepCollect"),
+    DEP_CITRUS("DepCitrus"),
 
     OUT_COLLECT("OutCollect"),
-    OUT_SNOWBLOW_MID_SHORT("out snowblow mid short"),
-    OUT_SNOWBLOW_MID_SHORT2("2out snowblow mid short"),
-    OUT_CITRUS("OutCitrus"),
-    DEP_CITRUS("DepCitrus");
+    OUT_CITRUS("OutCitrus");
+
 
     private String name = "";
 
@@ -103,12 +101,6 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new DepCollect(RobotContainer.getInstance());
         case OUT_COLLECT:
           return new OutCollect(RobotContainer.getInstance());
-        case DEP_SNOWBLOW_MID_SHORT:
-          return new DepSnowblowMidShort2(RobotContainer.getInstance());
-        case OUT_SNOWBLOW_MID_SHORT:
-          return new OutSnowblowMidShort(RobotContainer.getInstance());
-        case OUT_SNOWBLOW_MID_SHORT2:
-          return new OutSnowblowMidShort2(RobotContainer.getInstance());
         case OUT_CITRUS:
           return new OutCitrus(RobotContainer.getInstance());
         case DEP_CITRUS:
