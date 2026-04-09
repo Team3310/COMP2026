@@ -55,6 +55,7 @@ public class Paths {
 
     hubBackUp = loadPath("HubBackUp");
     OutInterweave = loadPath("OutInterweave");
+    DepInterweave = loadPath("DepInterweave");
   }
 
   /** Load a single path from a PathPlanner .path file. */

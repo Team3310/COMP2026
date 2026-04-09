@@ -7,9 +7,6 @@ public class OneAuton extends AutonCommandBase {
   public OneAuton(RobotContainer robotContainer) {
     super(robotContainer, null);
 
-    this.addCommands(
-      Commands.none()
-
-    );
+    this.addCommands(Commands.none());
   }
 }

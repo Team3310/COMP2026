@@ -3,8 +3,9 @@ package frc.robot.util.choosers;
 import frc.robot.Auton.AutonCommandBase;
 import frc.robot.Auton.Dep.DepCitrus;
 import frc.robot.Auton.Dep.DepCollect;
-import frc.robot.Auton.Hub.OutInterweave;
 import frc.robot.Auton.Forward2mPath;
+import frc.robot.Auton.Hub.DepInterweave;
+import frc.robot.Auton.Hub.OutInterweave;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.OutCitrus;
 import frc.robot.Auton.Outpost.OutCollect;
@@ -16,12 +17,10 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
 
     setDefaultOption(AutonomousMode.ONE)
         .addOption(AutonomousMode.FORWARD2MPATH)
-
         .addOption(AutonomousMode.HUB_OUT_INTERWEAVE)
-
+        .addOption(AutonomousMode.HUB_DEP_INTERWEAVE)
         .addOption(AutonomousMode.OUT_COLLECT)
         .addOption(AutonomousMode.DEP_COLLECT)
-
         .addOption(AutonomousMode.OUT_CITRUS)
         .addOption(AutonomousMode.DEP_CITRUS);
   }
@@ -40,6 +39,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     FORWARD2MPATH("Path Forward 2M"),
 
     HUB_OUT_INTERWEAVE("Hub OutInterweave"),
+    HUB_DEP_INTERWEAVE("Hub DepInterweave"),
 
     DEP_COLLECT("DepCollect"),
     DEP_CITRUS("DepCitrus"),
@@ -64,6 +64,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new Forward2mPath(RobotContainer.getInstance());
         case HUB_OUT_INTERWEAVE:
           return new OutInterweave(RobotContainer.getInstance());
+        case HUB_DEP_INTERWEAVE:
+          return new DepInterweave(RobotContainer.getInstance());
         case DEP_COLLECT:
           return new DepCollect(RobotContainer.getInstance());
         case OUT_COLLECT:
