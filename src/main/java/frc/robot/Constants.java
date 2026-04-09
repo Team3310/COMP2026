@@ -482,7 +482,7 @@ public final class Constants {
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
     public static final double kAngleHoldKp =
-        1.0; // was 5.0. PDC put it to 3 on 3-18 before practice
+        3.0; // was 5.0. PDC put it to 3 on 3-18 before practice
     public static final double kAngleHoldKd = 0.0;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
