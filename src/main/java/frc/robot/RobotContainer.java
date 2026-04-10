@@ -601,11 +601,20 @@ public class RobotContainer {
             drive,
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
-            () -> getDriverPerspectiveSnapAngle(targetAngleDeg))
+            () -> getDriverPerspectiveSnapAngle(targetAngleDeg),
+            this::getDriverCenterOfRotation)
         .until(
             () ->
                 Math.abs(driver.getRightX())
                     > Constants.DriveCommandConstants.kRotationCommandDeadband);
+  }
+
+  private Translation2d getDriverCenterOfRotation() {
+    return driver.getHID().getRightTriggerAxis() > 0.5
+        ? new Translation2d(
+            Constants.DriveCommandConstants.kDriverAltCenterOfRotationXMeters,
+            Constants.DriveCommandConstants.kDriverAltCenterOfRotationYMeters)
+        : Translation2d.kZero;
   }
 
   private Rotation2d getDriverPerspectiveSnapAngle(double blueFrameAngleDeg) {
@@ -774,7 +783,11 @@ public class RobotContainer {
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
+            this::getDriverCenterOfRotation));
 
     // #region Driver Controls
     // --- DRIVER BINDINGS
@@ -851,7 +864,7 @@ public class RobotContainer {
         .whileTrue(
             intakeRollers.outtakeCommand().finallyDo(() -> Robot.stateRefreshRequested = true));
 
-    // right trigger = unbound
+    // right trigger = alternate center of rotation for normal drive + snap-to-angle
 
     // left trigger = intake roller only while held in both modes
     driver.leftTrigger().whileTrue(intakeRollers.intakeCommand());

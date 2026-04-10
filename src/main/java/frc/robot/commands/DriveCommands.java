@@ -177,6 +177,15 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
+    return joystickDrive(drive, xSupplier, ySupplier, omegaSupplier, () -> Translation2d.kZero);
+  }
+
+  public static Command joystickDrive(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier) {
     PIDController headingHoldController =
         new PIDController(
             Constants.DriveCommandConstants.kAngleHoldKp,
@@ -261,7 +270,8 @@ public class DriveCommands {
                       speeds,
                       isFlipped
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
+                          : drive.getRotation()),
+                  centerOfRotationSupplier.get());
             },
             drive)
         .beforeStarting(
@@ -285,6 +295,16 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
+    return joystickDriveAtAngle(
+        drive, xSupplier, ySupplier, rotationSupplier, () -> Translation2d.kZero);
+  }
+
+  public static Command joystickDriveAtAngle(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Supplier<Rotation2d> rotationSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier) {
 
     // Create PID controller
     ProfiledPIDController angleController =
@@ -344,7 +364,8 @@ public class DriveCommands {
                       speeds,
                       isFlipped
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
+                          : drive.getRotation()),
+                  centerOfRotationSupplier.get());
             },
             drive)
 

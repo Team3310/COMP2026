@@ -281,6 +281,10 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    runVelocity(speeds, Translation2d.kZero);
+  }
+
+  public void runVelocity(ChassisSpeeds speeds, Translation2d centerOfRotationMeters) {
     // In sim mode, filter the commanded speeds through an inertial model with
     // velocity-dependent drag so that:
     //   1) The robot cannot change velocity instantaneously (tau-based inertia).
@@ -374,7 +378,8 @@ public class Drive extends SubsystemBase {
 
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(effectiveSpeeds, 0.02);
-    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+    SwerveModuleState[] setpointStates =
+        kinematics.toSwerveModuleStates(discreteSpeeds, centerOfRotationMeters);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
 
     // Log unoptimized setpoints and setpoint speeds

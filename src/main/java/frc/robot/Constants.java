@@ -532,6 +532,10 @@ public final class Constants {
     public static double kHomeScoringMaxAngularAccelRadPerSec2 = 30.0;
     public static double kHomeScoringMaxLinearDecelMetersPerSec2 = 40.0;
     public static double kHomeScoringMaxAngularDecelRadPerSec2 = 45.0;
+
+    // Driver right-trigger alternate center of rotation, robot-relative.
+    public static final double kDriverAltCenterOfRotationXMeters = Units.inchesToMeters(23.125);
+    public static final double kDriverAltCenterOfRotationYMeters = 0.0;
   }
 
   // #endregion
