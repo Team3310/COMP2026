@@ -65,8 +65,8 @@ public class FieldConstants {
       LandingZone { // landing zones of where we want the balls to land when passing (little bit out
     // from
     // corner)
-    BLUEOUT(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(100.0))),
-    BLUEDEP(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(218.0))),
+    BLUEOUT(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(80.0))),
+    BLUEDEP(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(238.0))),
     BLUEMID(new Translation2d(Units.inchesToMeters(48.0), Units.inchesToMeters(159))),
     REDOUT(
         new Translation2d(kFieldLength - Units.inchesToMeters(48.0), Units.inchesToMeters(238.5))),
