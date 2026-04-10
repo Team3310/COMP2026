@@ -282,7 +282,8 @@ public class DriveCommands {
               previousCommandedVxMetersPerSecond[0] = 0.0;
               previousCommandedVyMetersPerSecond[0] = 0.0;
               previousCommandedOmegaRadPerSec[0] = 0.0;
-            });
+            })
+        .finallyDo((interrupted) -> headingHoldController.close());
   }
 
   /**

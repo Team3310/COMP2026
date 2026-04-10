@@ -645,6 +645,7 @@ public class RobotContainer {
    * enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
    * PathPlanner named command {@code "snowblow"}.
    */
+  @SuppressWarnings("unused")
   private Command buildSnowblowCommand() {
     return new edu.wpi.first.wpilibj2.command.WaitUntilCommand(
             () -> {
