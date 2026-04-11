@@ -18,7 +18,7 @@ public class OutInterweave extends AutonCommandBase {
 
     this.addCommands(
         followPath(Paths.hubBackUp),
-        robotContainer.buildAutoShootCommand().withTimeout(1.5),
+        robotContainer.buildAutoShootCommand().withTimeout(0.2),
         followPath(Paths.OutInterweave),
         robotContainer.buildAutoShootCommand().withTimeout(5.0));
   }
