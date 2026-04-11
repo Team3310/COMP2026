@@ -37,6 +37,7 @@ import frc.robot.subsystems.scorer.turret.Turret;
 import frc.robot.subsystems.scorer.turret.TurretAimManager;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.choosers.AutonomousChooser;
+import java.util.Set;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -292,11 +293,15 @@ public class RobotContainer {
   }
 
   public Command holdShootCommand() {
-    return buildShootWhileHeldCommand(false).withName("Hold Shoot");
+    return buildShootWhileHeldCommand(false, true).withName("Hold Shoot");
   }
 
   public Command buildAutoShootCommand() {
-    return buildShootWhileHeldCommand(true).withName("Auto Shoot");
+    return buildShootWhileHeldCommand(true, true).withName("Auto Shoot");
+  }
+
+  public Command buildAutoShootOnCommand() {
+    return buildShootWhileHeldCommand(true, false).withName("Auto ShootOn");
   }
 
   public Command buildAutoFlywheelsOnCommand() {
@@ -379,13 +384,19 @@ public class RobotContainer {
             .withName("RightFloorRoller Follow LeftFloorRoller"));
 
     // Register PathPlanner named commands (must be before any path loading)
-    NamedCommands.registerCommand("stateDefenceOut", holdDefenceOutCommand());
-    NamedCommands.registerCommand("stateCollect", holdCollectCommand());
-    NamedCommands.registerCommand("flywheelsOn", buildAutoFlywheelsOnCommand());
-    NamedCommands.registerCommand("shootOn", buildAutoShootCommand());
+    NamedCommands.registerCommand(
+        "stateDefenceOut", Commands.defer(this::holdDefenceOutCommand, Set.of()));
+    NamedCommands.registerCommand(
+        "stateCollect", Commands.defer(this::holdCollectCommand, Set.of()));
+    NamedCommands.registerCommand(
+        "flywheelsOn", Commands.defer(this::buildAutoFlywheelsOnCommand, Set.of()));
+    NamedCommands.registerCommand(
+        "shootOn", Commands.defer(this::buildAutoShootOnCommand, Set.of()));
     NamedCommands.registerCommand(
         "deployIntake",
-        Commands.parallel(intakePivot.deployCommand(), intakeRollers.deployCommand()));
+        Commands.defer(
+            () -> Commands.parallel(intakePivot.deployCommand(), intakeRollers.deployCommand()),
+            Set.of()));
 
     // Initialize autonomous commands
     autonomousChooser = new AutonomousChooser();
@@ -715,7 +726,7 @@ public class RobotContainer {
     return proxyCommands ? command.asProxy() : command;
   }
 
-  private Command buildShootWhileHeldCommand(boolean proxyCommands) {
+  private Command buildShootWhileHeldCommand(boolean proxyCommands, boolean runCleanupOnEnd) {
     java.util.function.DoubleSupplier leftTargetRpm = turretAimManager::getLeftFlywheelRPM;
     java.util.function.DoubleSupplier rightTargetRpm = turretAimManager::getRightFlywheelRPM;
     java.util.function.DoubleSupplier leftVerticalFeedTargetRpm =
@@ -723,42 +734,39 @@ public class RobotContainer {
     java.util.function.DoubleSupplier rightVerticalFeedTargetRpm =
         turretAimManager::getRightVerticalFeedRPM;
 
+    Command shooterCore =
+        Commands.parallel(
+            maybeProxy(flywheelLeft.setRPMCommand(leftTargetRpm), proxyCommands),
+            maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands),
+            maybeProxy(verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm), proxyCommands),
+            maybeProxy(verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm), proxyCommands),
+            maybeProxy(agitatorLeft.snowblowCommand(), proxyCommands)
+            // Right floor roller now follows the left floor roller.
+            // Keep the old direct command commented out so follower mode is not
+            // overridden.
+            // , agitatorRight.snowblowCommand()
+            );
+
+    if (runCleanupOnEnd) {
+      shooterCore =
+          shooterCore.finallyDo(
+              () -> {
+                CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
+                CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
+                CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
+                CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
+                CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
+                // Right floor roller now follows the left floor roller.
+                // Keep the old direct off command commented out so follower mode is not
+                // overridden.
+                // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
+                Robot.stateRefreshRequested = true;
+              });
+    }
+
     return Commands.parallel(
         Commands.startEnd(() -> Robot.shootButtonHeld = true, () -> Robot.shootButtonHeld = false),
-        Commands.parallel(
-                maybeProxy(flywheelLeft.setRPMCommand(leftTargetRpm), proxyCommands),
-                maybeProxy(flywheelRight.setRPMCommand(rightTargetRpm), proxyCommands))
-            .alongWith(
-                new WaitCommand(Constants.ScorerConstants.kWaitTime)
-                    .andThen(
-                        // Use Commands.parallel so subsystem requirements are properly held
-                        // and commands stay running — never schedule() inside run().
-                        Commands.parallel(
-                            maybeProxy(
-                                verticalFeedLeft.setRPMCommand(leftVerticalFeedTargetRpm),
-                                proxyCommands),
-                            maybeProxy(
-                                verticalFeedRight.setRPMCommand(rightVerticalFeedTargetRpm),
-                                proxyCommands),
-                            maybeProxy(agitatorLeft.snowblowCommand(), proxyCommands)
-                            // Right floor roller now follows the left floor roller.
-                            // Keep the old direct command commented out so follower mode is not
-                            // overridden.
-                            // , agitatorRight.snowblowCommand()
-                            )))
-            .finallyDo(
-                () -> {
-                  CommandScheduler.getInstance().schedule(flywheelLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(flywheelRight.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedLeft.offCommand());
-                  CommandScheduler.getInstance().schedule(verticalFeedRight.offCommand());
-                  CommandScheduler.getInstance().schedule(agitatorLeft.offCommand());
-                  // Right floor roller now follows the left floor roller.
-                  // Keep the old direct off command commented out so follower mode is not
-                  // overridden.
-                  // CommandScheduler.getInstance().schedule(agitatorRight.offCommand());
-                  Robot.stateRefreshRequested = true;
-                }));
+        shooterCore);
   }
 
   private void configureButtonBindings() {
