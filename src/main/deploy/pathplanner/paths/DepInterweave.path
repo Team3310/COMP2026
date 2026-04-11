@@ -100,7 +100,7 @@
         "y": 2.354988636363637
       },
       "prevControl": {
-        "x": 3.5520716058787363,
+        "x": 3.552071605878737,
         "y": 2.3504045905645623
       },
       "nextControl": {
@@ -179,39 +179,6 @@
     {
       "name": "stateCollect",
       "waypointRelativePos": 1.646319569120287,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "stateCollect"
-        }
-      }
-    },
-    {
-      "name": "flywheelsOn",
-      "waypointRelativePos": 2.016949152542373,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "flywheelsOn"
-        }
-      }
-    },
-    {
-      "name": "shootOn",
-      "waypointRelativePos": 2.3491525423728814,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "shootOn"
-        }
-      }
-    },
-    {
-      "name": "stateCollect",
-      "waypointRelativePos": 3.488135593220339,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

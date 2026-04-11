@@ -182,39 +182,6 @@
     },
     {
       "name": "flywheelsOn",
-      "waypointRelativePos": 2.420338983050847,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "flywheelsOn"
-        }
-      }
-    },
-    {
-      "name": "shootOn",
-      "waypointRelativePos": 2.6847457627118643,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "shootOn"
-        }
-      }
-    },
-    {
-      "name": "stateCollect",
-      "waypointRelativePos": 3.762711864406779,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "stateCollect"
-        }
-      }
-    },
-    {
-      "name": "flywheelsOn",
       "waypointRelativePos": 4.616949152542377,
       "endWaypointRelativePos": null,
       "command": {
