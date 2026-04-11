@@ -34,7 +34,7 @@
   "eventMarkers": [
     {
       "name": "stateCollect",
-      "waypointRelativePos": 0,
+      "waypointRelativePos": 0.13220338983050853,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -45,7 +45,7 @@
     },
     {
       "name": "shootOn",
-      "waypointRelativePos": 0.14915254237288142,
+      "waypointRelativePos": 0.13559322033898297,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
