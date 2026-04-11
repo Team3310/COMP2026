@@ -482,7 +482,7 @@ public final class Constants {
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
     public static final double kAngleHoldKp =
-        3.0; // was 5.0. PDC put it to 3 on 3-18 before practice
+        5.0; // was 5.0. PDC put it to 3 on 3-18 before practice
     public static final double kAngleHoldKd = 0.0;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
@@ -518,7 +518,7 @@ public final class Constants {
     // Normal teleop drive profile. These are driver-facing chassis limits, not
     // the drivetrain's physical module-speed ceiling.
     public static double kNormalMaxLinearSpeedMps = 4.0;
-    public static double kNormalMaxAngularSpeedRadPerSec = 12.0;
+    public static double kNormalMaxAngularSpeedRadPerSec = 9.0;
     public static double kNormalMaxLinearAccelMetersPerSec2 = 9.0;
     public static double kNormalMaxAngularAccelRadPerSec2 = 30.0;
     public static double kNormalMaxLinearDecelMetersPerSec2 = 40.0;

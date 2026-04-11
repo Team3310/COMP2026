@@ -19,7 +19,7 @@ public class OutCitrus extends AutonCommandBase {
 
     this.addCommands(
         followPath(Paths.outCitrus1),
-        robotContainer.buildAutoShootCommand().withTimeout(3.0),
+        robotContainer.buildAutoShootCommand().withTimeout(3.5),
         followPath(Paths.outCitrus2),
         robotContainer.buildAutoShootCommand());
   }

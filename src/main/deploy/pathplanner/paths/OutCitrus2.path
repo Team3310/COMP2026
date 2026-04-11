@@ -17,15 +17,15 @@
     {
       "anchor": {
         "x": 3.0323611111111113,
-        "y": 0.6000833333333333
+        "y": 0.752
       },
       "prevControl": {
-        "x": 2.7147310828131856,
-        "y": 0.6000833333333333
+        "x": 2.4503329259792066,
+        "y": 0.8520885406161167
       },
       "nextControl": {
-        "x": 4.708548954217633,
-        "y": 0.6000833333333333
+        "x": 4.651735241502683,
+        "y": 0.4735241502683357
       },
       "isLocked": false,
       "linkedName": null
@@ -148,7 +148,18 @@
     },
     {
       "name": "flywheelsOn",
-      "waypointRelativePos": 4.870967741935484,
+      "waypointRelativePos": 4.64406779661017,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "flywheelsOn"
+        }
+      }
+    },
+    {
+      "name": "shootOn",
+      "waypointRelativePos": 4.813559322033896,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

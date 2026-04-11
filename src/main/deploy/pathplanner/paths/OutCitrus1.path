@@ -137,6 +137,17 @@
           "name": "flywheelsOn"
         }
       }
+    },
+    {
+      "name": "shootOn",
+      "waypointRelativePos": 3.6474576271186425,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "shootOn"
+        }
+      }
     }
   ],
   "globalConstraints": {
