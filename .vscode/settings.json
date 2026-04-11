@@ -33,6 +33,9 @@
   "spotlessGradle.format.enable": true,
   "spotlessGradle.diagnostics.enable": false,
   "java.import.gradle.annotationProcessing.enabled": true,
+  "java.import.exclusions": [
+    "**/bin/**"
+  ],
   "java.completion.favoriteStaticMembers": [
     "org.junit.Assert.*",
     "org.junit.Assume.*",
@@ -64,9 +67,9 @@
     "edu.wpi.first.math.**.struct.*"
   ],
   "java.dependency.enableDependencyCheckup": false,
-  "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle",
+  "editor.defaultFormatter": "wpilibsuite.vscode-wpilib",
   "[json]": {
-    "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[java]": {
     "editor.defaultFormatter": "redhat.java"

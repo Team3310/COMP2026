@@ -126,16 +126,6 @@ public class Agitator extends ServoMotorSubsystem<MotorInputsAutoLogged, MotorIO
     return rps * 60.0;
   }
 
-  /**
-   * Convert rotations per minute to rotations per second.
-   *
-   * @param rpm rotations per minute
-   * @return rotations per second
-   */
-  private double rpmToRps(double rpm) {
-    return rpm / 60.0;
-  }
-
   // -------------------- Velocity Control Commands --------------------
 
   /**

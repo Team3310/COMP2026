@@ -601,11 +601,20 @@ public class RobotContainer {
             drive,
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
-            () -> getDriverPerspectiveSnapAngle(targetAngleDeg))
+            () -> getDriverPerspectiveSnapAngle(targetAngleDeg),
+            this::getDriverCenterOfRotation)
         .until(
             () ->
                 Math.abs(driver.getRightX())
                     > Constants.DriveCommandConstants.kRotationCommandDeadband);
+  }
+
+  private Translation2d getDriverCenterOfRotation() {
+    return driver.getHID().getRightTriggerAxis() > 0.5
+        ? new Translation2d(
+            Constants.DriveCommandConstants.kDriverAltCenterOfRotationXMeters,
+            Constants.DriveCommandConstants.kDriverAltCenterOfRotationYMeters)
+        : Translation2d.kZero;
   }
 
   private Rotation2d getDriverPerspectiveSnapAngle(double blueFrameAngleDeg) {
@@ -636,6 +645,7 @@ public class RobotContainer {
    * enables both vertical feed rollers at the aim-manager's desired RPM. Registered as the
    * PathPlanner named command {@code "snowblow"}.
    */
+  @SuppressWarnings("unused")
   private Command buildSnowblowCommand() {
     return new edu.wpi.first.wpilibj2.command.WaitUntilCommand(
             () -> {
@@ -774,7 +784,11 @@ public class RobotContainer {
     // Default command, normal field-relative drive (same in both modes)
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
+            this::getDriverCenterOfRotation));
 
     // #region Driver Controls
     // --- DRIVER BINDINGS
@@ -793,20 +807,19 @@ public class RobotContainer {
     driver
         .y()
         .and(() -> !Robot.inPit)
-        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleYDeg));
+        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleYDeg));
     driver
         .x()
         .and(() -> !Robot.inPit)
-        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleXDeg));
+        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleXDeg));
     driver
         .a()
         .and(() -> !Robot.inPit)
-        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleADeg));
+        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleADeg));
     driver
         .b()
         .and(() -> !Robot.inPit)
-        .onFalse(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleBDeg));
-
+        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleBDeg));
     // Start: normal = zero gyro (both modes)
     driver
         .start()
@@ -852,7 +865,7 @@ public class RobotContainer {
         .whileTrue(
             intakeRollers.outtakeCommand().finallyDo(() -> Robot.stateRefreshRequested = true));
 
-    // right trigger = unbound
+    // right trigger = alternate center of rotation for normal drive + snap-to-angle
 
     // left trigger = intake roller only while held in both modes
     driver.leftTrigger().whileTrue(intakeRollers.intakeCommand());
