@@ -210,10 +210,10 @@ public final class Constants {
     // Tags beyond this distance have poor corner resolution and produce noisy
     // / unreliable pose solves.  With hub-only tags this also prevents the
     // far hub from polluting the estimate when you can barely see it.
-    //   5.0 m = covers the home zone + outpost comfortably without seeing the
+    //   6.0 m = covers the home zone + outpost comfortably without seeing the
     //           other hub across the field (~8 m away).
     // Set to Double.MAX_VALUE to disable the cutoff entirely.
-    public static final double kMaxAvgTagDistMeters = 5.0;
+    public static final double kMaxAvgTagDistMeters = 6.5;
 
     // ---- Distance-based std-dev scaling ----
     // Scale the XY stddev by (avgTagDist / kDistScalingRefMeters)² so that
@@ -897,8 +897,8 @@ public final class Constants {
     // max motor speed (7500rpm) we are setting to 7000rpm then convert to system (divide by 3.55)
     // roughly 1900
     // NOTE: non-final so SmartDashboard can override at runtime
-    public static double kIntakeVelocityRPM = 2200.0;
-    public static double kOuttakeVelocityRPM = -4000.0;
+    public static double kIntakeVelocityRPM = 3200.0;
+    public static double kOuttakeVelocityRPM = -3200.0;
 
     public static final double kDeployVelocityRPM = 1500.0;
     public static final double kRetractVelocityRPM = 200.0;
@@ -924,17 +924,17 @@ public final class Constants {
     kIntakeRollerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
 
-    kIntakeRollerConfig.fxConfig.Slot0.kP = 2.0; // Increased from 0.5
+    kIntakeRollerConfig.fxConfig.Slot0.kP = 20.0; // Increased from 0.5
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
     kIntakeRollerConfig.fxConfig.Slot0.kD = 0.0;
-    kIntakeRollerConfig.fxConfig.Slot0.kS = 0.0195; // Increased from 0.02 - overcome friction
-    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.144; // Increased from 0.1 - velocity feedforward
+    kIntakeRollerConfig.fxConfig.Slot0.kS = 4.3; // Increased from 0.02 - overcome friction
+    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.07; // Increased from 0.1 - velocity feedforward
     kIntakeRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -949,17 +949,17 @@ public final class Constants {
     kIntakeRollerFollowerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
 
-    kIntakeRollerFollowerConfig.fxConfig.Slot0.kP = 2.0;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kP = 20.0;
     kIntakeRollerFollowerConfig.fxConfig.Slot0.kI = 0.0;
     kIntakeRollerFollowerConfig.fxConfig.Slot0.kD = 0.0;
-    kIntakeRollerFollowerConfig.fxConfig.Slot0.kS = 0.0195;
-    kIntakeRollerFollowerConfig.fxConfig.Slot0.kV = 0.144;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kS = 4.3;
+    kIntakeRollerFollowerConfig.fxConfig.Slot0.kV = 0.07;
     kIntakeRollerFollowerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

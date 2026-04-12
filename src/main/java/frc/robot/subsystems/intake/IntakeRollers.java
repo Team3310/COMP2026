@@ -41,22 +41,26 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
    * @return Command that runs intake forward
    */
   public Command intakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kIntakeVelocityRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(
+            () -> Constants.IntakeConstants.kIntakeVelocityRPM)
         .withName("Intake Forward");
   }
 
   public Command outtakeCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kOuttakeVelocityRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(
+            () -> Constants.IntakeConstants.kOuttakeVelocityRPM)
         .withName("Intake Outtake");
   }
 
   public Command deployCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kDeployVelocityRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(
+            () -> Constants.IntakeConstants.kDeployVelocityRPM)
         .withName("Intake Deploy");
   }
 
   public Command retractCommand() {
-    return velocitySetpointCommand(() -> Constants.IntakeConstants.kRetractVelocityRPM)
+    return velocityTorqueCurrentFOCSetpointCommand(
+            () -> Constants.IntakeConstants.kRetractVelocityRPM)
         .withName("Intake Retract");
   }
 
@@ -65,6 +69,7 @@ public class IntakeRollers extends ServoMotorSubsystem<MotorInputsAutoLogged, Mo
   }
 
   public Command customVelocityCommand(double velocityRPM) {
-    return velocitySetpointCommand(() -> velocityRPM).withName(getName() + " Custom Velocity");
+    return velocityTorqueCurrentFOCSetpointCommand(() -> velocityRPM)
+        .withName(getName() + " Custom Velocity");
   }
 }

@@ -30,6 +30,8 @@ public class Paths {
   public static PathPlannerPath OutInterweave;
   public static PathPlannerPath DepInterweave;
 
+  public static PathPlannerPath DepMadtown;
+
   public static boolean loaded;
 
   /**
@@ -56,6 +58,8 @@ public class Paths {
     hubBackUp = loadPath("HubBackUp");
     OutInterweave = loadPath("OutInterweave");
     DepInterweave = loadPath("DepInterweave");
+
+    DepMadtown = loadPath("DepMadtown");
   }
 
   /** Load a single path from a PathPlanner .path file. */
