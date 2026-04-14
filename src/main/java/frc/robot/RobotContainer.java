@@ -301,7 +301,23 @@ public class RobotContainer {
   }
 
   public Command buildAutoShootOnCommand() {
-    return buildShootWhileHeldCommand(true, false).withName("Auto ShootOn");
+    Command shootOn = buildShootWhileHeldCommand(true, false).withName("Auto ShootOn");
+    activeAutoShootOnCommand = shootOn;
+    return shootOn.finallyDo(
+        () -> {
+          if (activeAutoShootOnCommand == shootOn) {
+            activeAutoShootOnCommand = null;
+          }
+        });
+  }
+
+  public Command buildAutoShootOffCommand() {
+    return Commands.runOnce(
+            () -> {
+              cancelActiveAutoShootOn();
+              Robot.shootButtonHeld = false;
+            })
+        .withName("Auto ShootOff");
   }
 
   public Command buildAutoFlywheelsOnCommand() {
@@ -358,6 +374,17 @@ public class RobotContainer {
   public boolean pitManualTurretEnabled = false;
   private double desiredLeftFlywheelRpm = 0.0;
   private double desiredRightFlywheelRpm = 0.0;
+  private Command activeAutoShootOnCommand = null;
+
+  private void cancelActiveAutoShootOn() {
+    if (activeAutoShootOnCommand == null) {
+      return;
+    }
+
+    if (CommandScheduler.getInstance().isScheduled(activeAutoShootOnCommand)) {
+      activeAutoShootOnCommand.cancel();
+    }
+  }
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -392,6 +419,8 @@ public class RobotContainer {
         "flywheelsOn", Commands.defer(this::buildAutoFlywheelsOnCommand, Set.of()));
     NamedCommands.registerCommand(
         "shootOn", Commands.defer(this::buildAutoShootOnCommand, Set.of()));
+    NamedCommands.registerCommand(
+        "shootOff", Commands.defer(this::buildAutoShootOffCommand, Set.of()));
     NamedCommands.registerCommand(
         "deployIntake",
         Commands.defer(
