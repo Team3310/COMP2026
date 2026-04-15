@@ -31,6 +31,7 @@ public class Paths {
   public static PathPlannerPath DepInterweave;
 
   public static PathPlannerPath DepMadtown;
+  public static PathPlannerPath OutMadtown;
 
   public static boolean loaded;
 
@@ -60,6 +61,7 @@ public class Paths {
     DepInterweave = loadPath("DepInterweave");
 
     DepMadtown = loadPath("DepMadtown");
+    OutMadtown = loadPath("OutMadtown");
   }
 
   /** Load a single path from a PathPlanner .path file. */

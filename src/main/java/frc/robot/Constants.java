@@ -481,8 +481,8 @@ public final class Constants {
 
     // PID gains used for heading hold in joystickDrive() and angle control in
     // joystickDriveAtAngle().
-    public static final double kAngleHoldKp =
-        7.0; // was 5.0. PDC put it to 3 on 3-18 before practice
+    public static final double kAngleHoldKp = 7.0;
+    // was 5.0. PDC put it to 3 on 3-18 before practice
     public static final double kAngleHoldKd = 0.0;
 
     // Trapezoid profile limits used only in joystickDriveAtAngle().
@@ -933,8 +933,8 @@ public final class Constants {
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -958,8 +958,8 @@ public final class Constants {
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

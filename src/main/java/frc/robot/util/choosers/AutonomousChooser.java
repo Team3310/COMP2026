@@ -10,6 +10,7 @@ import frc.robot.Auton.Hub.OutInterweave;
 import frc.robot.Auton.OneAuton;
 import frc.robot.Auton.Outpost.OutCitrus;
 import frc.robot.Auton.Outpost.OutCollect;
+import frc.robot.Auton.Outpost.OutMadtown;
 import frc.robot.RobotContainer;
 
 public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousMode> {
@@ -21,6 +22,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
         .addOption(AutonomousMode.HUB_OUT_INTERWEAVE)
         .addOption(AutonomousMode.HUB_DEP_INTERWEAVE)
         .addOption(AutonomousMode.DEP_MADTOWN)
+        .addOption(AutonomousMode.OUT_MADTOWN)
         .addOption(AutonomousMode.OUT_COLLECT)
         .addOption(AutonomousMode.DEP_COLLECT)
         .addOption(AutonomousMode.OUT_CITRUS)
@@ -41,6 +43,7 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
     FORWARD2MPATH("Path Forward 2M"),
 
     DEP_MADTOWN("DepMadtown"),
+    OUT_MADTOWN("OutMadtown"),
 
     HUB_OUT_INTERWEAVE("Hub OutInterweave"),
     HUB_DEP_INTERWEAVE("Hub DepInterweave"),
@@ -72,6 +75,8 @@ public class AutonomousChooser extends ChooserBase<AutonomousChooser.AutonomousM
           return new DepInterweave(RobotContainer.getInstance());
         case DEP_MADTOWN:
           return new DepMadtown(RobotContainer.getInstance());
+        case OUT_MADTOWN:
+          return new OutMadtown(RobotContainer.getInstance());
         case DEP_COLLECT:
           return new DepCollect(RobotContainer.getInstance());
         case OUT_COLLECT:

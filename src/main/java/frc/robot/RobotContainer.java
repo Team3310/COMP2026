@@ -844,19 +844,19 @@ public class RobotContainer {
     driver
         .y()
         .and(() -> !Robot.inPit)
-        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleYDeg));
+        .whileTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleYDeg));
     driver
         .x()
         .and(() -> !Robot.inPit)
-        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleXDeg));
+        .whileTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleXDeg));
     driver
         .a()
         .and(() -> !Robot.inPit)
-        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleADeg));
+        .whileTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleADeg));
     driver
         .b()
         .and(() -> !Robot.inPit)
-        .onTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleBDeg));
+        .whileTrue(buildNormalSnapCommand(Constants.DriveCommandConstants.kDriverSnapAngleBDeg));
     // Start: normal = zero gyro (both modes)
     driver
         .start()
