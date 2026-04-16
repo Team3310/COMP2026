@@ -114,6 +114,7 @@ public class Drive extends SubsystemBase {
   // on the same cycle as Vision (offset 0) or other subsystems.
   private int logCounter = 3;
   private boolean shouldLog = false;
+  private volatile Pose2d[] latestActivePath = new Pose2d[] {};
   private final Field2d field = new Field2d();
 
   public Drive(
@@ -162,8 +163,7 @@ public class Drive extends SubsystemBase {
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
-          if (shouldLog)
-            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+          latestActivePath = activePath.toArray(new Pose2d[0]);
         });
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
@@ -273,6 +273,7 @@ public class Drive extends SubsystemBase {
       Logger.recordOutput("SwerveStates/Measured", getModuleStates());
       Logger.recordOutput("SwerveChassisSpeeds/Measured", getChassisSpeeds());
       Logger.recordOutput("Odometry/Robot", getPose());
+      Logger.recordOutput("Odometry/Trajectory", latestActivePath);
     }
   }
 
