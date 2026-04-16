@@ -206,9 +206,9 @@ public final class Constants {
       10,
       11, // red hub tags
       13,
-      14,
-      15,
-      16, // red wall tags
+      14, // red dep tags
+      // 15,
+      // 16, // red tower tags
       18,
       19,
       20,
@@ -218,9 +218,9 @@ public final class Constants {
       26,
       27, // blue hub tags
       29,
-      30,
-      31,
-      32 // blue wall tags
+      30 // blue dep tags
+      // 31,
+      // 32 // blue tower tags
     };
 
     // ---- Tag-specific trust weighting ----
@@ -295,7 +295,7 @@ public final class Constants {
     //   6.0 m = covers the home zone + outpost comfortably without seeing the
     //           other hub across the field (~8 m away).
     // Set to Double.MAX_VALUE to disable the cutoff entirely.
-    public static final double kMaxAvgTagDistMeters = 6.5;
+    public static final double kMaxAvgTagDistMeters = 4.9;
 
     // ---- Distance-based std-dev scaling ----
     // Scale the XY stddev by (avgTagDist / kDistScalingRefMeters)² so that
@@ -740,21 +740,21 @@ public final class Constants {
       // 2.5 to 5.0 m: hood fixed at 10 deg
       // 5.0 to 6.0 m: hood fixed at 12 deg
       // { distance_m, hoodDeg, flywheelRPM, tofSeconds, verticalFeedRPM }
-      {1.219, 10.0, 2832.0, 0.8, 1000.0},
-      {1.524, 12.5, 2856.0, 0.8, 1000.0},
-      {1.829, 14.8, 2885.0, 0.9, 1000.0},
-      {2.134, 17.2, 2919.0, 0.9, 2000.0},
-      {2.438, 19.5, 2958.0, 1.0, 2500.0},
-      {2.743, 21.7, 3001.0, 1.0, 2500.0},
-      {3.048, 23.8, 3049.0, 1.0, 2500.0},
-      {3.353, 25.9, 3100.0, 1.0, 2500.0},
-      {3.658, 27.9, 3156.0, 1.1, 3000.0},
-      {3.962, 29.9, 3416.0, 1.1, 3000.0},
-      {4.267, 31.7, 3479.0, 1.1, 3000.0},
-      {4.572, 33.5, 3545.0, 1.1, 3000.0},
-      {4.877, 35.0, 3617.0, 1.1, 3000.0},
-      {5.182, 35.0, 3698.0, 1.2, 3000.0},
-      {5.486, 35.0, 3778.0, 1.2, 3000.0},
+      {1.219, 10.0, 3032.0, 0.8, 1000.0},
+      {1.524, 12.5, 3056.0, 0.8, 1000.0},
+      {1.829, 14.8, 3085.0, 0.9, 1000.0},
+      {2.134, 17.2, 3119.0, 0.9, 2000.0},
+      {2.438, 19.5, 3158.0, 1.0, 2500.0},
+      {2.743, 21.7, 3201.0, 1.0, 2500.0},
+      {3.048, 23.8, 3249.0, 1.0, 2500.0},
+      {3.353, 25.9, 3300.0, 1.0, 2500.0},
+      {3.658, 27.9, 3356.0, 1.1, 3000.0},
+      {3.962, 29.9, 3616.0, 1.1, 3000.0},
+      {4.267, 31.7, 3679.0, 1.1, 3000.0},
+      {4.572, 33.5, 3745.0, 1.1, 3000.0},
+      {4.877, 35.0, 3817.0, 1.1, 3000.0},
+      {5.182, 35.0, 3898.0, 1.2, 3000.0},
+      {5.486, 35.0, 3978.0, 1.2, 3000.0},
       {5.791, 35.0, 3856.0, 1.2, 3000.0},
       {6.096, 35.0, 3734.0, 1.3, 3000.0},
       {6.401, 35.0, 3810.0, 1.3, 3000.0},
