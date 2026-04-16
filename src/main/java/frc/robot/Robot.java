@@ -431,15 +431,13 @@ public class Robot extends LoggedRobot {
 
       // Always hard-set to the selected autonomous start translation.
       // If seeded, keep the current heading; if not seeded, use the path start heading.
-      Pose2d forcedStartPose =
-          seeded ? new Pose2d(autoPose.getTranslation(), robotPose.getRotation()) : autoPose;
+      Pose2d forcedStartPose = autoPose;
       robotContainer.getDrive().setPose(forcedStartPose);
       robotPose = forcedStartPose;
 
       // Push the current auto-start heading to every Limelight so MegaTag 2's IMU
       // matches the pose the robot is actually starting from.
-      double yawDeg =
-          seeded ? robotPose.getRotation().getDegrees() : autoPose.getRotation().getDegrees();
+      double yawDeg = autoPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
         LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
