@@ -1016,7 +1016,7 @@ public final class Constants {
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -1041,7 +1041,7 @@ public final class Constants {
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 60.0;
-    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
