@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.limelight.LimelightHelpers;
 import frc.lib.limelight.LimelightHelpers.PoseEstimate;
+import frc.lib.limelight.LimelightHelpers.RawFiducial;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Robot;
@@ -583,8 +584,15 @@ public class Vision extends SubsystemBase {
       scaledXYStdDev *= distRatio * distRatio;
     }
 
+    // 9. Apply tag-specific trust weighting.
+    //    Hub tags are trusted 3× more than wall tags (configured in VisionConstants).
+    //    Lower factor => lower stddev => more trust in the fused estimate.
+    double tagTrustStdDevFactor = getTagTrustStdDevFactor(estimate);
+    scaledXYStdDev *= tagTrustStdDevFactor;
+
     if (shouldLog) {
       Logger.recordOutput(prefix + "avgTagDist", estimate.avgTagDist);
+      Logger.recordOutput(prefix + "tagTrustStdDevFactor", tagTrustStdDevFactor);
       Logger.recordOutput(prefix + "scaledXYStdDev", scaledXYStdDev);
     }
 
@@ -671,10 +679,13 @@ public class Vision extends SubsystemBase {
     //    moderate theta stddev (the heading info we actually want).
     double cameraFactor = VisionConstants.kCameraStdDevFactors[cameraIndex];
     double scaledXYStdDev = VisionConstants.kMT1HeadingXYStdDevMultiplier * cameraFactor;
+    double tagTrustStdDevFactor = getTagTrustStdDevFactor(estimate);
+    scaledXYStdDev *= tagTrustStdDevFactor;
 
     if (shouldLog) {
       Logger.recordOutput(prefix + "mt1HeadingPose", visionPose);
       Logger.recordOutput(prefix + "mt1HeadingYawStdDev", yawStdDev);
+      Logger.recordOutput(prefix + "mt1HeadingTagTrustStdDevFactor", tagTrustStdDevFactor);
       Logger.recordOutput(prefix + "mt1HeadingAccepted", true);
     }
 
@@ -683,6 +694,32 @@ public class Vision extends SubsystemBase {
         estimate.timestampSeconds,
         scaledXYStdDev,
         VisionConstants.kMT1HeadingThetaStdDev);
+  }
+
+  /**
+   * Computes a stddev multiplier from the tags in a pose estimate.
+   *
+   * <p>If multiple tags are present, we use the most-trusted one (minimum stddev factor) so a
+   * visible hub tag can dominate over wall tags in mixed observations.
+   */
+  private static double getTagTrustStdDevFactor(PoseEstimate estimate) {
+    RawFiducial[] rawFiducials = estimate.rawFiducials;
+    if (rawFiducials == null || rawFiducials.length == 0) {
+      return VisionConstants.kUnknownTagStdDevFactor;
+    }
+
+    double bestFactor = Double.POSITIVE_INFINITY;
+    for (RawFiducial fiducial : rawFiducials) {
+      if (fiducial == null) {
+        continue;
+      }
+      bestFactor = Math.min(bestFactor, VisionConstants.getTagTrustStdDevFactor(fiducial.id));
+    }
+
+    if (!Double.isFinite(bestFactor)) {
+      return VisionConstants.kUnknownTagStdDevFactor;
+    }
+    return bestFactor;
   }
 
   // -----------------------------------------------------------------------

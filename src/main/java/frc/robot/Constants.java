@@ -197,9 +197,91 @@ public final class Constants {
     // shop field walls are frequently mis-aligned and those tags give bad data.
     // Excluded tags are commented out and can be re-enabled per-event.
     public static final int[] kValidTagIds = {
-      2, 3, 4, 5, 8, 9, 10, 11, // 13, 14, //15, 16,
-      18, 19, 20, 21, 24, 25, 26, 27 // , //29, 30, 31, 32
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      10,
+      11, // red hub tags
+      13,
+      14,
+      15,
+      16, // red wall tags
+      18,
+      19,
+      20,
+      21,
+      24,
+      25,
+      26,
+      27, // blue hub tags
+      29,
+      30,
+      31,
+      32 // blue wall tags
     };
+
+    // ---- Tag-specific trust weighting ----
+    // Trust hub tags 3× more than wall tags.
+    // The pose estimator consumes stddev (lower = more trust), and internally
+    // weights roughly by 1/stddev². To get a true 3× trust ratio in weight,
+    // hub-tag stddev is scaled by 1/sqrt(3) relative to wall tags.
+    public static final double kHubVsWallTrustRatio = 3.0;
+    public static final double kHubTagStdDevFactor = 1.0 / Math.sqrt(kHubVsWallTrustRatio);
+    public static final double kWallTagStdDevFactor = 1.0;
+    public static final double kUnknownTagStdDevFactor = 1.0;
+
+    public static boolean isHubTagId(int tagId) {
+      return switch (tagId) {
+        case 2,
+                3,
+                4,
+                5,
+                8,
+                9,
+                10,
+                11, // red hub
+                18,
+                19,
+                20,
+                21,
+                24,
+                25,
+                26,
+                27 // blue hub
+            ->
+            true;
+        default -> false;
+      };
+    }
+
+    public static boolean isWallTagId(int tagId) {
+      return switch (tagId) {
+        case 13,
+                14,
+                15,
+                16, // red wall
+                29,
+                30,
+                31,
+                32 // blue wall
+            ->
+            true;
+        default -> false;
+      };
+    }
+
+    public static double getTagTrustStdDevFactor(int tagId) {
+      if (isHubTagId(tagId)) {
+        return kHubTagStdDevFactor;
+      }
+      if (isWallTagId(tagId)) {
+        return kWallTagStdDevFactor;
+      }
+      return kUnknownTagStdDevFactor;
+    }
 
     // ---- Filtering thresholds ----
     // Maximum angular velocity (deg/s) before we reject vision updates.
@@ -933,7 +1015,7 @@ public final class Constants {
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kIntakeRollerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kIntakeRollerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
@@ -958,7 +1040,7 @@ public final class Constants {
 
     kIntakeRollerFollowerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 100.0;
+    kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.StatorCurrentLimit = 120.0;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimit = 30.0;
     kIntakeRollerFollowerConfig.fxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
