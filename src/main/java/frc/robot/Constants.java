@@ -1023,7 +1023,7 @@ public final class Constants {
   }
 
   static {
-    kIntakeRollerFollowerConfig.name = "Intake_Roller_fFollower";
+    kIntakeRollerFollowerConfig.name = "Intake_Roller_Follower";
     kIntakeRollerFollowerConfig.talonCANID =
         new CANDeviceId(15, CanBusNames.superstructureFor(15)); // Motor 2 (follower)
     kIntakeRollerFollowerConfig.momentOfInertia =
