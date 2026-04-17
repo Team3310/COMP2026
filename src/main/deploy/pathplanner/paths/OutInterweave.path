@@ -132,7 +132,7 @@
       "minWaypointRelativePos": 2.7457627118644066,
       "maxWaypointRelativePos": 4.093357271095154,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 2.0,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -165,13 +165,48 @@
         "nominalVoltage": 12.0,
         "unlimited": false
       }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0,
+      "maxWaypointRelativePos": 0.9762711864406779,
+      "constraints": {
+        "maxVelocity": 1.5,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
     }
   ],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "shootOn",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "shootOn"
+        }
+      }
+    },
+    {
+      "name": "shootOff",
+      "waypointRelativePos": 1.5864406779661024,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "shootOff"
+        }
+      }
+    },
+    {
       "name": "stateCollect",
-      "waypointRelativePos": 2.046678635547576,
+      "waypointRelativePos": 1.6271186440677963,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

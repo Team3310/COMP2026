@@ -1006,11 +1006,11 @@ public final class Constants {
     kIntakeRollerConfig.unitToRotorRatio =
         (18.0 / 20.0) * (16.0 / 28.0) * 60.0; // gear ratio in RPM to RPS
 
-    kIntakeRollerConfig.fxConfig.Slot0.kP = 3.0; 
+    kIntakeRollerConfig.fxConfig.Slot0.kP = 3.0;
     kIntakeRollerConfig.fxConfig.Slot0.kI = 0.0;
     kIntakeRollerConfig.fxConfig.Slot0.kD = 0.0;
-    kIntakeRollerConfig.fxConfig.Slot0.kS = 4.3; 
-    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.07; 
+    kIntakeRollerConfig.fxConfig.Slot0.kS = 4.3;
+    kIntakeRollerConfig.fxConfig.Slot0.kV = 0.07;
     kIntakeRollerConfig.fxConfig.Slot0.kA = 0.0;
 
     kIntakeRollerConfig.fxConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
