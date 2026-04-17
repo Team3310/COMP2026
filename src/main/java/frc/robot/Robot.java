@@ -687,7 +687,11 @@ public class Robot extends LoggedRobot {
     // sequence (buildShootWhileHeldCommand pattern) handles flywheel RPM.
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelLeft().idleCommand());
     CommandScheduler.getInstance().schedule(robotContainer.getFlywheelRight().idleCommand());
-    CommandScheduler.getInstance().schedule(robotContainer.getIntakeRollers().intakeCommand());
+    CommandScheduler.getInstance()
+        .schedule(
+            robotContainer
+                .getIntakeRollers()
+                .intakeCommand()); // TODO get rid of this line, could conflict with deploy
     CommandScheduler.getInstance()
         .schedule(robotContainer.getVerticalFeedLeft().verticalFeedCollectCommand());
     CommandScheduler.getInstance()
