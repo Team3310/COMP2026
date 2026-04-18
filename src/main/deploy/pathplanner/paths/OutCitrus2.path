@@ -163,7 +163,7 @@
     },
     {
       "name": "shootOn",
-      "waypointRelativePos": 4.9661016949152526,
+      "waypointRelativePos": 4.97,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

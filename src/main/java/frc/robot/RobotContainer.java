@@ -270,9 +270,19 @@ public class RobotContainer {
         .withName("Auto DefenceOut");
   }
 
+  private Command buildAutoIntakeDeployPhaseCommand() {
+    return Commands.deadline(
+            intakePivot
+                .motionMagicSetpointCommandBlocking(
+                    () -> Constants.IntakeConstants.kIntakePivotDeployDegrees, 2.0)
+                .asProxy(),
+            intakeRollers.deployCommand().asProxy())
+        .withName("Auto Intake Deploy Phase");
+  }
+
   public Command buildAutoCollectCommand() {
-    return Commands.parallel(
-            intakePivot.deployCommand().asProxy(),
+    Command collectHold =
+        Commands.parallel(
             intakeRollers.intakeCommand().asProxy(),
             agitatorLeft.collectCommand().asProxy(),
             // Right floor roller follows the left floor roller, so do not
@@ -280,7 +290,9 @@ public class RobotContainer {
             verticalFeedLeft.verticalFeedCollectCommand().asProxy(),
             verticalFeedRight.verticalFeedCollectCommand().asProxy(),
             flywheelLeft.idleCommand().asProxy(),
-            flywheelRight.idleCommand().asProxy())
+            flywheelRight.idleCommand().asProxy());
+
+    return Commands.sequence(buildAutoIntakeDeployPhaseCommand(), collectHold)
         .withName("Auto Collect");
   }
 
