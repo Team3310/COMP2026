@@ -439,7 +439,7 @@ public class Robot extends LoggedRobot {
       // matches the pose the robot is actually starting from.
       double yawDeg = autoPose.getRotation().getDegrees();
       for (String name : Constants.VisionConstants.kCameraNames) {
-        LimelightHelpers.SetRobotOrientation(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetRobotOrientation_NoFlush(name, yawDeg, 0.0, 0.0, 0.0, 0.0, 0.0);
       }
     }
 
