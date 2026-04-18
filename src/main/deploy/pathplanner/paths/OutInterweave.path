@@ -132,7 +132,7 @@
       "minWaypointRelativePos": 2.7457627118644066,
       "maxWaypointRelativePos": 4.093357271095154,
       "constraints": {
-        "maxVelocity": 2.0,
+        "maxVelocity": 2.3,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -228,7 +228,7 @@
     },
     {
       "name": "shootOn",
-      "waypointRelativePos": 4.861016949152543,
+      "waypointRelativePos": 4.983050847457623,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
