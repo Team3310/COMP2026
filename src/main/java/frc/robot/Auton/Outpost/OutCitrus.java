@@ -18,6 +18,7 @@ public class OutCitrus extends AutonCommandBase {
     super(robotContainer, BLUE_START);
 
     this.addCommands(
+        robotContainer.buildAutoIntakeDeployPhaseCommand(),
         followPath(Paths.outCitrus1),
         robotContainer.buildAutoShootCommand().withTimeout(3.0),
         followPath(Paths.outCitrus2),

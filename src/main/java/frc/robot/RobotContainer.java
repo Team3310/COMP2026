@@ -270,7 +270,7 @@ public class RobotContainer {
         .withName("Auto DefenceOut");
   }
 
-  private Command buildAutoIntakeDeployPhaseCommand() {
+  public Command buildAutoIntakeDeployPhaseCommand() {
     return Commands.deadline(
             intakePivot
                 .motionMagicSetpointCommandBlocking(
