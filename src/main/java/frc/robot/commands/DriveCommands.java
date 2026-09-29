@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -55,44 +54,28 @@ public class DriveCommands {
         .getTranslation();
   }
 
-  private static boolean isHomeScoringDriveModeActive() {
-    return Robot.shouldLimitHomeZoneDrive();
-  }
-
   private static double getActiveMaxLinearSpeedMetersPerSec() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearSpeedMps
-        : Constants.DriveCommandConstants.kNormalMaxLinearSpeedMps;
+    return Constants.DriveCommandConstants.kNormalMaxLinearSpeedMps;
   }
 
   private static double getActiveMaxAngularSpeedRadPerSec() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularSpeedRadPerSec
-        : Constants.DriveCommandConstants.kNormalMaxAngularSpeedRadPerSec;
+    return Constants.DriveCommandConstants.kNormalMaxAngularSpeedRadPerSec;
   }
 
   private static double getActiveMaxLinearAccelMetersPerSec2() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearAccelMetersPerSec2
-        : Constants.DriveCommandConstants.kNormalMaxLinearAccelMetersPerSec2;
+    return Constants.DriveCommandConstants.kNormalMaxLinearAccelMetersPerSec2;
   }
 
   private static double getActiveMaxAngularAccelRadPerSec2() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularAccelRadPerSec2
-        : Constants.DriveCommandConstants.kNormalMaxAngularAccelRadPerSec2;
+    return Constants.DriveCommandConstants.kNormalMaxAngularAccelRadPerSec2;
   }
 
   private static double getActiveMaxLinearDecelMetersPerSec2() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxLinearDecelMetersPerSec2
-        : Constants.DriveCommandConstants.kNormalMaxLinearDecelMetersPerSec2;
+    return Constants.DriveCommandConstants.kNormalMaxLinearDecelMetersPerSec2;
   }
 
   private static double getActiveMaxAngularDecelRadPerSec2() {
-    return isHomeScoringDriveModeActive()
-        ? Constants.DriveCommandConstants.kHomeScoringMaxAngularDecelRadPerSec2
-        : Constants.DriveCommandConstants.kNormalMaxAngularDecelRadPerSec2;
+    return Constants.DriveCommandConstants.kNormalMaxAngularDecelRadPerSec2;
   }
 
   private static Translation2d limitTranslationVelocity(
@@ -248,13 +231,6 @@ public class DriveCommands {
               }
 
               // Convert to field relative speeds & send command
-              // The previous activeHub-based drive slowdown is intentionally left commented out.
-              // Teleop drive mode selection now depends on alliance home zone + shooting instead of
-              // FMS hub state.
-              // double driveScale =
-              //     Robot.activeHub ? Constants.DriveCommandConstants.kHubDriveScalar : 1.0;
-              // double turnScale =
-              //     Robot.activeHub ? Constants.DriveCommandConstants.kHubTurnScalar : 1.0;
               ChassisSpeeds speeds =
                   buildLimitedFieldRelativeSpeeds(
                       linearVelocity,
